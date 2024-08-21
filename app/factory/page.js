@@ -1,6 +1,5 @@
 import { Stack, Typography } from "@mui/material";
 import { Quicksand } from "next/font/google";
-import FacImg from "@/public/images/fac.jpg";
 import factory1 from "@/public/images/factory1.jpg";
 import factory2 from "@/public/images/factory2.jpg";
 import factory3 from "@/public/images/factory3.jpg";
