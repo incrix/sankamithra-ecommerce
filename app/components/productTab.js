@@ -5,18 +5,20 @@ import useWindowSize from "@/util/windowSize";
 import { use, useEffect, useState } from "react";
 
 export default function ProductTab() {
-  let productFromLocalStorage = JSON.parse(
-    window.localStorage.getItem("productList")
-  );
-  const [productList, setProductList] = useState(productFromLocalStorage || []);
+  const [productList, setProductList] = useState([]);
   useEffect(() => {
-    productList.length === 0 &&
+    let productFromLocalStorage = JSON.parse(
+      localStorage.getItem("productList")
+    );
+    productFromLocalStorage.length === 0 &&
       fetch("https://e-com.incrix.com/Sankamithra%20Products/productData.json")
         .then((response) => response.json())
         .then((data) => {
-          window.localStorage.setItem("productList", JSON.stringify(data));
+          localStorage.setItem("productList", JSON.stringify(data));
           setProductList(data);
         });
+    productFromLocalStorage.length !== 0 &&
+      setProductList(productFromLocalStorage);
   }, [productList.length]);
   const { width } = useWindowSize();
   return (

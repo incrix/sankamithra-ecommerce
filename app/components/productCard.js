@@ -163,14 +163,14 @@ export default function ProductCard({ product }) {
             }}
             startIcon={<ShoppingCart />}
             onClick={() => {
-              let cart = JSON.parse(window.localStorage.getItem("cart")) || [];
+              let cart = JSON.parse(localStorage.getItem("cart")) || [];
               let item = cart.filter((item) => item.id == product.id)[0];
               if (item) {
                 item.count += count;
               } else {
                 cart.push({ ...product, count: count });
               }
-              window.localStorage.setItem("cart", JSON.stringify(cart));
+              localStorage.setItem("cart", JSON.stringify(cart));
             }}
           >
             Add

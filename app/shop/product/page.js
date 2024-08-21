@@ -202,14 +202,14 @@ export default function Shop() {
                   }}
                   onClick={() => {
                     let cart =
-                      JSON.parse(window.localStorage.getItem("cart")) || [];
+                      JSON.parse(localStorage.getItem("cart")) || [];
                     let item = cart.filter((item) => item.id == product.id)[0];
                     if (item) {
                       item.count += itemCount;
                     } else {
                       cart.push({ ...product, count: itemCount });
                     }
-                    window.localStorage.setItem("cart", JSON.stringify(cart));
+                    localStorage.setItem("cart", JSON.stringify(cart));
                   }}
                 >
                   Add to Cart

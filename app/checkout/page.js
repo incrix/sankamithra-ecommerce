@@ -163,10 +163,10 @@ export default function Page() {
 }
 
 function OrderSummary({ setCheckoutState }) {
-  const cartList = window.localStorage.getItem("cart")
-    ? JSON.parse(window.localStorage.getItem("cart"))
-    : [];
-  const [cart, setCart] = useState(cartList);
+  const [cart, setCart] = useState([]);
+  useEffect(() => {
+    setCart(JSON.parse(localStorage.getItem("cart")) || []);
+  }, []);
   return (
     <Stack gap={2}>
       <Button
@@ -315,7 +315,6 @@ function OrderSummary({ setCheckoutState }) {
               .then((res) => res.json())
               .then((data) => {
                 console.log(data);
-                // window.localStorage.removeItem("cart");
               });
           }}
         >
