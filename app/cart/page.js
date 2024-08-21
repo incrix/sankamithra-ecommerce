@@ -32,18 +32,12 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const StyledTableRow = styled(TableRow)(() => ({
-  //   "&:nth-of-type(odd)": {
-  // backgroundColor: "white",
-  //   },
   "& td, & th": {
     borderBottom: "1px solid var(--primary-color)",
   },
 }));
 
 export default function Cart() {
-  // const cartList = localStorage.getItem("cart")
-  //   ? JSON.parse(localStorage.getItem("cart"))
-  //   : [];
   const [cart, setCart] = useState([]);
 
   useEffect(() => {

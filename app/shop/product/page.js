@@ -13,21 +13,25 @@ import ProductCard from "@/app/components/productCard";
 export default function Shop() {
   const searchParams = useSearchParams();
   const search = searchParams.get("id");
-  let productFromLocalStorage = JSON.parse(
-    window.localStorage.getItem("productList")
-  );
-  const [productList, setProductList] = useState(productFromLocalStorage || []);
+  // let productFromLocalStorage = JSON.parse(localStorage.getItem("productList"));
+  const [productList, setProductList] = useState([]);
   const [product, setProduct] = useState(null);
   const [itemCount, setItemCount] = useState(1);
+
   useEffect(() => {
-    productList.length === 0 &&
+    let productFromLocalStorage = JSON.parse(
+      localStorage.getItem("productList")
+    );
+    productFromLocalStorage.length === 0 &&
       fetch("https://e-com.incrix.com/Sankamithra%20Products/productData.json")
         .then((response) => response.json())
         .then((data) => {
-          window.localStorage.setItem("productList", JSON.stringify(data));
+          localStorage.setItem("productList", JSON.stringify(data));
           setProductList(data);
         });
-  }, [productList.length]);
+    productFromLocalStorage.length !== 0 &&
+      setProductList(productFromLocalStorage);
+  }, []);
 
   useEffect(() => {
     setProduct(productList.filter((product) => product.id == search)[0]);
