@@ -1,7 +1,7 @@
 "use client";
 import { Stack, Typography, Button, ButtonGroup } from "@mui/material";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Image from "next/image";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
@@ -10,10 +10,10 @@ import { Quicksand } from "next/font/google";
 const quicksand = Quicksand({ subsets: ["latin"] });
 import ProductCard from "@/app/components/productCard";
 
-export default function Shop() {
+export default function Product() {
   const searchParams = useSearchParams();
   const search = searchParams.get("id");
-  // let productFromLocalStorage = JSON.parse(localStorage.getItem("productList"));
+  // const search = window.location.href.split("?")[1].split("=")[1];
   const [productList, setProductList] = useState([]);
   const [product, setProduct] = useState(null);
   const [itemCount, setItemCount] = useState(1);
@@ -22,19 +22,28 @@ export default function Shop() {
     let productFromLocalStorage = JSON.parse(
       localStorage.getItem("productList")
     );
-    productFromLocalStorage.length === 0 &&
+    if (
+      productFromLocalStorage == null ||
+      productFromLocalStorage.length === 0
+    ) {
       fetch("https://e-com.incrix.com/Sankamithra%20Products/productData.json")
         .then((response) => response.json())
         .then((data) => {
           localStorage.setItem("productList", JSON.stringify(data));
+          setProduct(data.filter((product) => product.id == search)[0]);
           setProductList(data);
         });
-    productFromLocalStorage.length !== 0 &&
+    } else {
+      setProduct(
+        productFromLocalStorage.filter((product) => product.id == search)[0]
+      );
       setProductList(productFromLocalStorage);
+    }
   }, []);
 
   useEffect(() => {
-    setProduct(productList.filter((product) => product.id == search)[0]);
+    productList.length !== 0 &&
+      setProduct(productList.filter((product) => product.id == search)[0]);
   }, [search]);
 
   return (
@@ -201,8 +210,7 @@ export default function Shop() {
                     },
                   }}
                   onClick={() => {
-                    let cart =
-                      JSON.parse(localStorage.getItem("cart")) || [];
+                    let cart = JSON.parse(localStorage.getItem("cart")) || [];
                     let item = cart.filter((item) => item.id == product.id)[0];
                     if (item) {
                       item.count += itemCount;

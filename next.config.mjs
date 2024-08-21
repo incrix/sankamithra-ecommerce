@@ -20,6 +20,7 @@ const nextConfig = {
   },
   experimental: {
     esmExternals: "loose",
+    missingSuspenseWithCSRBailout: false,
   },
 };
 

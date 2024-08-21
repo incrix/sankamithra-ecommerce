@@ -10,15 +10,19 @@ export default function ProductTab() {
     let productFromLocalStorage = JSON.parse(
       localStorage.getItem("productList")
     );
-    productFromLocalStorage.length === 0 &&
+    if (
+      productFromLocalStorage == null ||
+      productFromLocalStorage.length === 0
+    ) {
       fetch("https://e-com.incrix.com/Sankamithra%20Products/productData.json")
         .then((response) => response.json())
         .then((data) => {
           localStorage.setItem("productList", JSON.stringify(data));
           setProductList(data);
         });
-    productFromLocalStorage.length !== 0 &&
+    } else {
       setProductList(productFromLocalStorage);
+    }
   }, [productList.length]);
   const { width } = useWindowSize();
   return (
