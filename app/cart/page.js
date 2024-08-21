@@ -54,8 +54,8 @@ const rows = [
 ];
 
 export default function Cart() {
-  const cartList = window.localStorage.getItem("cart")
-    ? JSON.parse(window.localStorage.getItem("cart"))
+  const cartList = localStorage.getItem("cart")
+    ? JSON.parse(localStorage.getItem("cart"))
     : [];
   const [cart, setCart] = useState(cartList);
 
@@ -63,7 +63,7 @@ export default function Cart() {
     const newCart = [...cart];
     newCart[index].count += 1;
     setCart(newCart);
-    window.localStorage.setItem("cart", JSON.stringify(newCart));
+    localStorage.setItem("cart", JSON.stringify(newCart));
   };
 
   const handleDecrement = (index) => {
@@ -73,14 +73,14 @@ export default function Cart() {
     const newCart = [...cart];
     newCart[index].count -= 1;
     setCart(newCart);
-    window.localStorage.setItem("cart", JSON.stringify(newCart));
+    localStorage.setItem("cart", JSON.stringify(newCart));
   };
 
   const handleRemove = (index) => {
     const newCart = [...cart];
     newCart.splice(index, 1);
     setCart(newCart);
-    window.localStorage.setItem("cart", JSON.stringify(newCart));
+    localStorage.setItem("cart", JSON.stringify(newCart));
   };
 
   return (
