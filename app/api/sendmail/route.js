@@ -14,10 +14,16 @@ export async function POST(request) {
     const pdfBuffer = Buffer.concat(chunks);
     // Convert the Buffer to a Base64 string
     const base64String = pdfBuffer.toString("base64");
-    await sendVerificationMail({
-      billingDetails,
-      invoice: base64String,
-    });
+    try {
+      await sendVerificationMail({
+        billingDetails,
+        invoice: base64String,
+      }).then((message) => {
+        console.log(message);
+      });
+    } catch (error) {
+      console.error(error);
+    }
   });
   return Response.json({
     to: "avinash97official@gmail.com",

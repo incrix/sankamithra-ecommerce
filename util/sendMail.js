@@ -63,6 +63,7 @@ export const sendVerificationMail = async ({ billingDetails, invoice }) => {
       } else {
         console.log("Email sent: " + info.response);
         resolve(info);
+        return info;
       }
     });
   });
