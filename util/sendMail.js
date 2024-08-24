@@ -55,16 +55,17 @@ export const sendVerificationMail = async ({ billingDetails, invoice }) => {
     ],
   };
   await new Promise((resolve, reject) => {
-    transporter.sendMail(mailInfo, function (error, info) {
-      if (error) {
-        console.log("Error: ", error);
-        reject(error);
-        return error;
-      } else {
-        console.log("Email sent: " + info.response);
-        resolve(info);
-        return info;
-      }
-    });
+    transporter.sendMail(mailInfo);
+    // transporter.sendMail(mailInfo, function (error, info) {
+    //   if (error) {
+    //     console.log("Error: ", error);
+    //     reject(error);
+    //     return error;
+    //   } else {
+    //     console.log("Email sent: " + info.response);
+    //     resolve(info);
+    //     return info;
+    //   }
+    // });
   });
 };
