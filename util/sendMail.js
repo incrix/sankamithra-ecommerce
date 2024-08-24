@@ -2,13 +2,13 @@ import nodemailer from "nodemailer";
 
 export const sendVerificationMail = async ({ billingDetails, invoice }) => {
   const transporter = nodemailer.createTransport({
-    host: process.env.MAIL_HOST,
-    name: process.env.MAIL_NAME,
-    port: process.env.MAIL_PORT,
+    host: "incrix.com",
+    name: "Incrix",
+    port: 465,
     secure: true,
     auth: {
-      user: process.env.MAIL_USER,
-      pass: process.env.MAIL_PASSWORD,
+      user: "noreply@incrix.com",
+      pass: "crixinnoreply",
     },
   });
 
