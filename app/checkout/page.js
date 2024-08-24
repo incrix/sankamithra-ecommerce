@@ -13,12 +13,14 @@ import {
   TableRow,
   IconButton,
 } from "@mui/material";
+import { pdf } from "@react-pdf/renderer";
 import { styled } from "@mui/material/styles";
 import { Quicksand } from "next/font/google";
 const quicksand = Quicksand({ subsets: ["latin"] });
 import { useState, useEffect } from "react";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
+import MyDocument from "@/util/invoice";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -164,9 +166,15 @@ export default function Page() {
 
 function OrderSummary({ setCheckoutState }) {
   const [cart, setCart] = useState([]);
+  const [base64, setBase64] = useState("");
   useEffect(() => {
     setCart(JSON.parse(localStorage.getItem("cart")) || []);
   }, []);
+
+  useEffect(() => {
+    console.log(base64);
+  }, [base64]);
+
   return (
     <Stack gap={2}>
       <Button
@@ -299,7 +307,7 @@ function OrderSummary({ setCheckoutState }) {
             },
             textTransform: "none",
           }}
-          onClick={() => {
+          onClick={async () => {
             fetch("/api/sendmail", {
               method: "POST",
               headers: {

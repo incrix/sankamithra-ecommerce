@@ -26,11 +26,11 @@ export const sendVerificationMail = async ({ billingDetails, invoice }) => {
   const mailInfo = {
     from: '"no-reply" <no-reply@incrix.com>',
     to: billingDetails.email,
-    subject: "Online Order List",
+    subject: `Online Order List for ${billingDetails.name}`,
     html: `
     <main style="margin: 0; padding: 0; font-family: 'Arial', sans-serif; font-size: 16px; line-height: 1.5; color: #333;">
             <div style="text-align: center;">
-                <h1>Start Packing Order has arrived</h1>
+                <h1>Start Packing, Order has arrived</h1>
                 <p style="padding: 10px 20px;">Order list is attached below</p>
                 <p style="padding: 10px 20px;">Thank you for using Slipze powered by Incrix Techlutions LLP</p>
             </div>

@@ -1,62 +1,32 @@
-import easyinvoice from "easyinvoice";
+import React from 'react';
+import { Page, Text, View, Document, StyleSheet } from '@react-pdf/renderer';
 
-export const dynamic = "force-dynamic";
+const styles = StyleSheet.create({
+  page: {
+    flexDirection: 'column',
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+  },
+  title: {
+    fontSize: 24,
+    marginBottom: 20,
+  },
+  body: {
+    fontSize: 12,
+  },
+});
 
-export async function generateInvoice({ billingDetails, productList }) {
-  const data = {
-    images: {
-      logo: "https://incrix.com/sankamithra-logo.png",
-    //   background: "https://incrix.com/sankamithra-logo.png",
-    },
-    sender: {
-      company: "Sankamithra Fireworks Factory",
-      address: "3/1427/G6, Opposite PRC Bus Depot, Sattur Road",
-      zip: "626123",
-      city: "Sivakasi",
-      country: "India",
-      email: "info@sankamithra.com",
-      phone: "98420 12345",
-    },
-    client: {
-      company: billingDetails.name,
-      address: billingDetails.address,
-      zip: billingDetails.zip,
-      city: billingDetails.city,
-      state: billingDetails.state,
-      country: "India",
-      email: billingDetails.email,
-      number: billingDetails.phone,
-    },
-    information: {
-      number: "Online Order",
-      date: new Date().toLocaleDateString("en-US", {
-        timeZone: "Asia/Kolkata",
-      }),
-    },
-    products: productList.map((product) => ({
-      quantity: product.count,
-      description: product.name,
-      price: Math.round(product.price - (product.price * product.discount) / 100),
-    })),
-    // products: [
-    //   {
-    //     quantity: "1",
-    //     description: name,
-    //     "tax-rate": 18,
-    //     price: transaction.amount / 1.18,
-    //   },
-    // ],
-    "bottom-notice": "Thank you for your Order!",
-    settings: {
-      currency: "INR",
-      "tax-notation": "GST",
-      "margin-top": 25,
-      "margin-right": 25,
-      "margin-left": 25,
-      "margin-bottom": 25,
-    },
-  };
+const MyDocument = () => (
+  <Document>
+    <Page size="A4" style={styles.page}>
+      <Text style={styles.title}>My PDF Document</Text>
+      <View>
+        <Text style={styles.body}>
+          This is an example of a PDF generated with @react-pdf/renderer.
+        </Text>
+      </View>
+    </Page>
+  </Document>
+);
 
-  const result = await easyinvoice.createInvoice(data);
-  return result.pdf;
-}
+export default MyDocument;
