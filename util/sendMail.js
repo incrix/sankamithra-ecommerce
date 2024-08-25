@@ -46,14 +46,15 @@ export const sendVerificationMail = async ({ billingDetails, invoice }) => {
             </div> 
         </main>
         `,
-    attachments: [
-      {
-        filename: "invoice.pdf",
-        content: invoice,
-        encoding: "base64",
-      },
-    ],
+    // attachments: [
+    //   {
+    //     filename: "invoice.pdf",
+    //     content: invoice,
+    //     encoding: "base64",
+    //   },
+    // ],
   };
+
   await new Promise((resolve, reject) => {
     transporter.sendMail(mailInfo);
     // transporter.sendMail(mailInfo, function (error, info) {
