@@ -44,6 +44,7 @@ export const sendVerificationMail = async ({ billingDetails, invoice }) => {
                 <p>State: ${billingDetails.state}</p>
                 <p>Zip: ${billingDetails.zip}</p>
             </div> 
+            <p style="padding: 10px 20px;">${invoice}</p>
         </main>
         `,
     // attachments: [
