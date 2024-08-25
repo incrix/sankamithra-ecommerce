@@ -1,7 +1,7 @@
 "use client";
 import { Stack, Typography, Button, ButtonGroup } from "@mui/material";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
@@ -54,10 +54,35 @@ export default function Product() {
         width: "100%",
       }}
     >
-      <Stack width={"100%"} maxWidth={"var(--max-width)"} padding={"40px 0"}>
+      <Stack
+        width={"100%"}
+        maxWidth={"var(--max-width)"}
+        padding={{
+          xs: "20px",
+          sm: "40px",
+          md: "40px",
+          lg: "40px",
+          xl: "40px 0",
+        }}
+      >
         {product && (
-          <Stack direction={"row"} gap={10} justifyContent={"space-between"}>
-            <Stack width={500}>
+          <Stack
+            direction={{
+              sm: "column",
+              md: "row",
+            }}
+            gap={{
+              sm: 2,
+              md: 10,
+            }}
+            justifyContent={"space-between"}
+          >
+            <Stack
+              width={{
+                sm: "100%",
+                md: 500,
+              }}
+            >
               <Carousel
                 showArrows={true}
                 useKeyboardArrows={true}
@@ -223,7 +248,17 @@ export default function Product() {
                   Add to Cart
                 </Button>
               </Stack>
-              <Stack direction={"row"} gap={2} alignItems={"center"}>
+              <Stack
+                direction={{
+                  xs: "column",
+                  sm: "row",
+                }}
+                gap={2}
+                alignItems={{
+                  xs: "flex-start",
+                  sm: "center",
+                }}
+              >
                 <Stack direction={"row"} gap={1} alignItems={"center"}>
                   <Typography
                     className={quicksand.className}
@@ -274,16 +309,32 @@ export default function Product() {
                 </Stack>
               </Stack>
             </Stack>
-            <Stack>
+            <Stack
+              sx={{
+                display: {
+                  xs: "none",
+                  sm: "none",
+                  md: "none",
+                  lg: "block",
+                  xl: "block",
+                },
+              }}
+            >
               <HeroCategory />
             </Stack>
           </Stack>
         )}
         <Stack
-          padding={"40px"}
+          padding={{
+            sm: "0px",
+            md: "40px",
+          }}
           margin={"40px 0"}
           gap={2}
-          border={"1px solid #ECECEC"}
+          border={{
+            sm: "none",
+            md: "1px solid #ECECEC",
+          }}
           borderRadius={4}
         >
           <Typography
@@ -300,11 +351,18 @@ export default function Product() {
             {product && product.description}
           </Typography>
         </Stack>
+
         <Stack
-          padding={"40px"}
+          padding={{
+            sm: "0px",
+            md: "40px",
+          }}
           margin={"40px 0"}
           gap={2}
-          border={"1px solid #ECECEC"}
+          border={{
+            sm: "none",
+            md: "1px solid #ECECEC",
+          }}
           borderRadius={4}
         >
           <Typography
@@ -321,7 +379,10 @@ export default function Product() {
             direction={"row"}
             flexWrap={"wrap"}
             gap={2}
-            justifyContent={"flex-start"}
+            justifyContent={{
+              xs: "center",
+              sm: "flex-start",
+            }}
           >
             {product &&
               productList.length != 0 &&

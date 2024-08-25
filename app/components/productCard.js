@@ -10,7 +10,9 @@ export default function ProductCard({ product }) {
   const { width } = useWindowSize();
   const [count, setCount] = useState(1);
   const router = useRouter();
-  const path = usePathname().split("/")[1];
+  const pathArray = usePathname().split("/");
+  console.log(pathArray);
+  
 
   const handleIncrement = () => setCount(count + 1);
   const handleDecrement = () => count > 1 && setCount(count - 1);
@@ -46,23 +48,9 @@ export default function ProductCard({ product }) {
             {product.badge}
           </div>
         )}
-        {/* <img
-          onClick={() => {
-            router.push(`shop/product?id=${product.id}`);
-          }}
-          style={{
-            width: "200px",
-            height: "200px",
-            objectFit: "cover",
-            objectPosition: "center",
-            borderRadius: "2px",
-          }}
-          src={`https://e-com.incrix.com/Sankamithra%20Products/${product.image[0]}`}
-          alt="pr"
-        /> */}
         <Image
           onClick={() => {
-            path === "shop"
+            pathArray.length > 2
               ? router.push(`product?id=${product.id}`)
               : router.push(`shop/product?id=${product.id}`);
           }}
@@ -82,6 +70,11 @@ export default function ProductCard({ product }) {
           color={"var(--text-color-trinary)"}
           fontSize={"12px"}
           padding={"10px 0 0 0"}
+          onClick={() => {
+            pathArray.length > 2 && pathArray[2] === "shop"
+              ? router.push(`product?id=${product.id}`)
+              : router.push(`shop/product?id=${product.id}`);
+          }}
         >
           {product.category}
         </Typography>
@@ -95,7 +88,7 @@ export default function ProductCard({ product }) {
             cursor: "pointer",
           }}
           onClick={() => {
-            path === "shop"
+            pathArray.length > 2 && pathArray[2] === "shop"
               ? router.push(`product?id=${product.id}`)
               : router.push(`shop/product?id=${product.id}`);
           }}

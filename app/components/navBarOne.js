@@ -1,14 +1,21 @@
 "use client";
-import { Stack, TextField, InputAdornment, Fab } from "@mui/material";
+import {
+  Stack,
+  TextField,
+  InputAdornment,
+  Fab,
+  IconButton,
+} from "@mui/material";
 import Link from "next/link";
 import logo from "../../public/images/logo.svg";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import useWindowSize from "@/util/windowSize";
 import Badge, { BadgeProps } from "@mui/material/Badge";
 import { styled } from "@mui/material/styles";
 import { useState, useEffect } from "react";
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 
 const StyledBadge = styled(Badge)(() => ({
   "& .MuiBadge-badge": {
@@ -21,6 +28,11 @@ const StyledBadge = styled(Badge)(() => ({
 export default function NavBarOne() {
   const { width } = useWindowSize();
   const [cartCount, setCartCount] = useState(0);
+  const [open, setOpen] = useState(false);
+
+  const handleMenu = () => {
+    setOpen(!open);
+  };
 
   useEffect(() => {
     setCartCount(
@@ -36,6 +48,11 @@ export default function NavBarOne() {
       );
     }, 500);
   }, []);
+  const linkStyle = {
+    color: "var(--primary-color)",
+    fontSize: "18px",
+    fontWeight: "bold",
+  };
 
   return (
     <nav
@@ -47,8 +64,49 @@ export default function NavBarOne() {
         justifyContent: "center",
         alignItems: "center",
         padding: width < 1480 ? "0 40px" : "0",
+        position: "relative",
       }}
     >
+      <Stack
+        display={open ? "flex" : "none"}
+        gap={10}
+        width={"300px"}
+        height={"100vh"}
+        position={"fixed"}
+        padding={"20px"}
+        sx={{
+          top: "0",
+          right: "0",
+          backgroundColor: "white",
+          zIndex: "100",
+          border: "1px solid #ECECEC",
+        }}
+      >
+        <IconButton
+          sx={{
+            color: "var(--primary-color)",
+            fontSize: "30px",
+            width: "30px",
+          }}
+        >
+          <CloseRoundedIcon onClick={handleMenu} />
+        </IconButton>
+        <Link style={linkStyle} href="/">
+          Home
+        </Link>
+        <Link style={linkStyle} href="/factory">
+          Factory
+        </Link>
+        <Link style={linkStyle} href="/shop">
+          Shop
+        </Link>
+        {/* <Link style={linkStyle} href="/wholesale">
+            Wholesale
+          </Link> */}
+        <Link style={linkStyle} href="/contact">
+          Contact
+        </Link>
+      </Stack>
       <Stack
         direction="row"
         alignItems={"center"}
@@ -94,54 +152,62 @@ export default function NavBarOne() {
             </span>
           </Stack>
         </Link>
-        {width > 1024 && (
-          <Stack>
-            <TextField
-              sx={{
-                width: "500px",
-              }}
-              placeholder="Search"
-              variant="outlined"
-              size="small"
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="start">
-                    <SearchOutlinedIcon />
-                  </InputAdornment>
-                ),
-              }}
-            />
-          </Stack>
-        )}
         <Stack
-          direction={"row"}
-          gap={"20px"}
           display={{
             xs: "none",
-            sm: "flex",
+            sm: "none",
             md: "flex",
           }}
         >
-          <Link
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "20px",
-              color: "var(--text-color-secondary)",
+          <TextField
+            sx={{
+              width: "500px",
             }}
-            href={"/cart"}
+            placeholder="Search"
+            variant="outlined"
+            size="small"
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="start">
+                  <SearchOutlinedIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Stack>
+        <Stack direction={"row"} gap={"25px"} alignItems={"center"}>
+          <Stack
+            display={{
+              xs: "none",
+              sm: "flex",
+            }}
           >
-            <StyledBadge badgeContent={cartCount} color="secondary">
-              <ShoppingCartOutlinedIcon
-                sx={{
-                  fontSize: "24px",
-                  color: "var(--text-color)",
-                }}
-              />
-            </StyledBadge>
-            Cart
-          </Link>
+            <Link
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                color: "var(--text-color-secondary)",
+              }}
+              href={"/cart"}
+            >
+              <StyledBadge badgeContent={cartCount} color="secondary">
+                <ShoppingCartOutlinedIcon
+                  sx={{
+                    fontSize: "24px",
+                    color: "var(--text-color)",
+                  }}
+                />
+              </StyledBadge>
+              Cart
+            </Link>
+          </Stack>
+          <Stack display={{ xs: "flex", sm: "flex", md: "none" }}>
+            <IconButton onClick={handleMenu}>
+              <MenuRoundedIcon sx={{ fontSize: "30px" }} />
+            </IconButton>
+          </Stack>
         </Stack>
       </Stack>
       <Fab
@@ -155,6 +221,9 @@ export default function NavBarOne() {
           "&:hover": {
             backgroundColor: "var(--primary-color)",
           },
+        }}
+        onClick={() => {
+          window.location.href = "/cart";
         }}
       >
         <StyledBadge badgeContent={cartCount} color="secondary">

@@ -98,9 +98,9 @@ export default function Cart() {
           >
             Your Cart
           </Typography>
-          <Typography className={quicksand.className} fontSize={14}>
+          {/* <Typography className={quicksand.className} fontSize={14}>
             There are no items in your cart.
-          </Typography>
+          </Typography> */}
         </Stack>
         <Stack
           direction={{
@@ -148,7 +148,10 @@ export default function Cart() {
                 <TableBody>
                   {cart.length === 0 && (
                     <StyledTableRow>
-                      <StyledTableCell colSpan={5} align="center">
+                      <StyledTableCell
+                        colSpan={5}
+                        align={"left"}
+                      >
                         Your cart is empty
                       </StyledTableCell>
                     </StyledTableRow>
@@ -268,8 +271,12 @@ export default function Cart() {
                   {/* <Typography className={quicksand.className} fontSize={14}>
                     Shipping: $0.00
                   </Typography> */}
-                  <Typography className={quicksand.className} fontSize={14}>
-                    Total: $
+                  <Typography
+                    className={quicksand.className}
+                    fontSize={14}
+                    fontWeight={700}
+                  >
+                    Total: ₹
                     {cart.reduce(
                       (acc, item) =>
                         acc +

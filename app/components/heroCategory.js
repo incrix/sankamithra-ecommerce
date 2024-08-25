@@ -7,8 +7,10 @@ import special from "../../public/temp/special.png";
 import chakkar from "../../public/temp/chakkar.png";
 import aerial from "../../public/temp/aerial.png";
 import rocket from "../../public/temp/rocket.png";
+import { useRouter } from "next/navigation";
 
-const CatButton = ({ title, img, count }) => {
+const CatButton = ({ title, img, count, link }) => {
+  const router = useRouter();
   return (
     <Stack
       flexDirection={"row"}
@@ -26,6 +28,9 @@ const CatButton = ({ title, img, count }) => {
           borderColor: "var(--primary-color)",
           cursor: "pointer",
         },
+      }}
+      onClick={() => {
+        router.push(`/shop?category=${link}`);
       }}
     >
       <img
@@ -62,7 +67,7 @@ export default function HeroCategory() {
         p: 4,
         width: "100%",
         minWidth: "300px",
-        height: "auto",
+        maxWidth: "600px",
         border: "2px solid",
         borderColor: "#ECECEC",
         borderRadius: "15px",
@@ -90,12 +95,14 @@ export default function HeroCategory() {
           }}
         />
         <Stack gap={2.5}>
-          <CatButton title="Flower Pots" count={5} img={flower} />
-          <CatButton title="Ground Chakkar" count={5} img={chakkar} />
-          <CatButton title="One Sound" count={5} img={sound} />
-          <CatButton title="Special’s" count={5} img={special} />
-          <CatButton title="Rockets" count={5} img={rocket} />
-          <CatButton title="Aerials" count={5} img={aerial} />
+          <CatButton title="Flower Pots" count={5} img={flower} link={"Flower Pots"}/>
+          <CatButton title="Ground Chakkars" count={5} img={chakkar} link={"Ground Chakkars"}/>
+          <CatButton title="One Sound" count={5} img={sound} link={"One Sound"}/>
+          <CatButton title="Special’s" count={5} img={special} link={"Special%27s"} />
+          <CatButton title="Rockets" count={5} img={rocket} link={"Rockets"}/>
+          <CatButton title="Aerials" count={5} img={aerial} link={"Repeating shots"}/>
+          <CatButton title="Bombs" count={5} img={special} link={"Atom bombs"}/>
+          <CatButton title="Twinklers" count={5} img={aerial} link={"Twinklers"}/>
         </Stack>
       </Stack>
     </Paper>

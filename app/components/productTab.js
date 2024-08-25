@@ -1,11 +1,11 @@
 "use client";
-import { Stack, Typography } from "@mui/material";
+import { Stack } from "@mui/material";
 import ProductCard from "./productCard";
-import useWindowSize from "@/util/windowSize";
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function ProductTab() {
+export default function ProductTab({ category }) {
   const [productList, setProductList] = useState([]);
+  const [filteredProductList, setFilteredProductList] = useState([]);
   useEffect(() => {
     let productFromLocalStorage = JSON.parse(
       localStorage.getItem("productList")
@@ -23,11 +23,39 @@ export default function ProductTab() {
     } else {
       setProductList(productFromLocalStorage);
     }
-  }, [productList.length]);
-  const { width } = useWindowSize();
+    if (category) {
+      setFilteredProductList(
+        productList.filter((product) =>
+          category === "Atom bombs"
+            ? product.category === "Atom bombs" ||
+              product.category === "Bijili crackers"
+            : category === "Twinklers"
+            ? product.category === "Twinkling stars" ||
+              product.category === "Pencils"
+            : product.category === category
+        )
+      );
+    } else {
+      setFilteredProductList(productList);
+    }
+  }, [productList.length, category]);
+
   return (
-    <Stack margin={"40px 0 0 0"} width={"100%"}>
-      <h4 style={{ fontSize: "32px", fontWeight: "bold" }}>Our Products</h4>
+    <Stack
+      margin={{
+        xs: "20px",
+        sm: "20px",
+        md: "40px 0 0 0",
+      }}
+      width={"100%"}
+    >
+      <h4 style={{ fontSize: "32px", fontWeight: "bold" }}>
+        {category
+          ? category === "Atom bombs"
+            ? "Atom bombs & Bijili"
+            : category
+          : "Our Products"}
+      </h4>
       <Stack
         width={"100%"}
         padding={"40px 0 0 0"}
@@ -35,10 +63,15 @@ export default function ProductTab() {
         direction={"row"}
         flexWrap={"wrap"}
         gap={2}
-        justifyContent={width < 1024 ? "center" : "flex-start"}
+        justifyContent={{
+          xs: "center",
+          sm: "center",
+          md: "center",
+          lg: "flex-start",
+        }}
       >
-        {productList.length != 0 &&
-          productList.map((product, index) => {
+        {filteredProductList.length != 0 &&
+          filteredProductList.map((product, index) => {
             return <ProductCard key={index} product={product} />;
           })}
       </Stack>

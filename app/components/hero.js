@@ -10,7 +10,10 @@ export default function Hero() {
   return (
     <Stack
       sx={{
-        margin: width > 1480 ? "40px 0" : "40px",
+        margin: {
+          md: "40px 0",
+          lg: "40px",
+        },
       }}
     >
       <Grid container spacing={2} direction={"row"}>
@@ -22,11 +25,18 @@ export default function Hero() {
         <Grid item xs={width > 1300 ? 9 : width > 1024 ? 8 : 12}>
           <HeroCarousel />
           <ProductTab />
-          {width < 1024 && (
-            <Stack margin={"40px 0 0 0"}>
-              <HeroCategory />
-            </Stack>
-          )}
+          <Stack
+            display={{
+              sm: "flex",
+              md: "none",
+            }}
+            width={"100%"}
+            alignItems={"center"}
+            margin={"40px 0 0 0"}
+            padding={"20px"}
+          >
+            <HeroCategory />
+          </Stack>
         </Grid>
       </Grid>
     </Stack>

@@ -2,10 +2,8 @@
 import { Stack, InputBase, Button } from "@mui/material";
 import emailBg from "../../public/images/email-bg.png";
 import TelegramIcon from "@mui/icons-material/Telegram";
-import useWindowSize from "@/util/windowSize";
 
 export default function EmailSubscribe() {
-  const { width } = useWindowSize();
   return (
     <Stack
       position={"relative"}
@@ -23,7 +21,6 @@ export default function EmailSubscribe() {
         height: "100%",
         borderRadius: "20px",
         overflow: "hidden",
-        // margin: width > 1480 ? "80px 0 0 0" : "80px 40px 0 40px",
         margin: {
           xs: "80px 20px",
           sm: "80px 20px",
@@ -62,7 +59,7 @@ export default function EmailSubscribe() {
           borderRadius: "40px",
           width: {
             xs: "100%",
-            xs: "400px",
+            xs: "100%",
             sm: "400px",
             md: "400px",
             lg: "400px",

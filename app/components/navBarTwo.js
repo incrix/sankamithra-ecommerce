@@ -4,14 +4,18 @@ import Link from "next/link";
 import useWindowSize from "@/util/windowSize";
 
 export default function NavBarTwo() {
-  const { width } = useWindowSize();
   const linkStyle = {
     color: "var(--text-color)",
     fontSize: "16px",
     fontWeight: "bold",
   };
   return (
-    width > 764 && (
+    <Stack display={{
+      xs: "none",
+      sm: "none",
+      md: "flex",
+      lg: "flex",
+    }}>
       <nav
         style={{
           width: "100%",
@@ -44,6 +48,6 @@ export default function NavBarTwo() {
           </Link>
         </Stack>
       </nav>
-    )
+    </Stack>
   );
 }

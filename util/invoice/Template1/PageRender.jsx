@@ -43,9 +43,6 @@ export default function PageRender({ billingDetails, productList }) {
             Total Items / Qty : {productList.length}/
             {productList.reduce((a, { count }) => a + count, 0)}
           </Text>
-          <Text>
-            Total Amount in Words: One Hundred Seventy Rupees Twelve Paise Only
-          </Text>
         </View>
         <View style={{ width: "50%" }}>
           <View style={{ padding: 5, gap: 5, borderBottom: "1px solid #333" }}>

@@ -11,8 +11,8 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
 } from "@mui/material";
+import LoadingButton from "@mui/lab/LoadingButton";
 import { styled } from "@mui/material/styles";
 import { Quicksand } from "next/font/google";
 const quicksand = Quicksand({ subsets: ["latin"] });
@@ -166,17 +166,36 @@ export default function Page() {
 
 function OrderSummary({ setCheckoutState }) {
   const [cart, setCart] = useState([]);
-  const [base64, setBase64] = useState("");
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const handleClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpen(false);
+  };
   useEffect(() => {
     setCart(JSON.parse(localStorage.getItem("cart")) || []);
   }, []);
 
-  useEffect(() => {
-    console.log(base64);
-  }, [base64]);
-
   return (
     <Stack gap={2}>
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+        open={open}
+        // autoHideDuration={6000}
+        onClose={handleClose}
+      >
+        <Alert
+          onClose={handleClose}
+          severity="success"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {alertMessage}
+        </Alert>
+      </Snackbar>
       <Button
         variant="text"
         sx={{
@@ -297,8 +316,11 @@ function OrderSummary({ setCheckoutState }) {
         Crackers.
       </Typography>
       <Stack alignItems={"center"}>
-        <Button
+        <LoadingButton
           variant="contained"
+          loading={loading}
+          loadingPosition="start"
+          disabled={cart.length === 0}
           sx={{
             backgroundColor: "var(--primary-color)",
             width: "150px",
@@ -308,6 +330,7 @@ function OrderSummary({ setCheckoutState }) {
             textTransform: "none",
           }}
           onClick={async () => {
+            setLoading(true);
             const pdfStream = await pdf(
               <Template1
                 billingDetails={JSON.parse(
@@ -336,13 +359,20 @@ function OrderSummary({ setCheckoutState }) {
               })
                 .then((res) => res.json())
                 .then((data) => {
-                  console.log(data);
+                  if (data.status == "success") {
+                    setAlertMessage("Order placed successfully");
+                    setOpen(true);
+                    localStorage.setItem("cart", JSON.stringify([]));
+                    setCart([]);
+                    setCheckoutState("billing");
+                    setLoading(false);
+                  }
                 });
             });
           }}
         >
           Place Order
-        </Button>
+        </LoadingButton>
       </Stack>
     </Stack>
   );

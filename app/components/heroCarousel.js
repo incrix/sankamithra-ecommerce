@@ -8,7 +8,7 @@ import Carousel2 from "@/public/images/Carosal2.jpg";
 
 export default function HeroCarousel() {
   return (
-    <Stack>
+    <Stack width={"100%"}>
       <Carousel
         infiniteLoop
         interval={5000}
@@ -18,30 +18,38 @@ export default function HeroCarousel() {
         showStatus={false}
         showArrows={false}
       >
-        <div>
-          <img
-            style={{
-              borderRadius: "20px",
-            }}
-            src={Carousel1.src}
-          />
-        </div>
-        <div>
-          <img
-            style={{
-              borderRadius: "20px",
-            }}
-            src={Carousel2.src}
-          />
-        </div>
-        <div>
+        <Stack
+          borderRadius={{
+            md: 0,
+            lg: "20px",
+          }}
+          overflow={"hidden"}
+        >
+          <img src={Carousel1.src} />
+        </Stack>
+        <Stack
+          borderRadius={{
+            md: 0,
+            lg: "20px",
+          }}
+          overflow={"hidden"}
+        >
+          <img src={Carousel2.src} />
+        </Stack>
+        <Stack
+          borderRadius={{
+            md: 0,
+            lg: "20px",
+          }}
+          overflow={"hidden"}
+        >
           <img
             style={{
               borderRadius: "20px",
             }}
             src={tabPanel.src}
           />
-        </div>
+        </Stack>
       </Carousel>
     </Stack>
   );

@@ -32,8 +32,21 @@ export default function Factory() {
         >
           Factory
         </Typography>
-        <Stack direction={"row"} justifyContent={"space-between"} gap={4}>
-          <Stack maxWidth={600} gap={4}>
+        <Stack
+          direction={{
+            md: "column-reverse",
+            lg: "row",
+          }}
+          justifyContent={"space-between"}
+          gap={4}
+        >
+          <Stack
+            maxWidth={{
+              md: "100%",
+              lg: 600,
+            }}
+            gap={4}
+          >
             <Stack gap={1}>
               <Typography
                 className={quicksand.className}
@@ -81,20 +94,36 @@ export default function Factory() {
               </Typography>
             </Stack>
           </Stack>
-          <img
-            style={{
-              width: "50%",
+          <Stack
+            width={{
+              md: "100%",
+              lg: "50%",
             }}
-            src={factory1.src}
-          />
+          >
+            <img
+              style={{
+                width: "100%",
+              }}
+              src={factory1.src}
+            />
+          </Stack>
         </Stack>
         <Stack
-          direction={"row-reverse"}
+          direction={{
+            md: "column-reverse",
+            lg: "row-reverse",
+          }}
           justifyContent={"space-between"}
           pt={10}
           gap={4}
         >
-          <Stack maxWidth={600} gap={4}>
+          <Stack
+            maxWidth={{
+              md: "100%",
+              lg: 600,
+            }}
+            gap={4}
+          >
             <Stack gap={1}>
               <Typography
                 className={quicksand.className}
@@ -140,20 +169,36 @@ export default function Factory() {
               </Typography>
             </Stack>
           </Stack>
-          <img
-            style={{
-              width: "50%",
+          <Stack
+            width={{
+              md: "100%",
+              lg: "50%",
             }}
-            src={factory2.src}
-          />
+          >
+            <img
+              style={{
+                width: "100%",
+              }}
+              src={factory2.src}
+            />
+          </Stack>
         </Stack>
         <Stack
-          direction={"row"}
+          direction={{
+            md: "column-reverse",
+            lg: "row",
+          }}
           justifyContent={"space-between"}
           pt={10}
           gap={4}
         >
-          <Stack maxWidth={600} gap={4}>
+          <Stack
+            maxWidth={{
+              md: "100%",
+              lg: 600,
+            }}
+            gap={4}
+          >
             <Stack gap={1}>
               <Typography
                 className={quicksand.className}
@@ -200,12 +245,19 @@ export default function Factory() {
               </Typography>
             </Stack>
           </Stack>
-          <img
-            style={{
-              width: "50%",
+          <Stack
+            width={{
+              md: "100%",
+              lg: "50%",
             }}
-            src={factory3.src}
-          />
+          >
+            <img
+              style={{
+                width: "100%",
+              }}
+              src={factory3.src}
+            />
+          </Stack>
         </Stack>
         <div style={{ padding: "56.25% 0 0 0", position: "relative" }}>
           <iframe
