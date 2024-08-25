@@ -2,18 +2,17 @@ import nodemailer from "nodemailer";
 
 export const sendVerificationMail = async ({ billingDetails, invoice }) => {
   const transporter = nodemailer.createTransport({
-    host: "incrix.com",
-    name: "Incrix",
-    port: 465,
+    host: process.env.MAIL_HOST,
+    name: process.env.MAIL_NAME,
+    port: process.env.MAIL_PORT,
     secure: true,
     auth: {
-      user: "noreply@incrix.com",
-      pass: "crixinnoreply",
+      user: process.env.MAIL_USER,
+      pass: process.env.MAIL_PASSWORD,
     },
   });
 
   await new Promise((resolve, reject) => {
-    // verify connection configuration
     transporter.verify(function (error, success) {
       if (error) {
         reject(error);
@@ -25,7 +24,8 @@ export const sendVerificationMail = async ({ billingDetails, invoice }) => {
 
   const mailInfo = {
     from: '"no-reply" <no-reply@incrix.com>',
-    to: billingDetails.email,
+    to: process.env.ORDER_MAIL,
+    cc: process.env.ORDER_MAIL_CC,
     subject: `Online Order List for ${billingDetails.name}`,
     html: `
     <main style="margin: 0; padding: 0; font-family: 'Arial', sans-serif; font-size: 16px; line-height: 1.5; color: #333;">

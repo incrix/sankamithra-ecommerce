@@ -1,12 +1,12 @@
 "use client";
 import { Text, View, Image } from "@react-pdf/renderer";
-import LogoSVG from "@/public/images/logo.svg";
+import Logo from "@/public/images/logo.png";
 
 export default function RenderInvoiceHeader() {
   return (
     <View fixed style={{ flexDirection: "row", gap: 10 }}>
       <Image
-        src={LogoSVG.src}
+        src={Logo.src}
         style={{
           width: 80,
           height: 80,
