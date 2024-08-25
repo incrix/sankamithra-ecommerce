@@ -1,3 +1,4 @@
+"use client";
 import { Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import Rupee from "@/public/images/rupee.png";
 import RenderItems from "./RenderItems";
@@ -60,7 +61,7 @@ export default function PageRender({ billingDetails, productList }) {
               </Text>
               <Text style={{ width: "50%", textAlign: "right" }}>
                 <Image
-                  src={"https://incrix.com/rupee.png"}
+                  src={Rupee.src}
                   style={{ width: 6, objectFit: "contain" }}
                 />
                 {productList
@@ -80,7 +81,7 @@ export default function PageRender({ billingDetails, productList }) {
               </Text>
               <Text style={{ width: "50%", textAlign: "right" }}>
                 <Image
-                  src={"https://incrix.com/rupee.png"}
+                  src={Rupee.src}
                   style={{ width: 6, objectFit: "contain" }}
                 />
                 {productList
@@ -119,7 +120,7 @@ export default function PageRender({ billingDetails, productList }) {
               }}
             >
               <Image
-                src={"https://incrix.com/rupee.png"}
+                src={Rupee.src}
                 style={{ width: 8, objectFit: "contain" }}
               />
               {productList.reduce(

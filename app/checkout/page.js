@@ -13,14 +13,14 @@ import {
   TableRow,
   IconButton,
 } from "@mui/material";
-import { pdf } from "@react-pdf/renderer";
 import { styled } from "@mui/material/styles";
 import { Quicksand } from "next/font/google";
 const quicksand = Quicksand({ subsets: ["latin"] });
 import { useState, useEffect } from "react";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
-import MyDocument from "@/util/invoice";
+import { pdf } from "@react-pdf/renderer";
+import Template1 from "@/util/invoice/Template1/Template";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -308,22 +308,37 @@ function OrderSummary({ setCheckoutState }) {
             textTransform: "none",
           }}
           onClick={async () => {
-            fetch("/api/sendmail", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                billingDetails: JSON.parse(
+            const pdfStream = await pdf(
+              <Template1
+                billingDetails={JSON.parse(
                   localStorage.getItem("billingDetails")
-                ),
-                productList: cart,
-              }),
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                console.log(data);
-              });
+                )}
+                productList={cart}
+              />
+            ).toBuffer();
+            const chunks = [];
+            pdfStream.on("data", (chunk) => chunks.push(chunk));
+            pdfStream.on("end", async () => {
+              const pdfBuffer = Buffer.concat(chunks);
+              const base64String = pdfBuffer.toString("base64");
+              fetch("/api/sendmail", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  billingDetails: JSON.parse(
+                    localStorage.getItem("billingDetails")
+                  ),
+                  productList: cart,
+                  invoice: base64String,
+                }),
+              })
+                .then((res) => res.json())
+                .then((data) => {
+                  console.log(data);
+                });
+            });
           }}
         >
           Place Order

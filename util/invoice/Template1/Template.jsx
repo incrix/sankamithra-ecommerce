@@ -1,3 +1,4 @@
+"use client";
 import { Document, Font } from "@react-pdf/renderer";
 import PageRender from "./PageRender";
 

@@ -44,30 +44,29 @@ export const sendVerificationMail = async ({ billingDetails, invoice }) => {
                 <p>State: ${billingDetails.state}</p>
                 <p>Zip: ${billingDetails.zip}</p>
             </div> 
-            <p style="padding: 10px 20px;">${invoice}</p>
         </main>
         `,
-    // attachments: [
-    //   {
-    //     filename: "invoice.pdf",
-    //     content: invoice,
-    //     encoding: "base64",
-    //   },
-    // ],
+    attachments: [
+      {
+        filename: "invoice.pdf",
+        content: invoice,
+        encoding: "base64",
+      },
+    ],
   };
 
   await new Promise((resolve, reject) => {
-    transporter.sendMail(mailInfo);
-    // transporter.sendMail(mailInfo, function (error, info) {
-    //   if (error) {
-    //     console.log("Error: ", error);
-    //     reject(error);
-    //     return error;
-    //   } else {
-    //     console.log("Email sent: " + info.response);
-    //     resolve(info);
-    //     return info;
-    //   }
-    // });
+    // transporter.sendMail(mailInfo);
+    transporter.sendMail(mailInfo, function (error, info) {
+      if (error) {
+        console.log("Error: ", error);
+        reject(error);
+        return error;
+      } else {
+        console.log("Email sent: " + info.response);
+        resolve(info);
+        return info;
+      }
+    });
   });
 };
