@@ -19,8 +19,13 @@ export default function Shop() {
       }}
     >
       <Stack width={"100%"} maxWidth={"var(--max-width)"} padding={"40px 0"}>
-        <ShopByCategory />
-        <Stack padding={width < 1480 ? "0 40px" : "0"}>
+        <Stack
+          m={{
+            xs: "20px",
+            sm: "40px",
+          }}
+        >
+          <ShopByCategory />
           <ProductTab category={category} />
         </Stack>
       </Stack>

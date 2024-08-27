@@ -43,13 +43,13 @@ export default function ProductTab({ category }) {
   return (
     <Stack
       margin={{
-        xs: "20px",
+        xs: "0",
         sm: "20px",
         md: "40px 0 0 0",
       }}
       width={"100%"}
     >
-      <h4 style={{ fontSize: "32px", fontWeight: "bold" }}>
+      <h4 style={{ fontSize: "32px", fontWeight: "bold", marginLeft:"10px", marginTop:"40px" }}>
         {category
           ? category === "Atom bombs"
             ? "Atom bombs & Bijili"

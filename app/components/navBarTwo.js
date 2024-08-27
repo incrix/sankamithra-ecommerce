@@ -10,12 +10,14 @@ export default function NavBarTwo() {
     fontWeight: "bold",
   };
   return (
-    <Stack display={{
-      xs: "none",
-      sm: "none",
-      md: "flex",
-      lg: "flex",
-    }}>
+    <Stack
+      display={{
+        xs: "none",
+        sm: "none",
+        md: "flex",
+        lg: "flex",
+      }}
+    >
       <nav
         style={{
           width: "100%",
@@ -31,15 +33,16 @@ export default function NavBarTwo() {
           justifyContent="space-between"
           alignItems="center"
         >
+          <Link style={linkStyle} href="/shop">
+            Shop
+          </Link>
           <Link style={linkStyle} href="/">
             Home
           </Link>
           <Link style={linkStyle} href="/factory">
             Factory
           </Link>
-          <Link style={linkStyle} href="/shop">
-            Shop
-          </Link>
+
           {/* <Link style={linkStyle} href="/wholesale">
             Wholesale
           </Link> */}

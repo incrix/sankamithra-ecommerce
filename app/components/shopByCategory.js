@@ -1,105 +1,145 @@
 "use client";
-import { Paper, Stack } from "@mui/material";
+import { Paper, Stack, Typography } from "@mui/material";
 import Link from "next/link";
-import aerial from "../../public/temp/aerial.png";
-import chakkar from "../../public/temp/chakkar.png";
-import flower from "../../public/temp/flower.png";
-import rocket from "../../public/temp/rocket.png";
-import sound from "../../public/temp/sound.png";
-import special from "../../public/temp/special.png";
-import useWindowSize from "@/util/windowSize";
+import aerial from "@/public/temp/aerial.png";
+import chakkar from "@/public/temp/chakkar.png";
+import flower from "@/public/temp/flower.png";
+import rocket from "@/public/temp/rocket.png";
+import sound from "@/public/temp/sound.png";
+import special from "@/public/temp/special.png";
+import bomb from "@/public/temp/bomb.png";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 
 export default function ShopByCategory() {
-  const { width } = useWindowSize();
   const catList = [
     {
       id: 1,
-      title: "Ground Chakkar",
-      imgURL: chakkar.src,
+      title: "Flowerpots",
+      imgURL: flower.src,
+      url: "Flower%20Pots",
     },
     {
       id: 2,
-      title: "Flowerpots",
-      imgURL: flower.src,
+      title: "Ground Chakkar",
+      imgURL: chakkar.src,
+      url: "Ground%20Chakkars",
     },
     {
       id: 3,
       title: "One Sound",
       imgURL: sound.src,
+      url: "One%20Sound",
     },
     {
       id: 4,
-      title: "Rockets",
-      imgURL: rocket.src,
+      title: "Special’s",
+      imgURL: special.src,
+      url: "Special%27s",
     },
     {
       id: 5,
-      title: "Special’s",
-      imgURL: special.src,
+      title: "Rockets",
+      imgURL: rocket.src,
+      url: "Rockets",
     },
+
     {
       id: 6,
       title: "Aerials",
       imgURL: aerial.src,
+      url: "Repeating%20shots",
+    },
+    {
+      id: 7,
+      title: "Bombs",
+      imgURL: bomb.src,
+      url: "Atom%20bombs",
+    },
+    {
+      id: 8,
+      title: "Twinklers",
+      imgURL: aerial.src,
+      url: "Twinklers",
     },
   ];
   return (
-    width > 1024 && (
-      <Stack width={"100%"} gap={4} padding={width < 1480 ? "0 40px" : "0"}>
-        <Stack
-          width={"100%"}
-          flexDirection={"row"}
-          gap={2}
-          alignItems={"center"}
-        >
-          <h4
-            style={{
-              fontSize: "32px",
-              color: "var(--text-color)",
-              fontWeight: "bold",
-            }}
-          >
-            Shop By Categories
-          </h4>
-          <Link href={"/shop"}>
-            <span style={{ fontSize: "16px" }}>All Categories</span>
-          </Link>
-        </Stack>
-        <Stack
+    <Stack width={"100%"} gap={4}>
+      <Stack width={"100%"} flexDirection={"row"} gap={2} alignItems={"center"}>
+        <Typography
+          variant="h4"
           sx={{
-            display: "flex",
-            flexDirection: "row",
-            // flexWrap: "wrap",
-            overflowX: "scroll",
-            overflowY: "hidden",
-            gap: "30px",
-            padding: "30px 0",
-            "&::-webkit-scrollbar": {
-              display: "none",
+            fontSize: {
+              xs: "24px",
+              sm: "32px",
+              md: "32px",
+              lg: "32px",
+              xl: "32px",
             },
+            color: "var(--text-color)",
+            fontWeight: "bold",
           }}
         >
-          {catList.map((cat, index) => {
-            return (
-              <CatCard key={index} titile={cat.title} imgURL={cat.imgURL} />
-            );
-          })}
-        </Stack>
+          Shop By Categories
+        </Typography>
+        <Link href={"/shop"}>
+          <span style={{ fontSize: "16px" }}>All Categories</span>
+        </Link>
       </Stack>
-    )
+      <Stack
+        flexWrap={{
+          xs: "wrap",
+          sm: "nowrap",
+        }}
+        justifyContent={{
+          xs: "center",
+          sm: "flex-start",
+        }}
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          // flexWrap: "wrap",
+          overflowX: "scroll",
+          overflowY: "hidden",
+          gap: {
+            xs: "20px",
+            sm: "30px",
+          },
+          padding: "30px 0",
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+        }}
+      >
+        {catList.map((cat, index) => {
+          return (
+            <CatCard
+              key={index}
+              title={cat.title}
+              imgURL={cat.imgURL}
+              url={cat.url}
+            />
+          );
+        })}
+      </Stack>
+    </Stack>
   );
 }
 
-const CatCard = ({ titile: title, imgURL }) => {
+const CatCard = ({ title, imgURL, url }) => {
   const router = useRouter();
   return (
     <Paper
       sx={{
         background: "#F4F6FA",
-        width: "150px",
-        height: "180px",
+        width: {
+          xs: "120px",
+          sm: "150px",
+        },
+        height: {
+          xs: "150px",
+          sm: "180px",
+        },
         borderRadius: "10px",
         display: "flex",
         flexDirection: "column",
@@ -108,7 +148,7 @@ const CatCard = ({ titile: title, imgURL }) => {
         gap: "10px",
         cursor: "pointer",
       }}
-      onClick={() => router.push("/shop?category=" + title)}
+      onClick={() => router.push("/shop?category=" + url)}
     >
       <Image
         src={imgURL}

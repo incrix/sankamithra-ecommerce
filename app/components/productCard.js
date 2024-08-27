@@ -1,31 +1,113 @@
 "use client";
-import { Stack, Paper, Typography, Button, ButtonGroup } from "@mui/material";
+import {
+  Stack,
+  Paper,
+  Typography,
+  Button,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import { ShoppingCart } from "@mui/icons-material";
-import { useState } from "react";
-import useWindowSize from "@/util/windowSize";
+import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import Image from "next/image";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
 
 export default function ProductCard({ product }) {
-  const { width } = useWindowSize();
   const [count, setCount] = useState(1);
+  const [open, setOpen] = useState(false);
+  const [cart, setCart] = useState([]);
+  const [isAdded, setIsAdded] = useState(false);
   const router = useRouter();
   const pathArray = usePathname().split("/");
-  console.log(pathArray);
-  
 
-  const handleIncrement = () => setCount(count + 1);
-  const handleDecrement = () => count > 1 && setCount(count - 1);
+  const handleIncrement = () => {
+    if (isAdded) {
+      cart.map((item) => {
+        if (item.id == product.id) {
+          item.count += 1;
+          setCount(item.count);
+          localStorage.setItem("cart", JSON.stringify(cart));
+        }
+      });
+    } else {
+      setCount(count + 1);
+    }
+  };
+  const handleDecrement = () => {
+    if (isAdded) {
+      cart.map((item) => {
+        if (item.id == product.id) {
+          if (item.count > 1) {
+            item.count -= 1;
+            setCount(item.count);
+            localStorage.setItem("cart", JSON.stringify(cart));
+          } else {
+            let newCart = cart.filter((item) => item.id != product.id);
+            localStorage.setItem("cart", JSON.stringify(newCart));
+            setIsAdded(false);
+            handleOpen();
+            setCount(1);
+          }
+        }
+      });
+    } else {
+      if (count > 1) {
+        setCount(count - 1);
+      }
+    }
+  };
+  const handleClose = () => setOpen(false);
+  const handleOpen = () => setOpen(true);
+
+  useEffect(() => {
+    setCart(JSON.parse(localStorage.getItem("cart")) || []);
+  }, []);
+
+  const isProductAdded = () => {
+    let item = cart.filter((item) => item.id == product.id)[0];
+    if (item) {
+      setIsAdded(true);
+      setCount(item.count);
+      console.log(item.count);
+    } else {
+      setIsAdded(false);
+      setCount(1);
+    }
+  };
+
+  useEffect(() => {
+    isProductAdded();
+  }, [cart]);
 
   return (
     <Paper
       sx={{
-        width: "230px",
+        width: {
+          xs: "180px",
+          sm: "250px",
+        },
         position: "relative",
-        p: 2,
+        p: {
+          xs: "10px",
+        },
         borderRadius: "15px",
       }}
     >
+      <Snackbar
+        open={open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleClose}
+          severity={isAdded ? "success" : "info"}
+          sx={{ width: "100%" }}
+        >
+          {product.name + (!isAdded ? ` removed from cart` : ` added to cart`)}
+        </Alert>
+      </Snackbar>
       <Stack>
         {product.badge && (
           <div
@@ -48,28 +130,33 @@ export default function ProductCard({ product }) {
             {product.badge}
           </div>
         )}
-        <Image
-          onClick={() => {
-            pathArray.length > 2
-              ? router.push(`product?id=${product.id}`)
-              : router.push(`shop/product?id=${product.id}`);
-          }}
-          src={`https://e-com.incrix.com/Sankamithra%20Products/${product.image[0]}`}
-          alt="pr"
-          width={200}
-          height={200}
-          objectFit="cover"
-          objectPosition="center"
-          style={{
-            borderRadius: "2px",
-            cursor: "pointer",
-          }}
-        />
+        <Stack>
+          <img
+            onClick={() => {
+              pathArray.length > 2
+                ? router.push(`product?id=${product.id}`)
+                : router.push(`shop/product?id=${product.id}`);
+            }}
+            src={`https://e-com.incrix.com/Sankamithra%20Products/${product.image[0]}`}
+            alt="pr"
+            width={"100%"}
+            height={"100%"}
+            objectFit="cover"
+            objectPosition="center"
+            style={{
+              borderRadius: "2px",
+              cursor: "pointer",
+            }}
+          />
+        </Stack>
         <Typography
           variant="p"
           color={"var(--text-color-trinary)"}
           fontSize={"12px"}
-          padding={"10px 0 0 0"}
+          pt={{
+            xs: "5px",
+            sm: "10px",
+          }}
           onClick={() => {
             pathArray.length > 2 && pathArray[2] === "shop"
               ? router.push(`product?id=${product.id}`)
@@ -83,7 +170,10 @@ export default function ProductCard({ product }) {
           color={"var(--text-color)"}
           fontSize={"16px"}
           fontWeight={"bold"}
-          padding={"10px 0 0 0"}
+          pt={{
+            xs: "5px",
+            sm: "10px",
+          }}
           sx={{
             cursor: "pointer",
           }}
@@ -99,11 +189,21 @@ export default function ProductCard({ product }) {
           variant="p"
           color={"var(--text-color-secondary)"}
           fontSize={"14px"}
-          padding={"10px 0 0 0"}
+          pt={{
+            xs: "5px",
+            sm: "10px",
+          }}
         >
           By <font style={{ color: "var(--primary-color)" }}>Sankamithra</font>
         </Typography>
-        <Stack direction={"row"} gap={1} padding={"10px 0 0 0"}>
+        <Stack
+          direction={"row"}
+          gap={1}
+          pt={{
+            xs: "5px",
+            sm: "10px",
+          }}
+        >
           <Typography
             variant="p"
             color={"var(--primary-color)"}
@@ -137,7 +237,12 @@ export default function ProductCard({ product }) {
           )}
         </Stack>
         <Stack
-          direction={"row"}
+          width={"100%"}
+          direction={{
+            xs: "column-reverse",
+            // sm: "column-reverse",
+            md: "row",
+          }}
           justifyContent={"space-between"}
           paddingTop={2}
           gap={1}
@@ -154,25 +259,43 @@ export default function ProductCard({ product }) {
                 backgroundColor: "var(--primary-color)",
               },
             }}
-            startIcon={<ShoppingCart />}
+            startIcon={!isAdded && <ShoppingCart />}
             onClick={() => {
-              let cart = JSON.parse(localStorage.getItem("cart")) || [];
-              let item = cart.filter((item) => item.id == product.id)[0];
-              if (item) {
-                item.count += count;
+              if (!isAdded) {
+                let cart = JSON.parse(localStorage.getItem("cart")) || [];
+                let item = cart.filter((item) => item.id == product.id)[0];
+                if (item) {
+                  item.count += count;
+                } else {
+                  cart.push({ ...product, count: count });
+                }
+                localStorage.setItem("cart", JSON.stringify(cart));
+                setIsAdded(true);
+                handleOpen();
               } else {
-                cart.push({ ...product, count: count });
+                //remove item from cart
+                let cart = JSON.parse(localStorage.getItem("cart")) || [];
+                let newCart = cart.filter((item) => item.id != product.id);
+                localStorage.setItem("cart", JSON.stringify(newCart));
+                setIsAdded(false);
+                handleOpen();
               }
-              localStorage.setItem("cart", JSON.stringify(cart));
             }}
           >
-            Add
+            {isAdded ? "Remove" : "Add"}
           </Button>
-          <ButtonGroup size="small">
+          <Stack direction={"row"}>
             <Button
               variant="contained"
+              fullWidth={false}
               sx={{
+                width: {
+                  xs: "50px",
+                  sm: "50px",
+                  md: "20px",
+                },
                 color: "white",
+                borderRadius: "5px 0 0 5px",
                 fontSize: "14px",
                 fontWeight: "bold",
                 textTransform: "none",
@@ -183,28 +306,34 @@ export default function ProductCard({ product }) {
               }}
               onClick={handleIncrement}
             >
-              +
+              <AddRoundedIcon />
             </Button>
-            <Typography
-              color={"white"}
+            <Stack
+              width={"100%"}
+              justifyContent={"center"}
               sx={{
+                backgroundColor: "var(--primary-color)",
+                minWidth: "30px",
                 textAlign: "center",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
                 fontSize: "14px",
                 fontWeight: "bold",
-                backgroundColor: "var(--primary-color)",
-                width: "40px",
+                color: "white",
               }}
             >
               {count}
-            </Typography>
+            </Stack>
             <Button
               variant="contained"
+              fullWidth={false}
               sx={{
+                width: {
+                  xs: "50px",
+                  sm: "50px",
+                  md: "20px",
+                },
                 color: "white",
                 fontSize: "14px",
+                borderRadius: "0 5px 5px 0",
                 fontWeight: "bold",
                 textTransform: "none",
                 backgroundColor: "var(--primary-color)",
@@ -214,9 +343,9 @@ export default function ProductCard({ product }) {
               }}
               onClick={handleDecrement}
             >
-              -
+              <RemoveRoundedIcon />
             </Button>
-          </ButtonGroup>
+          </Stack>
         </Stack>
       </Stack>
     </Paper>

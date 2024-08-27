@@ -1,13 +1,14 @@
 "use client";
 import { Stack, Paper, Typography, Button } from "@mui/material";
-import Link from "next/link";
 import flower from "../../public/temp/flower.png";
 import sound from "../../public/temp/sound.png";
 import special from "../../public/temp/special.png";
 import chakkar from "../../public/temp/chakkar.png";
 import aerial from "../../public/temp/aerial.png";
 import rocket from "../../public/temp/rocket.png";
+import bomb from "@/public/temp/bomb.png";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
 const CatButton = ({ title, img, count, link }) => {
   const router = useRouter();
@@ -60,6 +61,26 @@ const CatButton = ({ title, img, count, link }) => {
 };
 
 export default function HeroCategory() {
+  const [productList, setProductList] = useState([]);
+
+  useEffect(() => {
+    let productFromLocalStorage = JSON.parse(
+      localStorage.getItem("productList")
+    );
+    if (
+      productFromLocalStorage == null ||
+      productFromLocalStorage.length === 0
+    ) {
+      fetch("https://e-com.incrix.com/Sankamithra%20Products/productData.json")
+        .then((response) => response.json())
+        .then((data) => {
+          localStorage.setItem("productList", JSON.stringify(data));
+          setProductList(data);
+        });
+    } else {
+      setProductList(productFromLocalStorage);
+    }
+  }, []);
   return (
     <Paper
       elevation={0}
@@ -95,14 +116,87 @@ export default function HeroCategory() {
           }}
         />
         <Stack gap={2.5}>
-          <CatButton title="Flower Pots" count={5} img={flower} link={"Flower Pots"}/>
-          <CatButton title="Ground Chakkars" count={5} img={chakkar} link={"Ground Chakkars"}/>
-          <CatButton title="One Sound" count={5} img={sound} link={"One Sound"}/>
-          <CatButton title="Special’s" count={5} img={special} link={"Special%27s"} />
-          <CatButton title="Rockets" count={5} img={rocket} link={"Rockets"}/>
-          <CatButton title="Aerials" count={5} img={aerial} link={"Repeating shots"}/>
-          <CatButton title="Bombs" count={5} img={special} link={"Atom bombs"}/>
-          <CatButton title="Twinklers" count={5} img={aerial} link={"Twinklers"}/>
+          <CatButton
+            title="Flower Pots"
+            count={
+              productList.filter(
+                (product) => product.category === "Flower Pots"
+              ).length
+            }
+            img={flower}
+            link={"Flower Pots"}
+          />
+          <CatButton
+            title="Ground Chakkars"
+            count={
+              productList.filter(
+                (product) => product.category === "Ground Chakkars"
+              ).length
+            }
+            img={chakkar}
+            link={"Ground Chakkars"}
+          />
+          <CatButton
+            title="One Sound"
+            count={
+              productList.filter((product) => product.category === "One Sound")
+                .length
+            }
+            img={sound}
+            link={"One Sound"}
+          />
+          <CatButton
+            title="Special’s"
+            count={
+              productList.filter((product) => product.category == "Special's")
+                .length
+            }
+            img={special}
+            link={"Special%27s"}
+          />
+          <CatButton
+            title="Rockets"
+            count={
+              productList.filter((product) => product.category == "Rockets")
+                .length
+            }
+            img={rocket}
+            link={"Rockets"}
+          />
+          <CatButton
+            title="Aerials"
+            count={
+              productList.filter(
+                (product) => product.category == "Repeating shots"
+              ).length
+            }
+            img={aerial}
+            link={"Repeating shots"}
+          />
+          <CatButton
+            title="Bombs"
+            count={
+              productList.filter((product) => product.category == "Atom bombs")
+                .length +
+              productList.filter(
+                (product) => product.category == "Bijili crackers"
+              ).length
+            }
+            img={bomb}
+            link={"Atom bombs"}
+          />
+          <CatButton
+            title="Twinklers"
+            count={
+              productList.filter(
+                (product) => product.category == "Twinkling stars"
+              ).length +
+              productList.filter((product) => product.category == "Pencils")
+                .length
+            }
+            img={aerial}
+            link={"Twinklers"}
+          />
         </Stack>
       </Stack>
     </Paper>

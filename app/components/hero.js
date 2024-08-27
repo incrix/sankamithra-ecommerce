@@ -11,6 +11,7 @@ export default function Hero() {
     <Stack
       sx={{
         margin: {
+          xs: "0",
           md: "40px 0",
           lg: "40px",
         },

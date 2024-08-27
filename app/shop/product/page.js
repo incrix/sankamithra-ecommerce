@@ -2,7 +2,6 @@
 import { Stack, Typography, Button, ButtonGroup } from "@mui/material";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import HeroCategory from "@/app/components/heroCategory";
@@ -80,7 +79,9 @@ export default function Product() {
             <Stack
               width={{
                 sm: "100%",
-                md: 500,
+                md: 700,
+                lg: 700,
+                xl: 1000,
               }}
             >
               <Carousel
@@ -110,13 +111,16 @@ export default function Product() {
               >
                 {product.image.map((image, index) => {
                   return (
-                    <div key={index}>
-                      <Image
+                    <div
+                      key={index}
+                      style={{
+                        width: "100%",
+                      }}
+                    >
+                      <img
                         src={`https://e-com.incrix.com/Sankamithra%20Products/${image}`}
                         alt={product.name}
                         layout="responsive"
-                        width={400}
-                        height={400}
                       />
                     </div>
                   );

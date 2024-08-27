@@ -78,28 +78,18 @@ export default function Footer() {
                 fontWeight: "800",
               }}
             >
-              Account
-            </h6>
-            <Link href={"/login"}>Login</Link>
-            <Link href={"/register"}>Register</Link>
-          </Stack>
-          <Stack gap={2}>
-            <h6
-              style={{
-                color: "var(--text-color)",
-                fontSize: "24px",
-                fontWeight: "800",
-              }}
-            >
               Categories
             </h6>
-            <Link href={"/"}>Flowerpots</Link>
-            <Link href={"/"}>Groundchakkar</Link>
-            <Link href={"/"}>Onesound</Link>
-            <Link href={"/"}>Aerials</Link>
-            <Link href={"/"}>Special’s</Link>
-            <Link href={"/"}>Rockets</Link>
-            <Link href={"/"}>Sparklers</Link>
+            <Link href={"/shop?category=Flower%20Pots"}>Flowerpots</Link>
+            <Link href={"/shop?category=Ground%20Chakkars"}>
+              Ground Chakkar
+            </Link>
+            <Link href={"/shop?category=One%20Sound"}>One Sound</Link>
+            <Link href={"/shop?category=Special%27s"}>Special’s</Link>
+            <Link href={"/shop?category=Rockets"}>Special’s</Link>
+            <Link href={"/shop?category=Repeating%20shots"}>Aerials</Link>
+            <Link href={"/shop?category=Atom%20bombs"}>Bombs</Link>
+            <Link href={"/shop?category=Twinklers"}>Twinklers</Link>
           </Stack>
           <Stack gap={2}>
             <h6

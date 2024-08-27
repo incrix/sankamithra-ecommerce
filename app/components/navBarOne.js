@@ -63,7 +63,7 @@ export default function NavBarOne() {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        padding: width < 1480 ? "0 40px" : "0",
+        padding: width < 1480 ? "0 20px" : "0",
         position: "relative",
       }}
     >
@@ -91,19 +91,19 @@ export default function NavBarOne() {
         >
           <CloseRoundedIcon onClick={handleMenu} />
         </IconButton>
-        <Link style={linkStyle} href="/">
+        <Link style={linkStyle} href="/shop" onClick={handleMenu}>
+          Shop
+        </Link>
+        <Link style={linkStyle} href="/" onClick={handleMenu}>
           Home
         </Link>
-        <Link style={linkStyle} href="/factory">
+        <Link style={linkStyle} href="/factory" onClick={handleMenu}>
           Factory
-        </Link>
-        <Link style={linkStyle} href="/shop">
-          Shop
         </Link>
         {/* <Link style={linkStyle} href="/wholesale">
             Wholesale
           </Link> */}
-        <Link style={linkStyle} href="/contact">
+        <Link style={linkStyle} href="/contact" onClick={handleMenu}>
           Contact
         </Link>
       </Stack>

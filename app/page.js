@@ -15,7 +15,9 @@ export default function Home() {
     >
       <Stack width={"100%"} maxWidth={"var(--max-width)"}>
         <Hero />
-        <ShopByCategory />
+        <Stack m={4}>
+          <ShopByCategory />
+        </Stack>
         <EmailSubscribe />
         <FireSafety />
       </Stack>
