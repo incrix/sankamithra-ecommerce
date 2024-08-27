@@ -26,8 +26,8 @@ export default function Shop() {
           }}
         >
           <ShopByCategory />
-          <ProductTab category={category} />
         </Stack>
+        <ProductTab category={category} />
       </Stack>
     </main>
   );

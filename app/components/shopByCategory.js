@@ -8,40 +8,51 @@ import rocket from "@/public/temp/rocket.png";
 import sound from "@/public/temp/sound.png";
 import special from "@/public/temp/special.png";
 import bomb from "@/public/temp/bomb.png";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export default function ShopByCategory() {
+  const searchParams = useSearchParams();
+  const category = searchParams.get("category");
+  useEffect(() => {
+    console.log(category);
+  }, [category]);
   const catList = [
     {
       id: 1,
       title: "Flowerpots",
       imgURL: flower.src,
       url: "Flower%20Pots",
+      query: "Flower Pots"
     },
     {
       id: 2,
       title: "Ground Chakkar",
       imgURL: chakkar.src,
       url: "Ground%20Chakkars",
+      query: "Ground Chakkars"
     },
     {
       id: 3,
       title: "One Sound",
       imgURL: sound.src,
       url: "One%20Sound",
+      query: "One Sound"
     },
     {
       id: 4,
       title: "Special’s",
       imgURL: special.src,
       url: "Special%27s",
+      query: "Special's"
     },
     {
       id: 5,
       title: "Rockets",
       imgURL: rocket.src,
       url: "Rockets",
+      query: "Rockets"
     },
 
     {
@@ -49,20 +60,25 @@ export default function ShopByCategory() {
       title: "Aerials",
       imgURL: aerial.src,
       url: "Repeating%20shots",
+      query: "Repeating shots"
     },
     {
       id: 7,
       title: "Bombs",
       imgURL: bomb.src,
       url: "Atom%20bombs",
+      query: "Atom bombs"
     },
     {
       id: 8,
       title: "Twinklers",
       imgURL: aerial.src,
       url: "Twinklers",
+      query: "Twinklers"
     },
   ];
+
+
   return (
     <Stack width={"100%"} gap={4}>
       <Stack width={"100%"} flexDirection={"row"} gap={2} alignItems={"center"}>
@@ -118,6 +134,7 @@ export default function ShopByCategory() {
               title={cat.title}
               imgURL={cat.imgURL}
               url={cat.url}
+              isSelected={category === cat.query}
             />
           );
         })}
@@ -126,12 +143,13 @@ export default function ShopByCategory() {
   );
 }
 
-const CatCard = ({ title, imgURL, url }) => {
+const CatCard = ({ title, imgURL, url, isSelected }) => {
   const router = useRouter();
+
   return (
     <Paper
       sx={{
-        background: "#F4F6FA",
+        background: isSelected ? "#F4F6FA" : "white",
         width: {
           xs: "120px",
           sm: "150px",
@@ -148,7 +166,9 @@ const CatCard = ({ title, imgURL, url }) => {
         gap: "10px",
         cursor: "pointer",
       }}
-      onClick={() => router.push("/shop?category=" + url)}
+      onClick={() => {
+        router.push("/shop?category=" + url + "#product");
+      }}
     >
       <Image
         src={imgURL}

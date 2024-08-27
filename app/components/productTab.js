@@ -49,7 +49,7 @@ export default function ProductTab({ category }) {
       }}
       width={"100%"}
     >
-      <h4 style={{ fontSize: "32px", fontWeight: "bold", marginLeft:"10px", marginTop:"40px" }}>
+      <h4 id="product" style={{ fontSize: "32px", fontWeight: "bold", marginLeft:"10px", marginTop:"40px" }}>
         {category
           ? category === "Atom bombs"
             ? "Atom bombs & Bijili"
