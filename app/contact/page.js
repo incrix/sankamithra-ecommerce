@@ -81,6 +81,14 @@ function AddressComponent() {
               Sattur Road, <br />
               Sivakasi - 626123.
             </Typography>
+            <Typography
+              className={quicksand.className}
+              fontSize={20}
+              fontWeight={400}
+            >
+              Ph: +91 99446 95228 <br />
+              &nbsp;&ensp;&emsp;+91 75488 20326
+            </Typography>
           </Stack>
           <Stack gap={2}>
             <Typography
@@ -100,6 +108,14 @@ function AddressComponent() {
               9/241, <br />
               Kanmaisurangudi Village, <br />
               Sattur-626203.
+            </Typography>
+            <Typography
+              className={quicksand.className}
+              fontSize={20}
+              fontWeight={400}
+            >
+              Ph: +91 99620 66648 <br />
+              &nbsp;&ensp;&emsp;+91 84892 92901
             </Typography>
           </Stack>
         </Stack>

@@ -33,12 +33,13 @@ export default function NavBarTwo() {
           justifyContent="space-between"
           alignItems="center"
         >
-          <Link style={linkStyle} href="/shop">
-            Shop
-          </Link>
           <Link style={linkStyle} href="/">
             Home
           </Link>
+          <Link style={linkStyle} href="/shop">
+            Shop
+          </Link>
+
           <Link style={linkStyle} href="/factory">
             Factory
           </Link>

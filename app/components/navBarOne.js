@@ -91,12 +91,13 @@ export default function NavBarOne() {
         >
           <CloseRoundedIcon onClick={handleMenu} />
         </IconButton>
-        <Link style={linkStyle} href="/shop" onClick={handleMenu}>
-          Shop
-        </Link>
         <Link style={linkStyle} href="/" onClick={handleMenu}>
           Home
         </Link>
+        <Link style={linkStyle} href="/shop" onClick={handleMenu}>
+          Shop
+        </Link>
+
         <Link style={linkStyle} href="/factory" onClick={handleMenu}>
           Factory
         </Link>

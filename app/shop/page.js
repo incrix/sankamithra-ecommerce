@@ -21,8 +21,8 @@ export default function Shop() {
       <Stack width={"100%"} maxWidth={"var(--max-width)"} padding={"40px 0"}>
         <Stack
           m={{
-            xs: "20px",
-            sm: "40px",
+            xs: "0 20px",
+            sm: "0 40px",
           }}
         >
           <ShopByCategory />
