@@ -24,35 +24,35 @@ export default function ShopByCategory() {
       title: "Flowerpots",
       imgURL: flower.src,
       url: "Flower%20Pots",
-      query: "Flower Pots"
+      query: "Flower Pots",
     },
     {
       id: 2,
       title: "Ground Chakkar",
       imgURL: chakkar.src,
       url: "Ground%20Chakkars",
-      query: "Ground Chakkars"
+      query: "Ground Chakkars",
     },
     {
       id: 3,
       title: "One Sound",
       imgURL: sound.src,
       url: "One%20Sound",
-      query: "One Sound"
+      query: "One Sound",
     },
     {
       id: 4,
       title: "Special’s",
       imgURL: special.src,
       url: "Special%27s",
-      query: "Special's"
+      query: "Special's",
     },
     {
       id: 5,
       title: "Rockets",
       imgURL: rocket.src,
       url: "Rockets",
-      query: "Rockets"
+      query: "Rockets",
     },
 
     {
@@ -60,24 +60,23 @@ export default function ShopByCategory() {
       title: "Aerials",
       imgURL: aerial.src,
       url: "Repeating%20shots",
-      query: "Repeating shots"
+      query: "Repeating shots",
     },
     {
       id: 7,
       title: "Bombs",
       imgURL: bomb.src,
       url: "Atom%20bombs",
-      query: "Atom bombs"
+      query: "Atom bombs",
     },
     {
       id: 8,
       title: "Twinklers",
       imgURL: aerial.src,
       url: "Twinklers",
-      query: "Twinklers"
+      query: "Twinklers",
     },
   ];
-
 
   return (
     <Stack width={"100%"} gap={4}>
@@ -114,14 +113,12 @@ export default function ShopByCategory() {
         sx={{
           display: "flex",
           flexDirection: "row",
-          // flexWrap: "wrap",
-          overflowX: "scroll",
-          overflowY: "hidden",
+          flexWrap: "wrap",
           gap: {
             xs: "20px",
-            sm: "30px",
+            sm: "20px",
           },
-          padding: "30px 0",
+          padding: "10px 0 20px 0",
           "&::-webkit-scrollbar": {
             display: "none",
           },
