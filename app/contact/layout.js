@@ -8,10 +8,10 @@ import Footer from "@/app/components/footer";
 const quicksand = Quicksand({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Sankamithra | Fireworks | Crackers | Sivakasi",
+  title: "Contact - Sankamithra | Fireworks | Crackers | Sivakasi",
   description:
     "Sankamithra is a leading fireworks and crackers shop in Sivakasi. We provide a wide range of fireworks and crackers for all occasions.",
-  keyWords: "fireworks, crackers, sivakasi, sankamithra",
+  keyWords: "fireworks, crackers, sivakasi, sankamithra, contact",
   author: "Incrix Techlutions LLP",
   url: "https://sankamithra.com",
   type: "website",

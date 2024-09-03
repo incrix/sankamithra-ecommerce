@@ -3,6 +3,7 @@ import { Stack, Grid } from "@mui/material";
 import HeroCategory from "./heroCategory";
 import HeroCarousel from "./heroCarousel";
 import ProductTab from "./productTab";
+import ShopByCategory from "./shopByCategory";
 import useWindowSize from "@/util/windowSize";
 
 export default function Hero() {
@@ -25,6 +26,19 @@ export default function Hero() {
         )}
         <Grid item xs={width > 1300 ? 9 : width > 1024 ? 8 : 12}>
           <HeroCarousel />
+          <Stack
+            display={{
+              sm: "flex",
+              md: "flex",
+              lg: "none",
+            }}
+            width={"100%"}
+            alignItems={"center"}
+            mt={4}
+            padding={"0 20px"}
+          >
+            <ShopByCategory />
+          </Stack>
           <ProductTab />
           <Stack
             display={{

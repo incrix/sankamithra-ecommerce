@@ -86,7 +86,7 @@ export default function Footer() {
             </Link>
             <Link href={"/shop?category=One%20Sound"}>One Sound</Link>
             <Link href={"/shop?category=Special%27s"}>Special’s</Link>
-            <Link href={"/shop?category=Rockets"}>Special’s</Link>
+            <Link href={"/shop?category=Rockets"}>Rocket</Link>
             <Link href={"/shop?category=Repeating%20shots"}>Aerials</Link>
             <Link href={"/shop?category=Atom%20bombs"}>Bombs</Link>
             <Link href={"/shop?category=Twinklers"}>Twinklers</Link>

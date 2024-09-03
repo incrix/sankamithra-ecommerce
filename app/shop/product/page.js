@@ -1,6 +1,6 @@
 "use client";
 import { Stack, Typography, Button, ButtonGroup } from "@mui/material";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
@@ -8,11 +8,12 @@ import HeroCategory from "@/app/components/heroCategory";
 import { Quicksand } from "next/font/google";
 const quicksand = Quicksand({ subsets: ["latin"] });
 import ProductCard from "@/app/components/productCard";
+import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 
 export default function Product() {
   const searchParams = useSearchParams();
   const search = searchParams.get("id");
-  // const search = window.location.href.split("?")[1].split("=")[1];
+  const router = useRouter();
   const [productList, setProductList] = useState([]);
   const [product, setProduct] = useState(null);
   const [itemCount, setItemCount] = useState(1);
@@ -64,6 +65,19 @@ export default function Product() {
           xl: "40px 0",
         }}
       >
+        <Button
+          size="small"
+          sx={{
+            width: "50px",
+            color: "var(--primary-color)",
+            mb: "20px",
+            textTransform: "none",
+          }}
+          onClick={() => router.push("/shop")}
+          startIcon={<ArrowBackIosNewRoundedIcon />}
+        >
+          Back
+        </Button>
         {product && (
           <Stack
             direction={{

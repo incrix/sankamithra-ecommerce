@@ -8,6 +8,8 @@ import rocket from "@/public/temp/rocket.png";
 import sound from "@/public/temp/sound.png";
 import special from "@/public/temp/special.png";
 import bomb from "@/public/temp/bomb.png";
+import all from "@/public/temp/all.png";
+import twinkle from "@/public/temp/twinkle.png";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -19,6 +21,11 @@ export default function ShopByCategory() {
     console.log(category);
   }, [category]);
   const catList = [
+    {
+      id: 0,
+      title: "All Categories",
+      imgURL: all.src,
+    },
     {
       id: 1,
       title: "Flowerpots",
@@ -72,7 +79,7 @@ export default function ShopByCategory() {
     {
       id: 8,
       title: "Twinklers",
-      imgURL: aerial.src,
+      imgURL: twinkle.src,
       url: "Twinklers",
       query: "Twinklers",
     },
@@ -164,7 +171,9 @@ const CatCard = ({ title, imgURL, url, isSelected }) => {
         cursor: "pointer",
       }}
       onClick={() => {
-        router.push("/shop?category=" + url + "#product");
+        !url
+          ? router.push("/shop#product")
+          : router.push("/shop?category=" + url + "#product");
       }}
     >
       <Image

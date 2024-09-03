@@ -148,10 +148,7 @@ export default function Cart() {
                 <TableBody>
                   {cart.length === 0 && (
                     <StyledTableRow>
-                      <StyledTableCell
-                        colSpan={5}
-                        align={"left"}
-                      >
+                      <StyledTableCell colSpan={5} align={"left"}>
                         Your cart is empty
                       </StyledTableCell>
                     </StyledTableRow>
@@ -218,9 +215,8 @@ export default function Cart() {
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         {Math.round(
-                          (row.price - (row.price * row.discount) / 100) *
-                            row.count
-                        )}
+                          row.price - (row.price * row.discount) / 100
+                        ) * row.count}
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         <IconButton
