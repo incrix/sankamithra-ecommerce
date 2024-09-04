@@ -4,6 +4,7 @@ import AnnounceBar from "@/app/components/announceBar";
 import NavBarOne from "@/app/components/navBarOne";
 import NavBarTwo from "@/app/components/navBarTwo";
 import Footer from "@/app/components/footer";
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 const quicksand = Quicksand({ subsets: ["latin"] });
 
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
         <NavBarTwo />
         {children}
         <Footer />
+        <GoogleAnalytics gaId="G-BVTWT7NXQW" />
       </body>
     </html>
   );
