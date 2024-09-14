@@ -80,16 +80,16 @@ export default function Footer() {
             >
               Categories
             </h6>
-            <Link href={"/shop?category=Flower%20Pots"}>Flowerpots</Link>
-            <Link href={"/shop?category=Ground%20Chakkars"}>
+            <Link href={"/shop?category=Flower%20Pots#product"}>Flowerpots</Link>
+            <Link href={"/shop?category=Ground%20Chakkars#product"}>
               Ground Chakkar
             </Link>
-            <Link href={"/shop?category=One%20Sound"}>One Sound</Link>
-            <Link href={"/shop?category=Special%27s"}>Special’s</Link>
-            <Link href={"/shop?category=Rockets"}>Rocket</Link>
-            <Link href={"/shop?category=Repeating%20shots"}>Aerials</Link>
-            <Link href={"/shop?category=Atom%20bombs"}>Bombs</Link>
-            <Link href={"/shop?category=Twinklers"}>Twinklers</Link>
+            <Link href={"/shop?category=One%20Sound#product"}>One Sound</Link>
+            <Link href={"/shop?category=Special%27s#product"}>Special’s</Link>
+            <Link href={"/shop?category=Rockets#product"}>Rocket</Link>
+            <Link href={"/shop?category=Repeating%20shots#product"}>Aerials</Link>
+            <Link href={"/shop?category=Atom%20bombs#product"}>Bombs</Link>
+            <Link href={"/shop?category=Twinklers#product"}>Twinklers</Link>
           </Stack>
           <Stack gap={2}>
             <h6

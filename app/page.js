@@ -15,7 +15,10 @@ export default function Home() {
     >
       <Stack width={"100%"} maxWidth={"var(--max-width)"}>
         <Hero />
-        <Stack m={4}>
+        <Stack m={4} display={{
+          xs: "none",
+          md: "block",
+        }}>
           <ShopByCategory />
         </Stack>
         <EmailSubscribe />
