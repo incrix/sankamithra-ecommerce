@@ -7,22 +7,13 @@ export default function ProductTab({ category }) {
   const [productList, setProductList] = useState([]);
   const [filteredProductList, setFilteredProductList] = useState([]);
   useEffect(() => {
-    let productFromLocalStorage = JSON.parse(
-      localStorage.getItem("productList")
-    );
-    if (
-      productFromLocalStorage == null ||
-      productFromLocalStorage.length === 0
-    ) {
-      fetch("https://e-com.incrix.com/Sankamithra%20Products/productData.json")
-        .then((response) => response.json())
-        .then((data) => {
-          localStorage.setItem("productList", JSON.stringify(data));
-          setProductList(data);
-        });
-    } else {
-      setProductList(productFromLocalStorage);
-    }
+    fetch("https://e-com.incrix.com/Sankamithra%20Products/productData.json")
+      .then((response) => response.json())
+      .then((data) => {
+        data.sort((a, b) => a.sku - b.sku);
+        localStorage.setItem("productList", JSON.stringify(data));
+        setProductList(data);
+      });
     if (category) {
       setFilteredProductList(
         productList.filter((product) =>
