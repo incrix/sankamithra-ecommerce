@@ -19,6 +19,7 @@ export default function Home() {
           xs: "none",
           md: "block",
         }}>
+      
           <ShopByCategory />
         </Stack>
         <EmailSubscribe />
