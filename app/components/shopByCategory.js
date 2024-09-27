@@ -92,7 +92,7 @@ export default function ShopByCategory() {
           variant="h4"
           sx={{
             fontSize: {
-              xs: "24px",
+              xs: "20px",
               sm: "32px",
               md: "32px",
               lg: "32px",

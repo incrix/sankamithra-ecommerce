@@ -34,7 +34,7 @@ export default function ProductTab({ category }) {
   return (
     <Stack
       margin={{
-        xs: "0",
+        xs: "40px 0 0 0",
         sm: "20px",
         md: "20px 0 0 0",
       }}
@@ -43,7 +43,7 @@ export default function ProductTab({ category }) {
       <h4
         id="product"
         style={{
-          fontSize: "32px",
+          fontSize: "28px",
           fontWeight: "bold",
           marginLeft: "10px",
         }}

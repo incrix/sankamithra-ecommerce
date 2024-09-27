@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
+import useWindowSize from "@/util/windowSize";
 
 export default function ProductCard({ product }) {
   const [count, setCount] = useState(1);
@@ -20,6 +21,8 @@ export default function ProductCard({ product }) {
   const [isAdded, setIsAdded] = useState(false);
   const router = useRouter();
   const pathArray = usePathname().split("/");
+  const { width } = useWindowSize();
+  const isMobile = width <= 380;
 
   const handleIncrement = () => {
     if (isAdded) {
@@ -83,8 +86,9 @@ export default function ProductCard({ product }) {
   return (
     <Paper
       sx={{
+        margin: isMobile ? "0 10px" : "0",
         width: {
-          xs: "180px",
+          xs: isMobile ? "100%" : "180px",
           sm: "250px",
         },
         position: "relative",
@@ -108,7 +112,7 @@ export default function ProductCard({ product }) {
           {product.name + (!isAdded ? ` removed from cart` : ` added to cart`)}
         </Alert>
       </Snackbar>
-      <Stack>
+      <Stack direction={isMobile ? "row" : "column"} gap={isMobile ? 2 : 0}>
         {product.badge && (
           <div
             style={{
@@ -149,153 +153,110 @@ export default function ProductCard({ product }) {
             }}
           />
         </Stack>
-        <Typography
-          variant="p"
-          color={"var(--text-color-trinary)"}
-          fontSize={"12px"}
-          pt={{
-            xs: "5px",
-            sm: "10px",
-          }}
-          onClick={() => {
-            pathArray.length > 2 && pathArray[2] === "shop"
-              ? router.push(`product?id=${product.id}`)
-              : router.push(`shop/product?id=${product.id}`);
-          }}
-        >
-          {product.category}
-        </Typography>
-        <Typography
-          variant="p"
-          color={"var(--text-color)"}
-          fontSize={"16px"}
-          fontWeight={"bold"}
-          pt={{
-            xs: "5px",
-            sm: "10px",
-          }}
-          sx={{
-            cursor: "pointer",
-          }}
-          onClick={() => {
-            pathArray.length > 2 && pathArray[2] === "shop"
-              ? router.push(`product?id=${product.id}`)
-              : router.push(`shop/product?id=${product.id}`);
-          }}
-        >
-          {product.name}
-        </Typography>
-        <Typography
-          variant="p"
-          color={"var(--text-color-secondary)"}
-          fontSize={"14px"}
-          pt={{
-            xs: "5px",
-            sm: "10px",
-          }}
-        >
-          By <font style={{ color: "var(--primary-color)" }}>Sankamithra</font>
-        </Typography>
-        <Stack
-          direction={"row"}
-          gap={1}
-          pt={{
-            xs: "5px",
-            sm: "10px",
-          }}
-        >
+        <Stack>
           <Typography
             variant="p"
-            color={"var(--primary-color)"}
-            fontSize={"14px"}
-            fontWeight={"bold"}
+            color={"var(--text-color-trinary)"}
+            fontSize={"12px"}
+            pt={{
+              xs: "5px",
+              sm: "10px",
+            }}
+            onClick={() => {
+              pathArray.length > 2 && pathArray[2] === "shop"
+                ? router.push(`product?id=${product.id}`)
+                : router.push(`shop/product?id=${product.id}`);
+            }}
           >
-            ₹
-            {Math.ceil(
-              product.price - (product.discount / 100) * product.price
-            )}
+            {product.category}
           </Typography>
-          {product.discount && (
-            <Typography
-              variant="p"
-              color={"var(--text-color-trinary)"}
-              fontSize={"14px"}
-              fontWeight={"bold"}
-            >
-              <s>₹{product.price}</s>
-            </Typography>
-          )}
-          {product.discount && (
+          <Typography
+            variant="p"
+            color={"var(--text-color)"}
+            fontSize={"16px"}
+            fontWeight={"bold"}
+            pt={{
+              xs: "5px",
+              sm: "10px",
+            }}
+            sx={{
+              cursor: "pointer",
+            }}
+            onClick={() => {
+              pathArray.length > 2 && pathArray[2] === "shop"
+                ? router.push(`product?id=${product.id}`)
+                : router.push(`shop/product?id=${product.id}`);
+            }}
+          >
+            {product.name}
+          </Typography>
+          <Typography
+            variant="p"
+            color={"var(--text-color-secondary)"}
+            fontSize={"14px"}
+            pt={{
+              xs: "5px",
+              sm: "10px",
+            }}
+          >
+            By{" "}
+            <font style={{ color: "var(--primary-color)" }}>Sankamithra</font>
+          </Typography>
+          <Stack
+            direction={"row"}
+            gap={1}
+            pt={{
+              xs: "5px",
+              sm: "10px",
+            }}
+          >
             <Typography
               variant="p"
               color={"var(--primary-color)"}
               fontSize={"14px"}
               fontWeight={"bold"}
             >
-              (off %{product.discount})
+              ₹
+              {Math.round(
+                product.price - (product.discount / 100) * product.price
+              )}
             </Typography>
-          )}
-        </Stack>
-        <Stack
-          width={"100%"}
-          direction={{
-            xs: "column-reverse",
-            // sm: "column-reverse",
-            md: "row",
-          }}
-          justifyContent={"space-between"}
-          paddingTop={2}
-          gap={1}
-        >
-          <Button
-            variant="contained"
-            sx={{
-              color: "white",
-              fontSize: "14px",
-              fontWeight: "bold",
-              textTransform: "none",
-              backgroundColor: "var(--primary-color)",
-              "&:hover": {
-                backgroundColor: "var(--primary-color)",
-              },
+            {product.discount && (
+              <Typography
+                variant="p"
+                color={"var(--text-color-trinary)"}
+                fontSize={"14px"}
+                fontWeight={"bold"}
+              >
+                <s>₹{product.price}</s>
+              </Typography>
+            )}
+            {product.discount && (
+              <Typography
+                variant="p"
+                color={"var(--primary-color)"}
+                fontSize={"14px"}
+                fontWeight={"bold"}
+              >
+                (off %{product.discount})
+              </Typography>
+            )}
+          </Stack>
+          <Stack
+            width={"100%"}
+            direction={{
+              xs: "column-reverse",
+              // sm: "column-reverse",
+              md: "row",
             }}
-            startIcon={!isAdded && <ShoppingCart />}
-            onClick={() => {
-              if (!isAdded) {
-                let cart = JSON.parse(localStorage.getItem("cart")) || [];
-                let item = cart.filter((item) => item.id == product.id)[0];
-                if (item) {
-                  item.count += count;
-                } else {
-                  cart.push({ ...product, count: count });
-                }
-                localStorage.setItem("cart", JSON.stringify(cart));
-                setIsAdded(true);
-                handleOpen();
-              } else {
-                //remove item from cart
-                let cart = JSON.parse(localStorage.getItem("cart")) || [];
-                let newCart = cart.filter((item) => item.id != product.id);
-                localStorage.setItem("cart", JSON.stringify(newCart));
-                setIsAdded(false);
-                handleOpen();
-              }
-            }}
+            justifyContent={"space-between"}
+            paddingTop={2}
+            gap={1}
           >
-            {isAdded ? "Remove" : "Add"}
-          </Button>
-          <Stack direction={"row"}>
             <Button
               variant="contained"
-              fullWidth={false}
               sx={{
-                width: {
-                  xs: "50px",
-                  sm: "50px",
-                  md: "20px",
-                },
                 color: "white",
-                borderRadius: "5px 0 0 5px",
                 fontSize: "14px",
                 fontWeight: "bold",
                 textTransform: "none",
@@ -304,47 +265,93 @@ export default function ProductCard({ product }) {
                   backgroundColor: "var(--primary-color)",
                 },
               }}
-              onClick={handleIncrement}
-            >
-              <AddRoundedIcon />
-            </Button>
-            <Stack
-              width={"100%"}
-              justifyContent={"center"}
-              sx={{
-                backgroundColor: "var(--primary-color)",
-                minWidth: "30px",
-                textAlign: "center",
-                fontSize: "14px",
-                fontWeight: "bold",
-                color: "white",
+              startIcon={!isAdded && <ShoppingCart />}
+              onClick={() => {
+                if (!isAdded) {
+                  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+                  let item = cart.filter((item) => item.id == product.id)[0];
+                  if (item) {
+                    item.count += count;
+                  } else {
+                    cart.push({ ...product, count: count });
+                  }
+                  localStorage.setItem("cart", JSON.stringify(cart));
+                  setIsAdded(true);
+                  handleOpen();
+                } else {
+                  //remove item from cart
+                  let cart = JSON.parse(localStorage.getItem("cart")) || [];
+                  let newCart = cart.filter((item) => item.id != product.id);
+                  localStorage.setItem("cart", JSON.stringify(newCart));
+                  setIsAdded(false);
+                  handleOpen();
+                }
               }}
             >
-              {count}
+              {isAdded ? "Remove" : "Add"}
+            </Button>
+            <Stack direction={"row"}>
+              <Button
+                variant="contained"
+                fullWidth={false}
+                sx={{
+                  width: {
+                    xs: "50px",
+                    sm: "50px",
+                    md: "20px",
+                  },
+                  color: "white",
+                  borderRadius: "5px 0 0 5px",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  textTransform: "none",
+                  backgroundColor: "var(--primary-color)",
+                  "&:hover": {
+                    backgroundColor: "var(--primary-color)",
+                  },
+                }}
+                onClick={handleIncrement}
+              >
+                <AddRoundedIcon />
+              </Button>
+              <Stack
+                width={"100%"}
+                justifyContent={"center"}
+                sx={{
+                  backgroundColor: "var(--primary-color)",
+                  minWidth: "30px",
+                  textAlign: "center",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  color: "white",
+                }}
+              >
+                {count}
+              </Stack>
+              <Button
+                variant="contained"
+                fullWidth={false}
+                sx={{
+                  width: {
+                    xs: "50px",
+                    sm: "50px",
+                    md: "20px",
+                  },
+                  color: "white",
+                  fontSize: "14px",
+                  borderRadius: "0 5px 5px 0",
+                  fontWeight: "bold",
+                  textTransform: "none",
+                  backgroundColor: "var(--primary-color)",
+                  "&:hover": {
+                    backgroundColor: "var(--primary-color)",
+                  },
+                }}
+                onClick={handleDecrement}
+              >
+                <RemoveRoundedIcon />
+              </Button>
             </Stack>
-            <Button
-              variant="contained"
-              fullWidth={false}
-              sx={{
-                width: {
-                  xs: "50px",
-                  sm: "50px",
-                  md: "20px",
-                },
-                color: "white",
-                fontSize: "14px",
-                borderRadius: "0 5px 5px 0",
-                fontWeight: "bold",
-                textTransform: "none",
-                backgroundColor: "var(--primary-color)",
-                "&:hover": {
-                  backgroundColor: "var(--primary-color)",
-                },
-              }}
-              onClick={handleDecrement}
-            >
-              <RemoveRoundedIcon />
-            </Button>
           </Stack>
         </Stack>
       </Stack>
