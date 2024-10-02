@@ -5,7 +5,7 @@ import EmailSubscribe from "./components/emailSubscribe";
 import FireSafety from "./components/fireSafety";
 
 export default function Home() {
-  return (
+  return ( 
     <main
       style={{
         display: "flex",
