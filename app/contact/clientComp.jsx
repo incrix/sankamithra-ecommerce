@@ -8,7 +8,7 @@ export function CallButton() {
     <Button
       variant="contained"
       onClick={() => {
-        window.open("tel:+919962066648", "_self");
+        window.open("tel:+919489239970", "_self");
       }}
       sx={{
         backgroundColor: "var(--primary-color)",
@@ -42,7 +42,7 @@ export function WhatsappButton() {
       startIcon={<SendRoundedIcon />}
       onClick={() => {
         window.open(
-          "https://wa.me/+919962066648?text=I'm%20interested%20in%20your%20products.",
+          "https://wa.me/+919489239970?text=I'm%20interested%20in%20your%20products.",
           "_blank"
         );
       }}
