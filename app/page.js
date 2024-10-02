@@ -4,7 +4,7 @@ import ShopByCategory from "./components/shopByCategory";
 import EmailSubscribe from "./components/emailSubscribe";
 import FireSafety from "./components/fireSafety";
 
-export default function Home() {
+export default function Home() { 
   return ( 
     <main
       style={{
