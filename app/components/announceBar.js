@@ -15,7 +15,11 @@ export default function AnnounceBar() {
         color={"#fff"}
         sx={{ m: 1 }}
       >
-        Happy Diwali, up to 55% off all items. Only 3 days left
+        {/* Diwali sales has been closed. Thank you for your support. */}
+
+        <strong>
+          Diwali sales has been closed. Thank you for your support.
+        </strong>
       </Typography>
     </Stack>
   );
