@@ -10,7 +10,7 @@ export default function ProductTab({ category }) {
     fetch("https://e-com.incrix.com/Sankamithra%20Products/productData.json")
       .then((response) => response.json())
       .then((data) => {
-        data.sort((a, b) => a.sku - b.sku);
+        data.sort((a, b) => a.sort_id - b.sort_id);
         localStorage.setItem("productList", JSON.stringify(data));
         setProductList(data);
       });
