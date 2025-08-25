@@ -301,8 +301,8 @@ export default function ProductCard({ product }) {
                     md: "20px",
                   },
                   color: "white",
-                  borderRadius: "5px 0 0 5px",
                   fontSize: "14px",
+                  borderRadius: "0 5px 5px 0",
                   fontWeight: "bold",
                   textTransform: "none",
                   backgroundColor: "var(--primary-color)",
@@ -310,9 +310,9 @@ export default function ProductCard({ product }) {
                     backgroundColor: "var(--primary-color)",
                   },
                 }}
-                onClick={handleIncrement}
+                onClick={handleDecrement}
               >
-                <AddRoundedIcon />
+                <RemoveRoundedIcon />
               </Button>
               <Stack
                 width={"100%"}
@@ -328,6 +328,7 @@ export default function ProductCard({ product }) {
               >
                 {count}
               </Stack>
+
               <Button
                 variant="contained"
                 fullWidth={false}
@@ -338,8 +339,8 @@ export default function ProductCard({ product }) {
                     md: "20px",
                   },
                   color: "white",
+                  borderRadius: "5px 0 0 5px",
                   fontSize: "14px",
-                  borderRadius: "0 5px 5px 0",
                   fontWeight: "bold",
                   textTransform: "none",
                   backgroundColor: "var(--primary-color)",
@@ -347,9 +348,9 @@ export default function ProductCard({ product }) {
                     backgroundColor: "var(--primary-color)",
                   },
                 }}
-                onClick={handleDecrement}
+                onClick={handleIncrement}
               >
-                <RemoveRoundedIcon />
+                <AddRoundedIcon />
               </Button>
             </Stack>
           </Stack>
