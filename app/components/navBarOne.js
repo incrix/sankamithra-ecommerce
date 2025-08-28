@@ -16,6 +16,7 @@ import Badge, { BadgeProps } from "@mui/material/Badge";
 import { styled } from "@mui/material/styles";
 import { useState, useEffect } from "react";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import FloatingPdf from "./floatingPdf";
 
 const StyledBadge = styled(Badge)(() => ({
   "& .MuiBadge-badge": {
@@ -237,6 +238,7 @@ export default function NavBarOne() {
         </StyledBadge>
         {/* Cart */}
       </Fab>
+      <FloatingPdf />
     </nav>
   );
 }

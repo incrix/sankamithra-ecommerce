@@ -17,9 +17,7 @@ export default function AnnounceBar() {
       >
         {/* Diwali sales has been closed. Thank you for your support. */}
 
-        <strong>
-          Diwali sales has been closed. Thank you for your support.
-        </strong>
+        <strong>Diwali 2025 Sale LIVE – Up to 90% OFF!</strong>
       </Typography>
     </Stack>
   );
