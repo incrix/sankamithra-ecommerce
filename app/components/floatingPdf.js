@@ -2,11 +2,8 @@
 import Stack from "@mui/material/Stack";
 import Fab from "@mui/material/Fab";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
-import { useRouter } from "next/navigation";
 
 export default function PdfCartFloating() {
-  const router = useRouter();
 
   const handlePdfDownload = async () => {
     const pdfUrl = "https://e-com.incrix.com/Sankamithra%20Products/SANKAMITHRA%20THUNDER%20WORLD%20PRICE%20LIST%202025.pdf";
@@ -72,22 +69,6 @@ export default function PdfCartFloating() {
       >
         <PictureAsPdfIcon />
       </Fab>
-
-      {/* Cart Button */}
-      {/* <Fab
-        aria-label="cart"
-        onClick={() => router.push("/Cart")}
-        sx={{
-          color: "white",
-          backgroundColor: "var(--primary)",
-          "&:hover": {
-            opacity: 0.9,
-            backgroundColor: "var(--primary)",
-          },
-        }}
-      >
-        <ShoppingCartIcon />
-      </Fab> */}
     </Stack>
   );
 }
