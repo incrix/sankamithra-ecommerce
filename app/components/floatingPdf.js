@@ -8,6 +8,8 @@ export default function PdfCartFloating() {
   const handlePdfDownload = async () => {
     const pdfUrl = "https://e-com.incrix.com/Sankamithra%20Products/SANKAMITHRA%20THUNDER%20WORLD%20PRICE%20LIST%202025.pdf";
     const fileName = "SANKAMITHRA THUNDER WORLD PRICE LIST 2025.pdf";
+    console.log("pdfUrl", pdfUrl);
+    
 
     try {
       // Open PDF in a new tab
@@ -67,6 +69,7 @@ export default function PdfCartFloating() {
           },
         }}
       >
+      {/* <PictureAsPdfIcon /> */}
         <PictureAsPdfIcon />
       </Fab>
     </Stack>
