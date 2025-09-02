@@ -71,12 +71,16 @@ export default function Page() {
   };
 
   useEffect(() => {
-    if (localStorage.getItem("billingDetails")) {
-      setBillingDetails(JSON.parse(localStorage.getItem("billingDetails")));
-    } else {
-      localStorage.setItem("billingDetails", JSON.stringify(billingDetails));
+    const stored = localStorage.getItem("billingDetails");
+    if (stored) {
+      setBillingDetails(JSON.parse(stored));
     }
   }, []);
+
+  // Keep localStorage updated whenever billingDetails changes
+  useEffect(() => {
+    localStorage.setItem("billingDetails", JSON.stringify(billingDetails));
+  }, [billingDetails]);
 
   const handleClick = () => {
     if (
