@@ -23,7 +23,7 @@ export const sendVerificationMail = async ({ billingDetails, invoice }) => {
   });
 
   const mailInfo = {
-    from: '"no-reply" <no-reply@incrix.com>',
+    from: `"no-reply" <${process.env.MAIL_USER}>`,
     to: process.env.ORDER_MAIL,
     cc: process.env.ORDER_MAIL_CC,
     subject: `Online Order List for ${billingDetails.name}`,
