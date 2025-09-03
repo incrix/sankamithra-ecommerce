@@ -4,10 +4,12 @@ import Template1 from "@/util/invoice/Template1/Template";
 
 export async function POST(request) {
   const { billingDetails, productList, invoice } = await request.json();
+
   await sendVerificationMail({
     billingDetails,
     invoice,
   });
+  // console.log("Order placed successfully", billingDetails, productList);
   return Response.json({
     message: "Order placed successfully",
     status: "success",
