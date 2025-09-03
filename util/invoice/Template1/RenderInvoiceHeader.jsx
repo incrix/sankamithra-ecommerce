@@ -30,7 +30,7 @@ export default function RenderInvoiceHeader() {
             fontFamily: "Lato",
           }}
         >
-          3/1427/G6, Opposite PRC Bus Depot, Sattur Road, Sivakasi - 626123.
+          9/62 G, Kanmaisurangudi, Elayirampannai main Road, Sattur 626203.
         </Text>
         <View style={{ flexDirection: "row", gap: 10 }}>
           <Text
@@ -74,7 +74,7 @@ export default function RenderInvoiceHeader() {
             fontFamily: "Lato Bold",
           }}
         >
-          PROFORMA INVOICE
+          PROFORMA
         </Text>
         <Text
           style={{

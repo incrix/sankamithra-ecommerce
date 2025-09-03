@@ -47,7 +47,7 @@ export default function RenderCustomerDetails({ billingDetails }) {
               gap: 2,
             }}
           >
-            <Text>Invoice No:</Text>
+            <Text>Est No:</Text>
             <Text>Online Order</Text>
           </View>
           <View
