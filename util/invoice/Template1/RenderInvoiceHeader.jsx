@@ -21,7 +21,7 @@ export default function RenderInvoiceHeader() {
             textTransform: "uppercase",
           }}
         >
-          Sankamithra Fireworks
+          Sankamithra Thunder World
         </Text>
         <Text
           style={{
@@ -39,7 +39,7 @@ export default function RenderInvoiceHeader() {
               maxWidth: 200,
             }}
           >
-            Mobile: +91 9842012345
+            Mobile: +91 7548820326
           </Text>
           <Text
             style={{
@@ -56,7 +56,7 @@ export default function RenderInvoiceHeader() {
             maxWidth: 200,
           }}
         >
-          Website: www.sankamithra.com/
+          Website: www.shop.sankamithra.com/
         </Text>
       </View>
       <View
@@ -74,7 +74,7 @@ export default function RenderInvoiceHeader() {
             fontFamily: "Lato Bold",
           }}
         >
-          TAX INVOICE
+          PROFORMA INVOICE
         </Text>
         <Text
           style={{
