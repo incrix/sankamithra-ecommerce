@@ -251,8 +251,21 @@ function OrderSummary({ setCheckoutState }) {
           </Typography>
         </Stack>
       </Stack>
+      <Typography
+        className={quicksand.className}
+        fontWeight={"bold"}
+        color={"#000"}
+      >
+        As per 2018 supreme court order, online sale of firecrackers are not
+        permitted! We value our customers and at the same time, respect
+        jurisdiction. We request you to add your products to the cart and submit
+        the required crackers through the place order button. We will contact
+        you within 24 hrs and confirm the order through WhatsApp or phone call.
+        Please add and submit your orders and enjoy your Diwali with Fast
+        Crackers.
+      </Typography>
 
-      <Stack alignItems={"center"}>
+      <Stack direction={"row"} justifyContent={"flex-end"}>
         <LoadingButton
           variant="contained"
           loading={loading}
