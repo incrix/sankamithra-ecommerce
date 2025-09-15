@@ -2,8 +2,6 @@
 import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
 import { Carousel } from "react-responsive-carousel";
 import { Stack } from "@mui/material";
-import Carousel1 from "@/public/images/Carosal1.jpg";
-import Carousel2 from "@/public/images/Carosal2.jpg";
 
 export default function HeroCarousel() {
   return (
@@ -24,7 +22,11 @@ export default function HeroCarousel() {
           }}
           overflow={"hidden"}
         >
-          <img src={Carousel1.src} />
+          {/* Fetched image from the first URL */}
+          <img
+            src="https://e-com.incrix.com/Sankamithra%20Products/banner2.png"
+            alt="Carousel Image 1"
+          />
         </Stack>
         <Stack
           borderRadius={{
@@ -33,7 +35,11 @@ export default function HeroCarousel() {
           }}
           overflow={"hidden"}
         >
-          <img src={Carousel2.src} />
+          {/* Fetched image from the second URL */}
+          <img
+            src="https://e-com.incrix.com/Sankamithra%20Products/banner3.png"
+            alt="Carousel Image 2"
+          />
         </Stack>
       </Carousel>
     </Stack>
