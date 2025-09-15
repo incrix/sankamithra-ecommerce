@@ -18,7 +18,7 @@ import { Quicksand } from "next/font/google";
 const quicksand = Quicksand({ subsets: ["latin"] });
 import EmailSubscribe from "../components/emailSubscribe";
 import { Delete } from "@mui/icons-material";
-import { useState, useEffect } from "react";
+import { useCart } from "@/context/CartContext";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -38,37 +38,37 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 export default function Cart() {
-  const [cart, setCart] = useState([]);
+  const { cart, updateCount, removeFromCart } = useCart();
 
-  useEffect(() => {
-    const cartList = localStorage.getItem("cart")
-      ? JSON.parse(localStorage.getItem("cart"))
-      : [];
-    setCart(cartList);
-  }, []);
-  const handleIncrement = (index) => {
-    const newCart = [...cart];
-    newCart[index].count += 1;
-    setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));
+  const handleIncrement = (id) => {
+    const item = cart.find((c) => c.id === id);
+    if (!item) return;
+    updateCount(id, item.count + 1);
   };
 
-  const handleDecrement = (index) => {
-    if (cart[index].count === 1) {
+  const handleDecrement = (id) => {
+    const item = cart.find((c) => c.id === id);
+    if (!item) return;
+    if (item.count === 1) {
+      // if you want to remove when count hits 0 uncomment the next line:
+      // removeFromCart(id);
       return;
     }
-    const newCart = [...cart];
-    newCart[index].count -= 1;
-    setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));
+    updateCount(id, item.count - 1);
   };
 
-  const handleRemove = (index) => {
-    const newCart = [...cart];
-    newCart.splice(index, 1);
-    setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));
+  const handleRemove = (id) => {
+    removeFromCart(id);
   };
+
+  // compute total with discount same as your old logic
+  const total = cart.reduce(
+    (acc, item) =>
+      acc +
+      Math.round(item.price - (item.price * (item.discount || 0)) / 100) *
+        (item.count || 0),
+    0
+  );
 
   return (
     <main
@@ -98,9 +98,6 @@ export default function Cart() {
           >
             Your Cart
           </Typography>
-          {/* <Typography className={quicksand.className} fontSize={14}>
-            There are no items in your cart.
-          </Typography> */}
         </Stack>
         <Stack
           direction={{
@@ -153,8 +150,8 @@ export default function Cart() {
                       </StyledTableCell>
                     </StyledTableRow>
                   )}
-                  {cart.map((row, index) => (
-                    <StyledTableRow key={row.name}>
+                  {cart.map((row) => (
+                    <StyledTableRow key={row.id}>
                       <StyledTableCell component="th" scope="row">
                         {row.name}
                       </StyledTableCell>
@@ -172,7 +169,7 @@ export default function Cart() {
                                 backgroundColor: "var(--text-color-trinary)",
                               },
                             }}
-                            onClick={() => handleIncrement(index)}
+                            onClick={() => handleIncrement(row.id)}
                           >
                             +
                           </IconButton>
@@ -202,21 +199,18 @@ export default function Cart() {
                                 backgroundColor: "var(--text-color-trinary)",
                               },
                             }}
-                            onClick={() => handleDecrement(index)}
+                            onClick={() => handleDecrement(row.id)}
                           >
                             -
                           </IconButton>
                         </Stack>
                       </StyledTableCell>
                       <StyledTableCell align="right">
-                        {Math.round(
-                          row.price - (row.price * row.discount) / 100
-                        )}
+                        {Math.round(row.price - (row.price * (row.discount || 0)) / 100)}
                       </StyledTableCell>
                       <StyledTableCell align="right">
-                        {Math.round(
-                          row.price - (row.price * row.discount) / 100
-                        ) * row.count}
+                        {Math.round(row.price - (row.price * (row.discount || 0)) / 100) *
+                          row.count}
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         <IconButton
@@ -224,7 +218,7 @@ export default function Cart() {
                           sx={{
                             color: "red",
                           }}
-                          onClick={() => handleRemove(index)}
+                          onClick={() => handleRemove(row.id)}
                         >
                           <Delete />
                         </IconButton>
@@ -252,36 +246,12 @@ export default function Cart() {
                   Cart Summary
                 </Typography>
                 <Stack gap={2}>
-                  {/* <Typography className={quicksand.className} fontSize={14}>
-                    Subtotal: ₹
-                    {cart.reduce(
-                      (acc, item) =>
-                        acc +
-                        Math.round(
-                          item.price - (item.price * item.discount) / 100
-                        ) *
-                          item.count,
-                      0
-                    )}
-                  </Typography> */}
-                  {/* <Typography className={quicksand.className} fontSize={14}>
-                    Shipping: $0.00
-                  </Typography> */}
                   <Typography
                     className={quicksand.className}
                     fontSize={14}
                     fontWeight={700}
                   >
-                    Total: ₹
-                    {cart.reduce(
-                      (acc, item) =>
-                        acc +
-                        Math.round(
-                          item.price - (item.price * item.discount) / 100
-                        ) *
-                          item.count,
-                      0
-                    )}
+                    Total: ₹{total}
                   </Typography>
                 </Stack>
                 <Stack gap={2}>

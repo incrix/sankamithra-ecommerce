@@ -1,4 +1,6 @@
+// components/ProductCard.jsx (update import path as needed)
 "use client";
+
 import {
   Stack,
   Paper,
@@ -13,75 +15,68 @@ import { useRouter, usePathname } from "next/navigation";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import RemoveRoundedIcon from "@mui/icons-material/RemoveRounded";
 import useWindowSize from "@/util/windowSize";
+import { useCart } from "@/context/CartContext";
 
 export default function ProductCard({ product }) {
   const [count, setCount] = useState(1);
   const [open, setOpen] = useState(false);
-  const [cart, setCart] = useState([]);
-  const [isAdded, setIsAdded] = useState(false);
+  const [snackMsg, setSnackMsg] = useState("");
   const router = useRouter();
   const pathArray = usePathname().split("/");
   const { width } = useWindowSize();
   const isMobile = width <= 380;
 
-  const handleIncrement = () => {
-    if (isAdded) {
-      cart.map((item) => {
-        if (item.id == product.id) {
-          item.count += 1;
-          setCount(item.count);
-          localStorage.setItem("cart", JSON.stringify(cart));
-        }
-      });
-    } else {
-      setCount(count + 1);
-    }
-  };
-  const handleDecrement = () => {
-    if (isAdded) {
-      cart.map((item) => {
-        if (item.id == product.id) {
-          if (item.count > 1) {
-            item.count -= 1;
-            setCount(item.count);
-            localStorage.setItem("cart", JSON.stringify(cart));
-          } else {
-            let newCart = cart.filter((item) => item.id != product.id);
-            localStorage.setItem("cart", JSON.stringify(newCart));
-            setIsAdded(false);
-            handleOpen();
-            setCount(1);
-          }
-        }
-      });
-    } else {
-      if (count > 1) {
-        setCount(count - 1);
-      }
-    }
-  };
-  const handleClose = () => setOpen(false);
-  const handleOpen = () => setOpen(true);
+  const { cart, addToCart, removeFromCart, updateCount } = useCart();
+
+  // derive item presence from cart (no extra persistent state required)
+  const cartItem = cart.find((i) => i.id == product.id);
+  const isAdded = !!cartItem;
 
   useEffect(() => {
-    setCart(JSON.parse(localStorage.getItem("cart")) || []);
-  }, []);
-
-  const isProductAdded = () => {
-    let item = cart.filter((item) => item.id == product.id)[0];
-    if (item) {
-      setIsAdded(true);
-      setCount(item.count);
-      console.log(item.count);
+    if (cartItem) {
+      setCount(cartItem.count);
     } else {
-      setIsAdded(false);
+      setCount(1);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cartItem]); // re-run when the item in cart changes
+
+  const handleIncrement = () => {
+    if (isAdded) {
+      updateCount(product.id, cartItem.count + 1);
+    } else {
+      setCount((c) => c + 1);
+    }
+  };
+
+  const handleDecrement = () => {
+    if (isAdded) {
+      if (cartItem.count > 1) {
+        updateCount(product.id, cartItem.count - 1);
+      } else {
+        removeFromCart(product.id);
+        setSnackMsg(`${product.name} removed from cart`);
+        setOpen(true);
+      }
+    } else {
+      setCount((c) => (c > 1 ? c - 1 : c));
+    }
+  };
+
+  const handleAddRemoveClick = () => {
+    if (!isAdded) {
+      addToCart(product, count);
+      setSnackMsg(`${product.name} added to cart`);
+      setOpen(true);
+    } else {
+      removeFromCart(product.id);
+      setSnackMsg(`${product.name} removed from cart`);
+      setOpen(true);
       setCount(1);
     }
   };
 
-  useEffect(() => {
-    isProductAdded();
-  }, [cart]);
+  const handleClose = () => setOpen(false);
 
   return (
     <Paper
@@ -100,18 +95,15 @@ export default function ProductCard({ product }) {
     >
       <Snackbar
         open={open}
-        autoHideDuration={6000}
+        autoHideDuration={3000}
         onClose={handleClose}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        <Alert
-          onClose={handleClose}
-          severity={isAdded ? "success" : "info"}
-          sx={{ width: "100%" }}
-        >
-          {product.name + (!isAdded ? ` removed from cart` : ` added to cart`)}
+        <Alert onClose={handleClose} severity={isAdded ? "success" : "info"} sx={{ width: "100%" }}>
+          {snackMsg}
         </Alert>
       </Snackbar>
+
       <Stack direction={isMobile ? "row" : "column"} gap={isMobile ? 2 : 0}>
         {product.badge && (
           <div
@@ -145,43 +137,27 @@ export default function ProductCard({ product }) {
             alt="pr"
             width={"100%"}
             height={"100%"}
-            objectFit="cover"
-            objectPosition="center"
             style={{
               borderRadius: "2px",
               cursor: "pointer",
+              objectFit: "cover",
+              objectPosition: "center",
             }}
           />
         </Stack>
+
         <Stack>
-          <Typography
-            variant="p"
-            color={"var(--text-color-trinary)"}
-            fontSize={"12px"}
-            pt={{
-              xs: "5px",
-              sm: "10px",
-            }}
-            onClick={() => {
-              pathArray.length > 2 && pathArray[2] === "shop"
-                ? router.push(`product?id=${product.id}`)
-                : router.push(`shop/product?id=${product.id}`);
-            }}
-          >
+          <Typography variant="p" color={"var(--text-color-trinary)"} fontSize={"12px"} pt={{ xs: "5px", sm: "10px" }}>
             {product.category}
           </Typography>
+
           <Typography
             variant="p"
             color={"var(--text-color)"}
             fontSize={"16px"}
             fontWeight={"bold"}
-            pt={{
-              xs: "5px",
-              sm: "10px",
-            }}
-            sx={{
-              cursor: "pointer",
-            }}
+            pt={{ xs: "5px", sm: "10px" }}
+            sx={{ cursor: "pointer" }}
             onClick={() => {
               pathArray.length > 2 && pathArray[2] === "shop"
                 ? router.push(`product?id=${product.id}`)
@@ -190,69 +166,30 @@ export default function ProductCard({ product }) {
           >
             {product.name}
           </Typography>
-          <Typography
-            variant="p"
-            color={"var(--text-color-secondary)"}
-            fontSize={"14px"}
-            pt={{
-              xs: "5px",
-              sm: "10px",
-            }}
-          >
-            By{" "}
-            <font style={{ color: "var(--primary-color)" }}>Sankamithra</font>
+
+          <Typography variant="p" color={"var(--text-color-secondary)"} fontSize={"14px"} pt={{ xs: "5px", sm: "10px" }}>
+            By <font style={{ color: "var(--primary-color)" }}>Sankamithra</font>
           </Typography>
-          <Stack
-            direction={"row"}
-            gap={1}
-            pt={{
-              xs: "5px",
-              sm: "10px",
-            }}
-          >
-            <Typography
-              variant="p"
-              color={"var(--primary-color)"}
-              fontSize={"14px"}
-              fontWeight={"bold"}
-            >
-              ₹
-              {Math.round(
-                product.price - (product.discount / 100) * product.price
-              )}
+
+          <Stack direction={"row"} gap={1} pt={{ xs: "5px", sm: "10px" }}>
+            <Typography variant="p" color={"var(--primary-color)"} fontSize={"14px"} fontWeight={"bold"}>
+              ₹{Math.round(product.price - (product.discount / 100) * product.price)}
             </Typography>
+
             {product.discount && (
-              <Typography
-                variant="p"
-                color={"var(--text-color-trinary)"}
-                fontSize={"14px"}
-                fontWeight={"bold"}
-              >
+              <Typography variant="p" color={"var(--text-color-trinary)"} fontSize={"14px"} fontWeight={"bold"}>
                 <s>₹{product.price}</s>
               </Typography>
             )}
+
             {product.discount && (
-              <Typography
-                variant="p"
-                color={"var(--primary-color)"}
-                fontSize={"14px"}
-                fontWeight={"bold"}
-              >
+              <Typography variant="p" color={"var(--primary-color)"} fontSize={"14px"} fontWeight={"bold"}>
                 (off %{product.discount})
               </Typography>
             )}
           </Stack>
-          <Stack
-            width={"100%"}
-            direction={{
-              xs: "column-reverse",
-              // sm: "column-reverse",
-              md: "row",
-            }}
-            justifyContent={"space-between"}
-            paddingTop={2}
-            gap={1}
-          >
+
+          <Stack width={"100%"} direction={{ xs: "column-reverse", md: "row" }} justifyContent={"space-between"} paddingTop={2} gap={1}>
             <Button
               variant="contained"
               sx={{
@@ -261,59 +198,33 @@ export default function ProductCard({ product }) {
                 fontWeight: "bold",
                 textTransform: "none",
                 backgroundColor: "var(--primary-color)",
-                "&:hover": {
-                  backgroundColor: "var(--primary-color)",
-                },
+                "&:hover": { backgroundColor: "var(--primary-color)" },
               }}
               startIcon={!isAdded && <ShoppingCart />}
-              onClick={() => {
-                if (!isAdded) {
-                  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-                  let item = cart.filter((item) => item.id == product.id)[0];
-                  if (item) {
-                    item.count += count;
-                  } else {
-                    cart.push({ ...product, count: count });
-                  }
-                  localStorage.setItem("cart", JSON.stringify(cart));
-                  setIsAdded(true);
-                  handleOpen();
-                } else {
-                  //remove item from cart
-                  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-                  let newCart = cart.filter((item) => item.id != product.id);
-                  localStorage.setItem("cart", JSON.stringify(newCart));
-                  setIsAdded(false);
-                  handleOpen();
-                }
-              }}
+              onClick={handleAddRemoveClick}
             >
               {isAdded ? "Remove" : "Add"}
             </Button>
+
             <Stack direction={"row"}>
               <Button
                 variant="contained"
                 fullWidth={false}
                 sx={{
-                  width: {
-                    xs: "50px",
-                    sm: "50px",
-                    md: "20px",
-                  },
+                  width: { xs: "50px", sm: "50px", md: "20px" },
                   color: "white",
                   fontSize: "14px",
                   borderRadius: "0 5px 5px 0",
                   fontWeight: "bold",
                   textTransform: "none",
                   backgroundColor: "var(--primary-color)",
-                  "&:hover": {
-                    backgroundColor: "var(--primary-color)",
-                  },
+                  "&:hover": { backgroundColor: "var(--primary-color)" },
                 }}
                 onClick={handleDecrement}
               >
                 <RemoveRoundedIcon />
               </Button>
+
               <Stack
                 width={"100%"}
                 justifyContent={"center"}
@@ -333,20 +244,14 @@ export default function ProductCard({ product }) {
                 variant="contained"
                 fullWidth={false}
                 sx={{
-                  width: {
-                    xs: "50px",
-                    sm: "50px",
-                    md: "20px",
-                  },
+                  width: { xs: "50px", sm: "50px", md: "20px" },
                   color: "white",
                   borderRadius: "5px 0 0 5px",
                   fontSize: "14px",
                   fontWeight: "bold",
                   textTransform: "none",
                   backgroundColor: "var(--primary-color)",
-                  "&:hover": {
-                    backgroundColor: "var(--primary-color)",
-                  },
+                  "&:hover": { backgroundColor: "var(--primary-color)" },
                 }}
                 onClick={handleIncrement}
               >

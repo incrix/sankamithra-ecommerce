@@ -9,6 +9,7 @@ import rocket from "../../public/temp/rocket.png";
 import bomb from "@/public/temp/bomb.png";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { useProducts } from "@/context/ProductContext";
 
 const CatButton = ({ title, img, count, link }) => {
   const router = useRouter();
@@ -61,26 +62,9 @@ const CatButton = ({ title, img, count, link }) => {
 };
 
 export default function HeroCategory() {
-  const [productList, setProductList] = useState([]);
+  const { productList, loading } = useProducts();
 
-  useEffect(() => {
-    let productFromLocalStorage = JSON.parse(
-      localStorage.getItem("productList")
-    );
-    if (
-      productFromLocalStorage == null ||
-      productFromLocalStorage.length === 0
-    ) {
-      fetch("https://e-com.incrix.com/Sankamithra%20Products/productData.json")
-        .then((response) => response.json())
-        .then((data) => {
-          localStorage.setItem("productList", JSON.stringify(data));
-          setProductList(data);
-        });
-    } else {
-      setProductList(productFromLocalStorage);
-    }
-  }, []);
+  if (loading) return <p>Loading categories...</p>;
   return (
     <Paper
       elevation={0}

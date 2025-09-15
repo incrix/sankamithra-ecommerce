@@ -5,6 +5,9 @@ import NavBarOne from "@/app/components/navBarOne";
 import NavBarTwo from "@/app/components/navBarTwo";
 import Footer from "@/app/components/footer";
 import { GoogleAnalytics } from '@next/third-parties/google'
+import { CartProvider } from "@/context/CartContext";
+import { BillingProvider } from "@/context/BillingContext";
+import { ProductProvider } from "@/context/ProductContext";
 
 const quicksand = Quicksand({ subsets: ["latin"] });
 
@@ -24,12 +27,18 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={quicksand.className}>
-        <AnnounceBar />
-        <NavBarOne />
-        <NavBarTwo />
-        {children}
-        <Footer />
-        <GoogleAnalytics gaId="G-BVTWT7NXQW" />
+        <CartProvider>
+          <BillingProvider>
+            <ProductProvider>
+              <AnnounceBar />
+              <NavBarOne />
+              <NavBarTwo />
+              {children}
+              <Footer />
+            <GoogleAnalytics gaId="G-BVTWT7NXQW" />
+            </ProductProvider>
+          </BillingProvider>
+        </CartProvider>
       </body>
     </html>
   );

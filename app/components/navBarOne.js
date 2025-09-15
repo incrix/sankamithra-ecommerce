@@ -12,11 +12,12 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import useWindowSize from "@/util/windowSize";
-import Badge, { BadgeProps } from "@mui/material/Badge";
+import Badge from "@mui/material/Badge";
 import { styled } from "@mui/material/styles";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import FloatingPdf from "./floatingPdf";
+import { useCart } from "@/context/CartContext";
 
 const StyledBadge = styled(Badge)(() => ({
   "& .MuiBadge-badge": {
@@ -28,27 +29,16 @@ const StyledBadge = styled(Badge)(() => ({
 
 export default function NavBarOne() {
   const { width } = useWindowSize();
-  const [cartCount, setCartCount] = useState(0);
+  const { cart } = useCart(); // get cart from context
   const [open, setOpen] = useState(false);
 
   const handleMenu = () => {
     setOpen(!open);
   };
 
-  useEffect(() => {
-    setCartCount(
-      localStorage.getItem("cart")
-        ? JSON.parse(localStorage.getItem("cart")).length
-        : 0
-    );
-    setInterval(() => {
-      setCartCount(
-        localStorage.getItem("cart")
-          ? JSON.parse(localStorage.getItem("cart")).length
-          : 0
-      );
-    }, 500);
-  }, []);
+  // calculate cart count (sum of counts, not just length)
+  const cartCount = cart.reduce((acc, item) => acc + (item.count || 0), 0);
+
   const linkStyle = {
     color: "var(--primary-color)",
     fontSize: "18px",
@@ -68,6 +58,7 @@ export default function NavBarOne() {
         position: "relative",
       }}
     >
+      {/* Drawer Menu */}
       <Stack
         display={open ? "flex" : "none"}
         gap={10}
@@ -98,17 +89,15 @@ export default function NavBarOne() {
         <Link style={linkStyle} href="/shop" onClick={handleMenu}>
           Shop
         </Link>
-
         <Link style={linkStyle} href="/factory" onClick={handleMenu}>
           Factory
         </Link>
-        {/* <Link style={linkStyle} href="/wholesale">
-            Wholesale
-          </Link> */}
         <Link style={linkStyle} href="/contact" onClick={handleMenu}>
           Contact
         </Link>
       </Stack>
+
+      {/* Main Nav */}
       <Stack
         direction="row"
         alignItems={"center"}
@@ -118,6 +107,7 @@ export default function NavBarOne() {
           maxWidth: "var(--max-width)",
         }}
       >
+        {/* Logo */}
         <Link
           href="/"
           style={{
@@ -154,6 +144,8 @@ export default function NavBarOne() {
             </span>
           </Stack>
         </Link>
+
+        {/* Search (desktop only) */}
         <Stack
           display={{
             xs: "none",
@@ -177,7 +169,10 @@ export default function NavBarOne() {
             }}
           />
         </Stack>
+
+        {/* Right-side items */}
         <Stack direction={"row"} gap={"25px"} alignItems={"center"}>
+          {/* Cart (desktop + tablet) */}
           <Stack
             display={{
               xs: "none",
@@ -205,6 +200,8 @@ export default function NavBarOne() {
               Cart
             </Link>
           </Stack>
+
+          {/* Hamburger (mobile only) */}
           <Stack display={{ xs: "flex", sm: "flex", md: "none" }}>
             <IconButton onClick={handleMenu}>
               <MenuRoundedIcon sx={{ fontSize: "30px" }} />
@@ -212,6 +209,8 @@ export default function NavBarOne() {
           </Stack>
         </Stack>
       </Stack>
+
+      {/* Floating Cart Button (mobile quick access) */}
       <Fab
         sx={{
           position: "fixed",
@@ -236,8 +235,8 @@ export default function NavBarOne() {
             }}
           />
         </StyledBadge>
-        {/* Cart */}
       </Fab>
+
       <FloatingPdf />
     </nav>
   );

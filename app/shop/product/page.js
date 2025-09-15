@@ -9,42 +9,26 @@ import { Quicksand } from "next/font/google";
 const quicksand = Quicksand({ subsets: ["latin"] });
 import ProductCard from "@/app/components/productCard";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
+import { useProducts } from "@/context/ProductContext";
+import { useCart } from "@/context/CartContext";
 
 export default function Product() {
   const searchParams = useSearchParams();
   const search = searchParams.get("id");
   const router = useRouter();
-  const [productList, setProductList] = useState([]);
+  const { productList, loading } = useProducts();
+  const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [itemCount, setItemCount] = useState(1);
 
   useEffect(() => {
-    let productFromLocalStorage = JSON.parse(
-      localStorage.getItem("productList")
-    );
-    if (
-      productFromLocalStorage == null ||
-      productFromLocalStorage.length === 0
-    ) {
-      fetch("https://e-com.incrix.com/Sankamithra%20Products/productData.json")
-        .then((response) => response.json())
-        .then((data) => {
-          localStorage.setItem("productList", JSON.stringify(data));
-          setProduct(data.filter((product) => product.id == search)[0]);
-          setProductList(data);
-        });
-    } else {
-      setProduct(
-        productFromLocalStorage.filter((product) => product.id == search)[0]
-      );
-      setProductList(productFromLocalStorage);
+    if (!loading && productList.length > 0) {
+      setProduct(productList.find((p) => p.id == search));
     }
-  }, []);
+  }, [search, productList, loading]);
 
-  useEffect(() => {
-    productList.length !== 0 &&
-      setProduct(productList.filter((product) => product.id == search)[0]);
-  }, [search]);
+  if (loading) return <p>Loading product...</p>;
+  if (!product) return <p>Product not found</p>;
 
   return (
     <main
@@ -253,14 +237,7 @@ export default function Product() {
                     },
                   }}
                   onClick={() => {
-                    let cart = JSON.parse(localStorage.getItem("cart")) || [];
-                    let item = cart.filter((item) => item.id == product.id)[0];
-                    if (item) {
-                      item.count += itemCount;
-                    } else {
-                      cart.push({ ...product, count: itemCount });
-                    }
-                    localStorage.setItem("cart", JSON.stringify(cart));
+                    addToCart(product, itemCount);
                   }}
                 >
                   Add to Cart

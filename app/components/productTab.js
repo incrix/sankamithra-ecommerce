@@ -2,34 +2,30 @@
 import { Stack } from "@mui/material";
 import ProductCard from "./productCard";
 import { useEffect, useState } from "react";
+import { useProducts } from "@/context/ProductContext";
 
 export default function ProductTab({ category }) {
-  const [productList, setProductList] = useState([]);
+  const { productList, loading } = useProducts();
   const [filteredProductList, setFilteredProductList] = useState([]);
   useEffect(() => {
-    fetch("https://e-com.incrix.com/Sankamithra%20Products/productData.json")
-      .then((response) => response.json())
-      .then((data) => { 
-        data.sort((a, b) => a.sort_id - b.sort_id);
-        localStorage.setItem("productList", JSON.stringify(data));
-        setProductList(data);
-      });
-    if (category) {
+    if (!loading) {
       setFilteredProductList(
-        productList.filter((product) =>
-          category === "Atom bombs"
-            ? product.category === "Atom bombs" ||
-              product.category === "Bijili crackers"
-            : category === "Twinklers"
-            ? product.category === "Twinkling stars" ||
-              product.category === "Pencils"
-            : product.category === category
-        )
+        category
+          ? productList.filter((product) =>
+              category === "Atom bombs"
+                ? product.category === "Atom bombs" ||
+                  product.category === "Bijili crackers"
+                : category === "Twinklers"
+                ? product.category === "Twinkling stars" ||
+                  product.category === "Pencils"
+                : product.category === category
+            )
+          : productList
       );
-    } else {
-      setFilteredProductList(productList);
     }
-  }, [productList.length, category]);
+  }, [category, productList, loading]);
+
+  if (loading) return <p>Loading products...</p>;
 
   return (
     <Stack
