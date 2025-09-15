@@ -46,7 +46,12 @@ const StyledTableRow = styled(TableRow)(() => ({
 
 export default function Page() {
   const [checkoutState, setCheckoutState] = useState("billing");
-  const [open, setOpen] = useState(false);
+
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "error", // Default to error for the billing form
+  });
 
   // ✅ use billing hook
   const { billingDetails, setBillingDetails } = useBilling();
@@ -55,12 +60,22 @@ export default function Page() {
     setBillingDetails({ ...billingDetails, [e.target.name]: e.target.value });
   };
 
-  const handleClose = (_, reason) => {
+  const handleCloseSnackbar = (_, reason) => {
     if (reason === "clickaway") return;
-    setOpen(false);
+    setSnackbar({ ...snackbar, open: false });
   };
 
-  const handleClick = () => {
+  // This function will show the snackbar for the billing form
+  const showBillingError = (message) => {
+    setSnackbar({ open: true, message: message, severity: "error" });
+  };
+
+  // This function will be passed to OrderSummary to show the success snackbar
+  const showOrderSuccess = (message) => {
+    setSnackbar({ open: true, message: message, severity: "success" });
+  };
+
+  const handleNextClick = () => {
     if (
       !billingDetails.name ||
       !billingDetails.email ||
@@ -70,19 +85,19 @@ export default function Page() {
       !billingDetails.state ||
       !billingDetails.zip
     ) {
-      setOpen(true);
+      showBillingError("Please fill all the fields");
       return;
     }
     if (billingDetails.phone.length !== 10) {
-      setOpen(true);
+      showBillingError("Please enter a valid phone number");
       return;
     }
     if (billingDetails.zip.length !== 6) {
-      setOpen(true);
+      showBillingError("Please enter a valid zip code");
       return;
     }
     if (billingDetails.email.indexOf("@") === -1) {
-      setOpen(true);
+      showBillingError("Please enter a valid email");
       return;
     }
     setCheckoutState("order");
@@ -100,17 +115,17 @@ export default function Page() {
     >
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        open={open}
+        open={snackbar.open}
         autoHideDuration={6000}
-        onClose={handleClose}
+        onClose={handleCloseSnackbar}
       >
         <Alert
-          onClose={handleClose}
-          severity="error"
+          onClose={handleCloseSnackbar}
+          severity={snackbar.severity}
           variant="filled"
           sx={{ width: "100%" }}
         >
-          Fill the details!
+          {snackbar.message}
         </Alert>
       </Snackbar>
       <Stack
@@ -133,48 +148,30 @@ export default function Page() {
         <StepIndicator checkoutState={checkoutState} />
         {checkoutState === "billing" && (
           <BillingDetails
-            handleClick={handleClick}
+            handleClick={handleNextClick}
             billingDetails={billingDetails}
             onBillingDetailsChange={onBillingDetailsChange}
           />
         )}
         {checkoutState === "order" && (
-          <OrderSummary setCheckoutState={setCheckoutState} />
+          <OrderSummary
+            setCheckoutState={setCheckoutState}
+            showOrderSuccess={showOrderSuccess}
+          />
         )}
       </Stack>
     </main>
   );
 }
 
-function OrderSummary({ setCheckoutState }) {
-  const { cart, clearCart } = useCart(); // ✅ use cart hook
+function OrderSummary({ setCheckoutState, showOrderSuccess }) {
+  const { cart, clearCart } = useCart();
   const { billingDetails } = useBilling();
-
-  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
-
-  const handleClose = (_, reason) => {
-    if (reason === "clickaway") return;
-    setOpen(false);
-  };
 
   return (
     <Stack gap={2}>
-      <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-        open={open}
-        onClose={handleClose}
-      >
-        <Alert
-          onClose={handleClose}
-          severity="success"
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {alertMessage}
-        </Alert>
-      </Snackbar>
+      {/* Back button */}
       <Button
         variant="text"
         sx={{
@@ -191,6 +188,8 @@ function OrderSummary({ setCheckoutState }) {
       >
         Billing details
       </Button>
+
+      {/* Title */}
       <Typography
         className={quicksand.className}
         variant="h2"
@@ -200,6 +199,8 @@ function OrderSummary({ setCheckoutState }) {
       >
         Order Summary
       </Typography>
+
+      {/* Table */}
       <Stack gap={2}>
         <TableContainer>
           <Table sx={{ minWidth: 700 }} aria-label="customized table">
@@ -236,6 +237,8 @@ function OrderSummary({ setCheckoutState }) {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Total */}
         <Stack justifyContent={"flex-end"} direction={"row"} gap={5}>
           <Typography fontWeight={"bold"}>Total:</Typography>
           <Typography fontSize={20} fontWeight={"bold"}>
@@ -251,6 +254,8 @@ function OrderSummary({ setCheckoutState }) {
           </Typography>
         </Stack>
       </Stack>
+
+      {/* Disclaimer */}
       <Typography
         className={quicksand.className}
         fontWeight={"bold"}
@@ -265,6 +270,7 @@ function OrderSummary({ setCheckoutState }) {
         Crackers.
       </Typography>
 
+      {/* Place Order button */}
       <Stack direction={"row"} justifyContent={"flex-end"}>
         <LoadingButton
           variant="contained"
@@ -280,19 +286,20 @@ function OrderSummary({ setCheckoutState }) {
           }}
           onClick={async () => {
             setLoading(true);
+
             const pdfStream = await pdf(
               <Template1 billingDetails={billingDetails} productList={cart} />
             ).toBuffer();
+
             const chunks = [];
             pdfStream.on("data", (chunk) => chunks.push(chunk));
             pdfStream.on("end", async () => {
               const pdfBuffer = Buffer.concat(chunks);
               const base64String = pdfBuffer.toString("base64");
+
               fetch("/api/sendmail", {
                 method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   billingDetails,
                   productList: cart,
@@ -302,13 +309,13 @@ function OrderSummary({ setCheckoutState }) {
                 .then((res) => res.json())
                 .then((data) => {
                   if (data.status === "success") {
-                    setAlertMessage("Order placed successfully");
-                    setOpen(true);
+                    // ✅ Trigger success snackbar
+                    showOrderSuccess("Order placed successfully 🎉");
                     clearCart();
                     setCheckoutState("billing");
-                    setLoading(false);
                   }
-                });
+                })
+                .finally(() => setLoading(false));
             });
           }}
         >
