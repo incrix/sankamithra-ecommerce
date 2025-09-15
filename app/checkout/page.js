@@ -157,6 +157,7 @@ export default function Page() {
           <OrderSummary
             setCheckoutState={setCheckoutState}
             showOrderSuccess={showOrderSuccess}
+            showError={showBillingError}
           />
         )}
       </Stack>
@@ -164,10 +165,65 @@ export default function Page() {
   );
 }
 
-function OrderSummary({ setCheckoutState, showOrderSuccess }) {
+function OrderSummary({ setCheckoutState, showOrderSuccess, showError }) {
   const { cart, clearCart } = useCart();
   const { billingDetails } = useBilling();
   const [loading, setLoading] = useState(false);
+
+  const totalAmount = cart.reduce(
+    (acc, item) =>
+      acc +
+      Math.round(
+        (item.price - (item.price * item.discount) / 100) * item.count
+      ),
+    0
+  );
+
+  // ✅ CHANGE: Create a new function to handle the order placement logic
+  const handlePlaceOrder = async () => {
+    // Check if the total amount is above 3000
+    if (totalAmount <= 3000) {
+      showError("The total amount must be above ₹3000 to place an order.");
+      return; // Stop the function if the condition is not met
+    }
+
+    setLoading(true);
+
+    const pdfStream = await pdf(
+      <Template1 billingDetails={billingDetails} productList={cart} />
+    ).toBuffer();
+
+    const chunks = [];
+    pdfStream.on("data", (chunk) => chunks.push(chunk));
+    pdfStream.on("end", async () => {
+      const pdfBuffer = Buffer.concat(chunks);
+      const base64String = pdfBuffer.toString("base64");
+
+      fetch("/api/sendmail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          billingDetails,
+          productList: cart,
+          invoice: base64String,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.status === "success") {
+            showOrderSuccess("Order placed successfully 🎉");
+            clearCart();
+            setCheckoutState("billing");
+          } else {
+            showError("Failed to place order. Please try again.");
+          }
+        })
+        .catch(() => {
+           showError("An error occurred. Please check your connection.");
+        })
+        .finally(() => setLoading(false));
+    });
+  };
 
   return (
     <Stack gap={2}>
@@ -284,40 +340,7 @@ function OrderSummary({ setCheckoutState, showOrderSuccess }) {
             },
             textTransform: "none",
           }}
-          onClick={async () => {
-            setLoading(true);
-
-            const pdfStream = await pdf(
-              <Template1 billingDetails={billingDetails} productList={cart} />
-            ).toBuffer();
-
-            const chunks = [];
-            pdfStream.on("data", (chunk) => chunks.push(chunk));
-            pdfStream.on("end", async () => {
-              const pdfBuffer = Buffer.concat(chunks);
-              const base64String = pdfBuffer.toString("base64");
-
-              fetch("/api/sendmail", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  billingDetails,
-                  productList: cart,
-                  invoice: base64String,
-                }),
-              })
-                .then((res) => res.json())
-                .then((data) => {
-                  if (data.status === "success") {
-                    // ✅ Trigger success snackbar
-                    showOrderSuccess("Order placed successfully 🎉");
-                    clearCart();
-                    setCheckoutState("billing");
-                  }
-                })
-                .finally(() => setLoading(false));
-            });
-          }}
+          onClick={handlePlaceOrder}
         >
           Place Order
         </LoadingButton>
