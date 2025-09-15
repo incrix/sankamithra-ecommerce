@@ -184,7 +184,7 @@ export default function ProductCard({ product }) {
 
             {product.discount && (
               <Typography variant="p" color={"var(--primary-color)"} fontSize={"14px"} fontWeight={"bold"}>
-                (off {product.discount}%)
+                ({product.discount}% off)
               </Typography>
             )}
           </Stack>
