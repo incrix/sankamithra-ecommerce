@@ -184,7 +184,7 @@ export default function ProductCard({ product }) {
 
             {product.discount && (
               <Typography variant="p" color={"var(--primary-color)"} fontSize={"14px"} fontWeight={"bold"}>
-                (off %{product.discount})
+                (off {product.discount}%)
               </Typography>
             )}
           </Stack>
@@ -214,7 +214,7 @@ export default function ProductCard({ product }) {
                   width: { xs: "50px", sm: "50px", md: "20px" },
                   color: "white",
                   fontSize: "14px",
-                  borderRadius: "0 5px 5px 0",
+                  borderRadius: "5px 0 0 5px",
                   fontWeight: "bold",
                   textTransform: "none",
                   backgroundColor: "var(--primary-color)",
@@ -246,7 +246,7 @@ export default function ProductCard({ product }) {
                 sx={{
                   width: { xs: "50px", sm: "50px", md: "20px" },
                   color: "white",
-                  borderRadius: "5px 0 0 5px",
+                  borderRadius: "0 5px 5px 0",
                   fontSize: "14px",
                   fontWeight: "bold",
                   textTransform: "none",
