@@ -322,7 +322,7 @@ function OrderSummary({ setCheckoutState, showOrderSuccess, showError }) {
         jurisdiction. We request you to add your products to the cart and submit
         the required crackers through the place order button. We will contact
         you within 24 hrs and confirm the order through WhatsApp or phone call.
-        Please add and submit your orders and enjoy your Diwali with Fast
+        Please add and submit your orders and enjoy your Diwali with Fire
         Crackers.
       </Typography>
 
