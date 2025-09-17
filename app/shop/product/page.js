@@ -10,14 +10,12 @@ const quicksand = Quicksand({ subsets: ["latin"] });
 import ProductCard from "@/app/components/productCard";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import { useProducts } from "@/context/ProductContext";
-import { useCart } from "@/context/CartContext";
 
 export default function Product() {
   const searchParams = useSearchParams();
   const search = searchParams.get("id");
   const router = useRouter();
   const { productList, loading } = useProducts();
-  const { addToCart } = useCart();
   const [product, setProduct] = useState(null);
   const [itemCount, setItemCount] = useState(1);
 
@@ -237,7 +235,14 @@ export default function Product() {
                     },
                   }}
                   onClick={() => {
-                    addToCart(product, itemCount);
+                    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+                    let item = cart.filter((item) => item.id == product.id)[0];
+                    if (item) {
+                      item.count += itemCount;
+                    } else {
+                      cart.push({ ...product, count: itemCount });
+                    }
+                    localStorage.setItem("cart", JSON.stringify(cart));
                   }}
                 >
                   Add to Cart

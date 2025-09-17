@@ -18,7 +18,7 @@ import { Quicksand } from "next/font/google";
 const quicksand = Quicksand({ subsets: ["latin"] });
 import EmailSubscribe from "../components/emailSubscribe";
 import { Delete } from "@mui/icons-material";
-import { useCart } from "@/context/CartContext";
+import { useState, useEffect } from "react";
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -38,27 +38,36 @@ const StyledTableRow = styled(TableRow)(() => ({
 }));
 
 export default function Cart() {
-  const { cart, updateCount, removeFromCart } = useCart();
+  const [cart, setCart] = useState([]);
 
-  const handleIncrement = (id) => {
-    const item = cart.find((c) => c.id === id);
-    if (!item) return;
-    updateCount(id, item.count + 1);
+  useEffect(() => {
+    const cartList = localStorage.getItem("cart")
+      ? JSON.parse(localStorage.getItem("cart"))
+      : [];
+    setCart(cartList);
+  }, []);
+  const handleIncrement = (index) => {
+    const newCart = [...cart];
+    newCart[index].count += 1;
+    setCart(newCart);
+    localStorage.setItem("cart", JSON.stringify(newCart));
   };
 
-  const handleDecrement = (id) => {
-    const item = cart.find((c) => c.id === id);
-    if (!item) return;
-    if (item.count === 1) {
-      // if you want to remove when count hits 0 uncomment the next line:
-      // removeFromCart(id);
+  const handleDecrement = (index) => {
+    if (cart[index].count === 1) {
       return;
     }
-    updateCount(id, item.count - 1);
+    const newCart = [...cart];
+    newCart[index].count -= 1;
+    setCart(newCart);
+    localStorage.setItem("cart", JSON.stringify(newCart));
   };
 
-  const handleRemove = (id) => {
-    removeFromCart(id);
+  const handleRemove = (index) => {
+    const newCart = [...cart];
+    newCart.splice(index, 1);
+    setCart(newCart);
+    localStorage.setItem("cart", JSON.stringify(newCart));
   };
 
   // compute total with discount same as your old logic
@@ -150,7 +159,7 @@ export default function Cart() {
                       </StyledTableCell>
                     </StyledTableRow>
                   )}
-                  {cart.map((row) => (
+                  {cart.map((row, index) => (
                     <StyledTableRow key={row.id}>
                       <StyledTableCell component="th" scope="row">
                         {row.name}
@@ -169,9 +178,9 @@ export default function Cart() {
                                 backgroundColor: "var(--text-color-trinary)",
                               },
                             }}
-                            onClick={() => handleIncrement(row.id)}
+                            onClick={() => handleDecrement(index)}
                           >
-                            +
+                            -
                           </IconButton>
                           <Typography
                             sx={{
@@ -199,9 +208,9 @@ export default function Cart() {
                                 backgroundColor: "var(--text-color-trinary)",
                               },
                             }}
-                            onClick={() => handleDecrement(row.id)}
+                            onClick={() => handleIncrement(index)}
                           >
-                            -
+                            +
                           </IconButton>
                         </Stack>
                       </StyledTableCell>
@@ -209,8 +218,9 @@ export default function Cart() {
                         {Math.round(row.price - (row.price * (row.discount || 0)) / 100)}
                       </StyledTableCell>
                       <StyledTableCell align="right">
-                        {Math.round(row.price - (row.price * (row.discount || 0)) / 100) *
-                          row.count}
+                        {Math.round(
+                          row.price - (row.price * (row.discount || 0)) / 100
+                        ) * row.count}
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         <IconButton
@@ -218,7 +228,7 @@ export default function Cart() {
                           sx={{
                             color: "red",
                           }}
-                          onClick={() => handleRemove(row.id)}
+                          onClick={() => handleRemove(index)}
                         >
                           <Delete />
                         </IconButton>

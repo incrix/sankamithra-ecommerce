@@ -14,10 +14,9 @@ import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import useWindowSize from "@/util/windowSize";
 import Badge from "@mui/material/Badge";
 import { styled } from "@mui/material/styles";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import FloatingPdf from "./floatingPdf";
-import { useCart } from "@/context/CartContext";
 
 const StyledBadge = styled(Badge)(() => ({
   "& .MuiBadge-badge": {
@@ -29,15 +28,27 @@ const StyledBadge = styled(Badge)(() => ({
 
 export default function NavBarOne() {
   const { width } = useWindowSize();
-  const { cart } = useCart(); // get cart from context
+  const [cartCount, setCartCount] = useState(1);
   const [open, setOpen] = useState(false);
 
   const handleMenu = () => {
     setOpen(!open);
   };
 
-  // calculate cart count (sum of counts, not just length)
-  const cartCount = cart.reduce((acc, item) => acc + (item.count || 0), 0);
+  useEffect(() => {
+    setCartCount(
+      localStorage.getItem("cart")
+        ? JSON.parse(localStorage.getItem("cart")).length
+        : 0
+    );
+    setInterval(() => {
+      setCartCount(
+        localStorage.getItem("cart")
+          ? JSON.parse(localStorage.getItem("cart")).length
+          : 0
+      );
+    }, 500);
+  }, []);
 
   const linkStyle = {
     color: "var(--primary-color)",
