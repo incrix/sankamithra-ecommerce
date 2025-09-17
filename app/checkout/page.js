@@ -46,7 +46,7 @@ export default function Page() {
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
-    severity: "error", // Default to error for the billing form
+    severity: "error", 
   });
 
   const [billingDetails, setBillingDetails] = useState({
