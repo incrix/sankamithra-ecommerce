@@ -1,5 +1,12 @@
 "use client";
-import { Stack, Typography, Button, ButtonGroup } from "@mui/material";
+import {
+  Stack,
+  Typography,
+  Button,
+  ButtonGroup,
+  Snackbar,
+  Alert,
+} from "@mui/material";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Carousel } from "react-responsive-carousel";
@@ -19,14 +26,57 @@ export default function Product() {
   const [product, setProduct] = useState(null);
   const [itemCount, setItemCount] = useState(1);
 
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
   useEffect(() => {
     if (!loading && productList.length > 0) {
       setProduct(productList.find((p) => p.id == search));
     }
   }, [search, productList, loading]);
 
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleAddToCart = () => {
+    if (product.countInStock <= 0) {
+      setSnackbar({
+        open: true,
+        message: "Sorry, this product is out of stock!",
+        severity: "error",
+      });
+      return;
+    }
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let itemInCart = cart.find((item) => item.id == product.id);
+
+    if (itemInCart) {
+      itemInCart.count += itemCount;
+    } else {
+      cart.push({ ...product, count: itemCount });
+    }
+    localStorage.setItem("cart", JSON.stringify(cart));
+    setSnackbar({
+      open: true,
+      message: `${product.name} added to your cart!`,
+      severity: "success",
+    });
+  };
+  
   if (loading) return <p>Loading product...</p>;
   if (!product) return <p>Product not found</p>;
+
+  const isOutOfStock = product.countInStock <= 0;
+
+
 
   return (
     <main
@@ -36,6 +86,21 @@ export default function Product() {
         width: "100%",
       }}
     >
+      {/* Snackbar Component */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbar.severity}
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       <Stack
         width={"100%"}
         maxWidth={"var(--max-width)"}
@@ -234,18 +299,10 @@ export default function Product() {
                       backgroundColor: "var(--primary-color)",
                     },
                   }}
-                  onClick={() => {
-                    let cart = JSON.parse(localStorage.getItem("cart")) || [];
-                    let item = cart.filter((item) => item.id == product.id)[0];
-                    if (item) {
-                      item.count += itemCount;
-                    } else {
-                      cart.push({ ...product, count: itemCount });
-                    }
-                    localStorage.setItem("cart", JSON.stringify(cart));
-                  }}
+                  onClick={handleAddToCart}
+                  disabled={isOutOfStock}
                 >
-                  Add to Cart
+                  {isOutOfStock ? "Out of Stock" : "Add to Cart"}
                 </Button>
               </Stack>
               <Stack

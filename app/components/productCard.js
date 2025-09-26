@@ -1,4 +1,3 @@
-// components/ProductCard.jsx (update import path as needed)
 "use client";
 
 import {
@@ -19,7 +18,11 @@ import useWindowSize from "@/util/windowSize";
 export default function ProductCard({ product }) {
   const [count, setCount] = useState(1);
   const [open, setOpen] = useState(false);
-  const [snackMsg, setSnackMsg] = useState("");
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   const router = useRouter();
   const pathArray = usePathname().split("/");
   const { width } = useWindowSize();
@@ -64,7 +67,7 @@ export default function ProductCard({ product }) {
       }
     }
   };
-  const handleClose = () => setOpen(false);
+  const handleClose = () => setSnackbar({ ...snackbar, open: false });
   const handleOpen = () => setOpen(true);
 
   useEffect(() => {
@@ -76,16 +79,55 @@ export default function ProductCard({ product }) {
     if (item) {
       setIsAdded(true);
       setCount(item.count);
-      // console.log(item.count);
     } else {
       setIsAdded(false);
       setCount(1);
     }
-  }, [cart, product.id]); // Dependencies for useCallback
+  }, [cart, product.id]);
 
   useEffect(() => {
     isProductAdded();
   }, [cart, isProductAdded]);
+
+  const handleAddToCart = () => {
+    // 1. Check if the product is in stock
+    if (product.countInStock <= 0) {
+      setSnackbar({
+        open: true,
+        message: "Sorry, this item is out of stock.",
+        severity: "error",
+      });
+      return; // Prevent adding to cart
+    }
+
+    // 2. If in stock, proceed to add
+    if (!isAdded) {
+      let currentCart = JSON.parse(localStorage.getItem("cart")) || [];
+      currentCart.push({ ...product, count: count });
+      localStorage.setItem("cart", JSON.stringify(currentCart));
+      setCart(currentCart); // Update state to trigger re-render
+      setIsAdded(true);
+      setSnackbar({
+        open: true,
+        message: `${product.name} added to cart`,
+        severity: "success",
+      });
+    } else {
+      // Remove item from cart
+      let currentCart = JSON.parse(localStorage.getItem("cart")) || [];
+      let newCart = currentCart.filter((item) => item.id !== product.id);
+      localStorage.setItem("cart", JSON.stringify(newCart));
+      setCart(newCart); // Update state to trigger re-render
+      setIsAdded(false);
+      setSnackbar({
+        open: true,
+        message: `${product.name} removed from cart`,
+        severity: "info",
+      });
+    }
+  };
+
+  const isOutOfStock = product.countInStock <= 0;
 
   return (
     <Paper
@@ -103,17 +145,17 @@ export default function ProductCard({ product }) {
       }}
     >
       <Snackbar
-        open={open}
+        open={snackbar.open}
         autoHideDuration={3000}
         onClose={handleClose}
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
       >
         <Alert
           onClose={handleClose}
-          severity={isAdded ? "success" : "info"}
+          severity={snackbar.severity}
           sx={{ width: "100%" }}
         >
-          {product.name + (!isAdded ? ` removed from cart` : ` added to cart`)}
+          {snackbar.message}
         </Alert>
       </Snackbar>
 
@@ -248,30 +290,17 @@ export default function ProductCard({ product }) {
                 backgroundColor: "var(--primary-color)",
                 "&:hover": { backgroundColor: "var(--primary-color)" },
               }}
-              startIcon={!isAdded && <ShoppingCart />}
-              onClick={() => {
-                if (!isAdded) {
-                  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-                  let item = cart.filter((item) => item.id == product.id)[0];
-                  if (item) {
-                    item.count += count;
-                  } else {
-                    cart.push({ ...product, count: count });
-                  }
-                  localStorage.setItem("cart", JSON.stringify(cart));
-                  setIsAdded(true);
-                  handleOpen();
-                } else {
-                  //remove item from cart
-                  let cart = JSON.parse(localStorage.getItem("cart")) || [];
-                  let newCart = cart.filter((item) => item.id != product.id);
-                  localStorage.setItem("cart", JSON.stringify(newCart));
-                  setIsAdded(false);
-                  handleOpen();
-                }
-              }}
+              startIcon={!isAdded && !isOutOfStock && <ShoppingCart />}
+              onClick={handleAddToCart}
+              disabled={isOutOfStock && !isAdded}
             >
-              {isAdded ? "Remove" : "Add"}
+              {isOutOfStock
+                ? isAdded
+                  ? "Remove"
+                  : "Out of Stock"
+                : isAdded
+                ? "Remove"
+                : "Add"}
             </Button>
 
             <Stack direction={"row"}>
