@@ -5,6 +5,7 @@ import { Stack } from "@mui/material";
 import useWindowSize from "@/util/windowSize";
 import { useSearchParams } from "next/navigation";
 import { useProducts } from "@/context/ProductContext";
+import FloatTopButton from "../components/floatTopButton";
 
 export default function Shop() {
   const searchParams = useSearchParams();
@@ -31,6 +32,7 @@ export default function Shop() {
         </Stack>
         <ProductTab category={category} searchTerm={searchTerm} />
       </Stack>
+      <FloatTopButton />
     </main>
   );
 }

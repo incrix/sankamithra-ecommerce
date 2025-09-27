@@ -3,6 +3,7 @@ import Hero from "./components/hero";
 import ShopByCategory from "./components/shopByCategory";
 import EmailSubscribe from "./components/emailSubscribe";
 import FireSafety from "./components/fireSafety";
+import FloatTopButton from "./components/floatTopButton";
 
 export default function Home() { 
   return ( 
@@ -24,6 +25,7 @@ export default function Home() {
         <EmailSubscribe />
         <FireSafety />
       </Stack>
+      <FloatTopButton />
     </main>
   );
 }
