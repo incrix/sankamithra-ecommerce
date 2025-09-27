@@ -16,6 +16,7 @@ import LoadingButton from "@mui/lab/LoadingButton";
 import { styled } from "@mui/material/styles";
 import { Quicksand } from "next/font/google";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import TableCell, { tableCellClasses } from "@mui/material/TableCell";
 import ArrowBackIosNewRoundedIcon from "@mui/icons-material/ArrowBackIosNewRounded";
 import { pdf } from "@react-pdf/renderer";
@@ -187,6 +188,7 @@ export default function Page() {
 function OrderSummary({ setCheckoutState, showOrderSuccess, showError }) {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setCart(JSON.parse(localStorage.getItem("cart")) || []);
@@ -239,7 +241,9 @@ function OrderSummary({ setCheckoutState, showOrderSuccess, showError }) {
             showOrderSuccess("Order placed successfully 🎉");
             localStorage.removeItem("cart");
             localStorage.removeItem("billingDetails");
-            setCheckoutState("billing");
+            setTimeout(() => {
+              router.push("/shop");
+            }, 2000); 
           } else {
             showError("Failed to place order. Please try again.");
           }

@@ -275,7 +275,7 @@ export default function Cart() {
                         backgroundColor: "var(--primary-color)",
                       },
                     }}
-                    disabled={cart.length === 0}
+                    disabled={cart.length === 0 || total <= 3000}
                   >
                     <Link
                       style={{
@@ -287,6 +287,16 @@ export default function Cart() {
                       Proceed to Checkout
                     </Link>
                   </Button>
+                  {total <= 3000 && cart.length > 0 && (
+                    <Typography
+                      className={quicksand.className}
+                      fontSize={13}
+                      fontWeight={600}
+                      color="red"
+                    >
+                      Minimum order amount is ₹3000
+                    </Typography>
+                  )}
                   <Button
                     variant="outlined"
                     sx={{
