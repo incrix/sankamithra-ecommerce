@@ -8,6 +8,7 @@ import { GoogleAnalytics } from '@next/third-parties/google'
 import { CartProvider } from "@/context/CartContext";
 import { BillingProvider } from "@/context/BillingContext";
 import { ProductProvider } from "@/context/ProductContext";
+import SearchBarMobile from "@/app/components/searchBarMobile";
 
 const quicksand = Quicksand({ subsets: ["latin"] });
 
@@ -33,6 +34,7 @@ export default function RootLayout({ children }) {
               <AnnounceBar />
               <NavBarOne />
               <NavBarTwo />
+              <SearchBarMobile />
               {children}
               <Footer />
             <GoogleAnalytics gaId="G-BVTWT7NXQW" />
