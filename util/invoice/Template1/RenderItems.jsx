@@ -81,7 +81,7 @@ export default function RenderItems({ productList }) {
       {/* Table Body */}
       {productList.map((product, index) => {
         // De-structure properties for easier access
-        const { title, price, count, discount } = product;
+        const { name: title, price, count, discount } = product;
 
         // --- NEW LOGIC ---
         // 1. Calculate the price of a single item AFTER the discount
