@@ -1,162 +1,127 @@
-import { Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
+"use client";
+import { Text, View, StyleSheet } from "@react-pdf/renderer";
+
+// Define styles for the table
+const styles = StyleSheet.create({
+  table: {
+    width: "100%",
+    border: "1px solid #333",
+    borderTop: 0,
+  },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#f0f0f0",
+    borderBottom: "1px solid #333",
+    fontFamily: "Lato Bold",
+  },
+  tableRow: {
+    flexDirection: "row",
+    borderBottom: "1px solid #333",
+  },
+  cell: {
+    padding: 5,
+    fontSize: 8,
+    textAlign: "right",
+  },
+  s_no: {
+    width: "7%",
+    padding: 5,
+    fontSize: 8,
+    textAlign: "center",
+    borderRight: "1px solid #333",
+  },
+  item_name: {
+    width: "38%",
+    padding: 5,
+    fontSize: 8,
+    borderRight: "1px solid #333",
+  },
+  rate: {
+    width: "15%",
+    padding: 5,
+    fontSize: 8,
+    textAlign: "right",
+    borderRight: "1px solid #333",
+  },
+  qty: {
+    width: "10%",
+    padding: 5,
+    fontSize: 8,
+    textAlign: "center",
+    borderRight: "1px solid #333",
+  },
+  discount: {
+    width: "15%",
+    padding: 5,
+    fontSize: 8,
+    textAlign: "right",
+    borderRight: "1px solid #333",
+  },
+  total: {
+    width: "15%",
+    padding: 5,
+    fontSize: 8,
+    textAlign: "right",
+  },
+});
 
 export default function RenderItems({ productList }) {
   return (
-    <View>
-      {/* //Table Header */}
-      <GenerateTableHeader />
-      {/* //Table Items */}
-      <View>
-        <GenerateItem productList={productList} />
+    <View style={styles.table}>
+      {/* Table Header */}
+      <View style={styles.tableHeader} fixed>
+        <View style={styles.s_no}><Text>S.No</Text></View>
+        <View style={styles.item_name}><Text>Item</Text></View>
+        <View style={styles.rate}><Text>Rate / Item</Text></View>
+        <View style={styles.qty}><Text>Qty</Text></View>
+        <View style={styles.discount}><Text>Discount</Text></View>
+        <View style={styles.total}><Text>Total</Text></View>
       </View>
+
+      {/* Table Body */}
+      {productList.map((product, index) => {
+        // De-structure properties for easier access
+        const { title, price, count, discount } = product;
+
+        // --- NEW LOGIC ---
+        // 1. Calculate the price of a single item AFTER the discount
+        const priceAfterDiscount = price * (1 - discount / 100);
+
+        // 2. Calculate the total for the row (price after discount * quantity)
+        const totalAmount = priceAfterDiscount * count;
+        // --- END OF NEW LOGIC ---
+
+        return (
+          <View key={index} style={styles.tableRow} wrap={false}>
+            {/* S.No */}
+            <View style={styles.s_no}>
+              <Text>{index + 1}</Text>
+            </View>
+            {/* Item Name */}
+            <View style={styles.item_name}>
+              <Text>{title}</Text>
+            </View>
+            {/* Rate / Item */}
+            <View style={styles.rate}>
+              <Text>{price.toFixed(2)}</Text>
+            </View>
+            {/* Qty */}
+            <View style={styles.qty}>
+              <Text>{count}</Text>
+            </View>
+            {/* Discount Column (Updated) */}
+            <View style={styles.discount}>
+              <Text>
+                {`${priceAfterDiscount.toFixed(2)} (${discount}%)`}
+              </Text>
+            </View>
+            {/* Total Column (Updated) */}
+            <View style={styles.total}>
+              <Text>{totalAmount.toFixed(2)}</Text>
+            </View>
+          </View>
+        );
+      })}
     </View>
   );
-}
-
-function GenerateTableHeader() {
-  return (
-    <View
-      fixed
-      style={{
-        flexDirection: "row",
-        margin: 0,
-        border: "1px solid #333",
-        borderTop: 0,
-        fontSize: 8,
-        fontFamily: "Lato Bold",
-      }}
-    >
-      <Text
-        style={{
-          padding: "8px 4px",
-          width: "10%",
-          borderRight: "1px solid #333",
-        }}
-      >
-        S.No
-      </Text>
-      <Text
-        style={{
-          padding: "8px 4px",
-          width: "30%",
-          borderRight: "1px solid #333",
-        }}
-      >
-        Item
-      </Text>
-      <Text
-        style={{
-          padding: "8px 4px",
-          width: "15%",
-          borderRight: "1px solid #333",
-        }}
-      >
-        Rate / Item
-      </Text>
-      <Text
-        style={{
-          padding: "8px 4px",
-          width: "15%",
-          borderRight: "1px solid #333",
-        }}
-      >
-        Qty
-      </Text>
-      <Text
-        style={{
-          padding: "8px 4px",
-          width: "15%",
-          borderRight: "1px solid #333",
-        }}
-      >
-        Discount
-      </Text>
-      <Text
-        style={{
-          padding: "8px 4px",
-          width: "15%",
-          borderRight: "1px solid #333",
-        }}
-      >
-        Total
-      </Text>
-    </View>
-  );
-}
-
-function GenerateItem({ productList }) {
-  return productList.map((item, index) => {
-    return (
-      <View
-        wrap={false}
-        key={index}
-        style={{
-          flexDirection: "row",
-          margin: 0,
-          border: "1px solid #333",
-          borderTop: 0,
-          fontSize: 8,
-          fontFamily: "Lato",
-        }}
-      >
-        <Text
-          style={{
-            padding: "8px 4px",
-            width: "10%",
-            borderRight: "1px solid #333",
-          }}
-        >
-          {index + 1}
-        </Text>
-        <Text
-          style={{
-            padding: "8px 4px",
-            width: "30%",
-            borderRight: "1px solid #333",
-          }}
-        >
-          {item.name}
-        </Text>
-        <Text
-          style={{
-            padding: "8px 4px",
-            width: "15%",
-            borderRight: "1px solid #333",
-          }}
-        >
-          {item.price.toFixed(2)}
-        </Text>
-        <Text
-          style={{
-            padding: "8px 4px",
-            width: "15%",
-            borderRight: "1px solid #333",
-          }}
-        >
-          {item.count}
-        </Text>
-        <Text
-          style={{
-            padding: "8px 4px",
-            width: "15%",
-            borderRight: "1px solid #333",
-          }}
-        >
-          {((item.price * item.discount) / 100).toFixed(2)} ({item.discount}%)
-        </Text>
-        <Text
-          style={{
-            padding: "8px 4px",
-            width: "15%",
-            borderRight: "1px solid #333",
-          }}
-        >
-          {(
-            (item.price - (item.price * item.discount) / 100) *
-            item.count
-          ).toFixed(2)}
-        </Text>
-      </View>
-    );
-  });
 }
