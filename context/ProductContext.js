@@ -6,6 +6,7 @@ const ProductContext = createContext();
 export function ProductProvider({ children }) {
   const [productList, setProductList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     async function fetchProducts() {
@@ -26,10 +27,16 @@ export function ProductProvider({ children }) {
     fetchProducts();
   }, []);
 
+  const value = {
+    productList,
+    setProductList,
+    loading,
+    searchTerm,
+    setSearchTerm,
+  };
+
   return (
-    <ProductContext.Provider value={{ productList, setProductList, loading }}>
-      {children}
-    </ProductContext.Provider>
+    <ProductContext.Provider value={value}>{children}</ProductContext.Provider>
   );
 }
 

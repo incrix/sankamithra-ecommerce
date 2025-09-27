@@ -4,12 +4,14 @@ import ShopByCategory from "../components/shopByCategory";
 import { Stack } from "@mui/material";
 import useWindowSize from "@/util/windowSize";
 import { useSearchParams } from "next/navigation";
+import { useProducts } from "@/context/ProductContext";
 
 export default function Shop() {
   const searchParams = useSearchParams();
   const category = searchParams.get("category");
   console.log(category);
   const { width } = useWindowSize();
+  const { searchTerm } = useProducts();
   return (
     <main
       style={{
@@ -27,7 +29,7 @@ export default function Shop() {
         >
           <ShopByCategory />
         </Stack>
-        <ProductTab category={category} />
+        <ProductTab category={category} searchTerm={searchTerm} />
       </Stack>
     </main>
   );

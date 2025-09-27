@@ -5,6 +5,7 @@ import {
   InputAdornment,
   Fab,
   IconButton,
+  Box,
 } from "@mui/material";
 import Link from "next/link";
 import logo from "../../public/images/logo.svg";
@@ -17,6 +18,8 @@ import { styled } from "@mui/material/styles";
 import { useState, useEffect } from "react";
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import FloatingPdf from "./floatingPdf";
+import { useProducts } from "@/context/ProductContext";
+import { useRouter } from "next/navigation";
 
 const StyledBadge = styled(Badge)(() => ({
   "& .MuiBadge-badge": {
@@ -30,6 +33,22 @@ export default function NavBarOne() {
   const { width } = useWindowSize();
   const [cartCount, setCartCount] = useState(1);
   const [open, setOpen] = useState(false);
+  const { searchTerm, setSearchTerm } = useProducts();
+  const router = useRouter();
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const handleSearchSubmit = () => {
+    router.push("/shop#product");
+  };
+
+  const handleKeyDown = (event) => {
+    if (event.key === "Enter") {
+      handleSearchSubmit();
+    }
+  };
 
   const handleMenu = () => {
     setOpen(!open);
@@ -41,13 +60,14 @@ export default function NavBarOne() {
         ? JSON.parse(localStorage.getItem("cart")).length
         : 0
     );
-    setInterval(() => {
+    const interval = setInterval(() => {
       setCartCount(
         localStorage.getItem("cart")
           ? JSON.parse(localStorage.getItem("cart")).length
           : 0
       );
     }, 500);
+    return () => clearInterval(interval);
   }, []);
 
   const linkStyle = {
@@ -164,21 +184,51 @@ export default function NavBarOne() {
             md: "flex",
           }}
         >
-          <TextField
+          <Box
             sx={{
+              display: "flex",
               width: "500px",
             }}
-            placeholder="Search"
-            variant="outlined"
-            size="small"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="start">
-                  <SearchOutlinedIcon />
-                </InputAdornment>
-              ),
-            }}
-          />
+          >
+            <TextField
+              placeholder="Search for products..."
+              variant="outlined"
+              size="small"
+              fullWidth
+              value={searchTerm}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
+              sx={{
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: "4px 0 0 4px",
+                  "& fieldset": {
+                    borderColor: "#ccc",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "var(--primary-color)",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "var(--primary-color)",
+                  },
+                },
+              }}
+            />
+            <IconButton
+              onClick={handleSearchSubmit}
+              sx={{
+                borderRadius: "0 4px 4px 0",
+                backgroundColor: "#000",
+                color: "white",
+                px: 3,
+                "&:hover": {
+                  backgroundColor: "#000",
+                  opacity: 0.8,
+                },
+              }}
+            >
+              <SearchOutlinedIcon />
+            </IconButton>
+          </Box>
         </Stack>
 
         {/* Right-side items */}

@@ -4,26 +4,34 @@ import ProductCard from "./productCard";
 import { useEffect, useState } from "react";
 import { useProducts } from "@/context/ProductContext";
 
-export default function ProductTab({ category }) {
+export default function ProductTab({ category, searchTerm }) {
   const { productList, loading } = useProducts();
   const [filteredProductList, setFilteredProductList] = useState([]);
   useEffect(() => {
     if (!loading) {
-      setFilteredProductList(
-        category
-          ? productList.filter((product) =>
-              category === "Atom bombs"
-                ? product.category === "Atom bombs" ||
-                  product.category === "Bijili crackers"
-                : category === "Twinklers"
-                ? product.category === "Twinkling stars" ||
-                  product.category === "Pencils"
-                : product.category === category
-            )
-          : productList
-      );
+      let filtered = productList;
+
+      if (category) {
+        filtered = productList.filter((product) =>
+          category === "Atom bombs"
+            ? product.category === "Atom bombs" ||
+              product.category === "Bijili crackers"
+            : category === "Twinklers"
+            ? product.category === "Twinkling stars" ||
+              product.category === "Pencils"
+            : product.category === category
+        );
+      }
+
+      if (searchTerm) {
+        filtered = filtered.filter((product) =>
+          product.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+
+      setFilteredProductList(filtered);
     }
-  }, [category, productList, loading]);
+  }, [category, searchTerm, productList, loading]);
 
   if (loading) return <p>Loading products...</p>;
 
@@ -44,7 +52,9 @@ export default function ProductTab({ category }) {
           marginLeft: "10px",
         }}
       >
-        {category
+        {searchTerm
+          ? `Showing results for "${searchTerm}"`
+          : category
           ? category === "Atom bombs"
             ? "Atom bombs & Bijili"
             : category
@@ -64,10 +74,15 @@ export default function ProductTab({ category }) {
           lg: "flex-start",
         }}
       >
-        {filteredProductList.length != 0 &&
+        {filteredProductList.length > 0 ? (
           filteredProductList.map((product, index) => {
             return <ProductCard key={index} product={product} />;
-          })}
+          })
+        ) : (
+          <p style={{ textAlign: "center", width: "100%" }}>
+            No products found.
+          </p>
+        )}
       </Stack>
     </Stack>
   );
