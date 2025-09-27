@@ -22,6 +22,8 @@ import { useProducts } from "@/context/ProductContext";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useActivePath } from "./helperPath";
+import Lottie from "lottie-react";
+import animationData from "@/public/lottie/OOOikhsGy3.json";
 
 const StyledBadge = styled(Badge)(() => ({
   "& .MuiBadge-badge": {
@@ -105,12 +107,11 @@ export default function NavBarOne() {
       }}
     >
       {/* Drawer Menu */}
-      {/* Drawer Menu */}
       <Stack
         sx={{
           position: "fixed",
           top: 0,
-          right: open ? 0 : "-300px", // slide out
+          right: open ? 0 : "-300px",
           width: "280px",
           height: "100vh",
           padding: 3,
@@ -175,6 +176,14 @@ export default function NavBarOne() {
               </Link>
             );
           })}
+        </Stack>
+
+        <Stack direction="row" justifyContent="center" mt={4}>
+          <Lottie
+            animationData={animationData}
+            loop={true}
+            style={{ width: 180, height: 180 }}
+          />
         </Stack>
       </Stack>
 
