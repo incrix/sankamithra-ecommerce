@@ -20,6 +20,8 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import FloatingPdf from "./floatingPdf";
 import { useProducts } from "@/context/ProductContext";
 import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useActivePath } from "./helperPath";
 
 const StyledBadge = styled(Badge)(() => ({
   "& .MuiBadge-badge": {
@@ -35,6 +37,7 @@ export default function NavBarOne() {
   const [open, setOpen] = useState(false);
   const { searchTerm, setSearchTerm } = useProducts();
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value);
@@ -71,9 +74,21 @@ export default function NavBarOne() {
   }, []);
 
   const linkStyle = {
-    color: "var(--primary-color)",
+    color: "#000",
     fontSize: "18px",
     fontWeight: "bold",
+    textDecoration: "none",
+  };
+
+  const activeLinkStyle = {
+    color: "var(--primary-color)",
+    textDecoration: "underline",
+  };
+
+  const isActiveLink = (href) => {
+    const current = pathname.replace(/\/$/, ""); // remove trailing slash
+    const linkPath = href.replace(/\/$/, "");
+    return current === linkPath;
   };
 
   return (
@@ -90,42 +105,77 @@ export default function NavBarOne() {
       }}
     >
       {/* Drawer Menu */}
+      {/* Drawer Menu */}
       <Stack
-        display={open ? "flex" : "none"}
-        gap={10}
-        width={"300px"}
-        height={"100vh"}
-        position={"fixed"}
-        padding={"20px"}
         sx={{
-          top: "0",
-          right: "0",
+          position: "fixed",
+          top: 0,
+          right: open ? 0 : "-300px", // slide out
+          width: "280px",
+          height: "100vh",
+          padding: 3,
           backgroundColor: "white",
-          zIndex: "100",
-          border: "1px solid #ECECEC",
+          zIndex: 100,
+          borderLeft: "1px solid #ECECEC",
+          transition: "right 0.3s ease",
         }}
       >
-        <IconButton
-          sx={{
-            color: "var(--primary-color)",
-            fontSize: "30px",
-            width: "30px",
-          }}
+        {/* Header with Logo + Close */}
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
         >
-          <CloseRoundedIcon onClick={handleMenu} />
-        </IconButton>
-        <Link style={linkStyle} href="/" onClick={handleMenu}>
-          Home
-        </Link>
-        <Link style={linkStyle} href="/shop" onClick={handleMenu}>
-          Shop
-        </Link>
-        <Link style={linkStyle} href="/factory" onClick={handleMenu}>
-          Factory
-        </Link>
-        <Link style={linkStyle} href="/contact" onClick={handleMenu}>
-          Contact
-        </Link>
+          <Link
+            href="/"
+            onClick={handleMenu}
+            style={{ display: "flex", alignItems: "center" }}
+          >
+            <img
+              src={logo.src}
+              alt="Sankamithra"
+              style={{ width: "90px", height: "auto" }}
+            />
+          </Link>
+
+          <IconButton
+            onClick={handleMenu}
+            sx={{
+              backgroundColor: "black",
+              color: "#fff",
+              "&:hover": { backgroundColor: "#222" },
+            }}
+          >
+            <CloseRoundedIcon />
+          </IconButton>
+        </Stack>
+
+        {/* Navigation Links */}
+        <Stack spacing={2.5} mt={4}>
+          {[
+            { href: "/", label: "Home" },
+            { href: "/shop", label: "Shop" },
+            { href: "/factory", label: "Factory" },
+            { href: "/contact", label: "Contact" },
+          ].map((link) => {
+            const active = useActivePath(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={handleMenu}
+                style={{
+                  color: active ? "var(--primary-color)" : "#000",
+                  fontSize: "18px",
+                  fontWeight: "bold",
+                  textDecoration: active ? "underline" : "none",
+                }}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
+        </Stack>
       </Stack>
 
       {/* Main Nav */}
