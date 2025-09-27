@@ -74,7 +74,7 @@ export default function RenderItems({ productList }) {
         <View style={styles.item_name}><Text>Item</Text></View>
         <View style={styles.rate}><Text>Rate / Item</Text></View>
         <View style={styles.qty}><Text>Qty</Text></View>
-        <View style={styles.discount}><Text>Discount</Text></View>
+        <View style={styles.discount}><Text>Discount Rate</Text></View>
         <View style={styles.total}><Text>Total</Text></View>
       </View>
 
