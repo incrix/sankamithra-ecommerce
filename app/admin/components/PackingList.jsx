@@ -63,7 +63,7 @@ export default function PackingList({ items, onToggle, onUnavailable, onSubstitu
               <Stack direction="row" alignItems="center" gap={1.25}>
                 <Checkbox
                   checked={Boolean(it.packed)}
-                  disabled={busy || dropped}
+                  disabled={dropped}
                   onChange={() => onToggle(it)}
                   disableRipple
                   inputProps={{ "aria-label": `packed: ${it.name}` }}

@@ -22,7 +22,7 @@ const NEXT = {
   packed: { to: "dispatched", label: "Mark dispatched" },
 };
 
-export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) {
+export default function OrderDetail({ order, onClose, onPatch, onTogglePacked, busy, onToast }) {
   // Hooks must run before any early return, or the hook order changes between
   // renders as soon as `order` goes null.
   const [swapFor, setSwapFor] = useState(null);
@@ -121,7 +121,7 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
         <PackingList
           items={order.items}
           busy={busy}
-          onToggle={(it) => onPatch({ itemId: it.id, packed: !it.packed })}
+          onToggle={onTogglePacked}
           onUnavailable={(it, flag) => onPatch({ itemId: it.id, unavailable: flag })}
           onSubstitute={(it) => setSwapFor(it)}
         />

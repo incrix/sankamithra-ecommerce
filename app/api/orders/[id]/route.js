@@ -1,5 +1,6 @@
 import { updateOrder, getOrder } from "@/util/ordersStore";
 import { requireAdmin } from "@/util/admin/auth";
+import { withRetry } from "@/util/db/mongo";
 import { sendCustomerMail } from "@/util/sendMail";
 
 export const dynamic = "force-dynamic";
@@ -26,8 +27,10 @@ export async function PATCH(request, { params }) {
 
   const patch = await request.json().catch(() => ({}));
 
-  const before = await getOrder(params.id);
-  const order = await updateOrder(params.id, patch);
+  // Retried: a packer ticking through a list should not lose a change because
+  // the cluster shed load for a moment.
+  const before = await withRetry(() => getOrder(params.id));
+  const order = await withRetry(() => updateOrder(params.id, patch));
   if (!order) return Response.json({ error: "Not found" }, { status: 404 });
 
   // Tell the customer when the status genuinely moved, so the shop never has to

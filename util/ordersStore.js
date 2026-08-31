@@ -131,9 +131,32 @@ export async function createOrder({ billingDetails, productList, emailSent, sour
   return order;
 }
 
+/**
+ * Applies a patch to an order.
+ *
+ * Read-modify-write, guarded by a revision number. A packer ticking several
+ * lines in quick succession fires overlapping requests; each used to read the
+ * same document and then replaceOne() the whole thing, so the last write won
+ * and the other ticks were silently lost. The write now only lands if the
+ * document still carries the revision we read, and a losing writer re-reads
+ * and reapplies its own change rather than clobbering someone else's.
+ */
 export async function updateOrder(id, patch) {
   if (!useDb()) return fileStore.updateOrder(id, patch);
 
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const saved = await applyOnce(id, patch);
+    if (saved !== CONFLICT) return saved;
+    // Someone else wrote between our read and our write; back off a moment and
+    // build the change again on top of theirs.
+    await new Promise((r) => setTimeout(r, 25 * (attempt + 1)));
+  }
+  throw new Error("That order is being changed elsewhere - try again");
+}
+
+const CONFLICT = Symbol("conflict");
+
+async function applyOnce(id, patch) {
   const prev = await getOrder(id);
   if (!prev) return null;
 
@@ -202,8 +225,13 @@ export async function updateOrder(id, patch) {
   }
 
   const saved = recomputeTotals(next);
-  await (await orders()).replaceOne({ id }, { ...saved });
-  return saved;
+  saved.rev = Number(prev.rev || 0) + 1;
+
+  // Orders written before revisions existed have no rev field, which matches
+  // null in a query - so those are accepted on their first guarded write.
+  const guard = prev.rev == null ? { $in: [null, 0] } : prev.rev;
+  const res = await (await orders()).replaceOne({ id, rev: guard }, { ...saved });
+  return res.matchedCount === 1 ? saved : CONFLICT;
 }
 
 export async function orderStats() {

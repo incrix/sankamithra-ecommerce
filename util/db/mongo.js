@@ -33,7 +33,10 @@ export async function getDb() {
       // and build worker) keep accumulating sockets until the cluster hits its
       // limit. Idle connections now hand themselves back after a minute.
       maxIdleTimeMS: 60_000,
-      serverSelectionTimeoutMS: 8000,
+      // 3s, not 8s. A shared-tier cluster intermittently refuses connections;
+      // waiting 8s before giving up made every such blip look like a hang, and
+      // left no room to retry inside Vercel's 10s function limit.
+      serverSelectionTimeoutMS: 3000,
       // Fail a request that cannot get a connection rather than let callers
       // queue up behind an exhausted pool.
       waitQueueTimeoutMS: 5000,
@@ -88,5 +91,30 @@ export async function dbDiagnostics() {
     return { ok: true, configured: true, database: db.databaseName, counts: { orders, products, media } };
   } catch (err) {
     return { ok: false, configured: true, error: err.message };
+  }
+}
+
+/**
+ * Retries an operation that failed for a reason the server itself called
+ * temporary.
+ *
+ * A free-tier cluster sheds load by refusing connections outright, which the
+ * driver surfaces as SystemOverloadedError / ResetPool. The topology recovers
+ * on its own within a moment, so one retry turns what the packer saw as
+ * "Update failed" into a barely perceptible pause. Anything not labelled
+ * retryable is thrown straight through - a genuine bug must not be masked.
+ */
+const TRANSIENT = ["SystemOverloadedError", "RetryableError", "ResetPool", "RetryableWriteError"];
+
+export async function withRetry(fn, attempts = 2) {
+  for (let i = 0; ; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      const labels = err?.errorLabelSet;
+      const transient = labels && TRANSIENT.some((l) => labels.has(l));
+      if (!transient || i >= attempts - 1) throw err;
+      await new Promise((r) => setTimeout(r, 200 * (i + 1)));
+    }
   }
 }
