@@ -3,6 +3,7 @@ import path from "path";
 import crypto from "crypto";
 import { requireAdmin } from "@/util/admin/auth";
 import { collection, isDbConfigured } from "@/util/db/mongo";
+import { uploadImage, isCloudinaryConfigured } from "@/util/cloudinary";
 
 export const dynamic = "force-dynamic";
 
@@ -13,10 +14,10 @@ const MAX_BYTES = 5 * 1024 * 1024;
 /**
  * Stores a product image and returns the path the catalogue should reference.
  *
- * With a database configured the bytes go into MongoDB and are served back
- * through /api/media/<name>. Writing to public/uploads only works where the
- * filesystem persists — on a serverless host it is read-only and wiped between
- * deploys, so an uploaded image would 404 almost immediately.
+ * Three tiers, in order of preference: Cloudinary (CDN-delivered, keeps large
+ * binaries out of the database), then MongoDB, then the local filesystem.
+ * public/uploads only works where the filesystem persists — on a serverless
+ * host it is read-only and wiped between deploys.
  */
 export async function POST(request) {
   const denied = await requireAdmin();
@@ -41,6 +42,11 @@ export async function POST(request) {
     // to escape the directory.
     const name = `${crypto.randomBytes(10).toString("hex")}.${ext}`;
     const bytes = Buffer.from(await file.arrayBuffer());
+
+    if (isCloudinaryConfigured()) {
+      const { url } = await uploadImage(bytes);
+      return Response.json({ ok: true, path: url });
+    }
 
     if (isDbConfigured()) {
       await (await collection("media")).insertOne({
