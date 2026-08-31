@@ -22,8 +22,21 @@ export async function getDb() {
 
   if (!cached.promise) {
     cached.promise = new MongoClient(URI, {
-      maxPoolSize: 10,
+      // Each serverless instance gets its own pool, and the free tier allows
+      // 500 connections in total - so the pool is kept small deliberately.
+      // 5 per instance leaves room for ~100 concurrent instances; a single
+      // instance never handles enough parallel work to need more.
+      maxPoolSize: 5,
+      minPoolSize: 0,
+      // The important one. Without it a pooled connection is held open for the
+      // life of the process, so idle instances (and, locally, every dev server
+      // and build worker) keep accumulating sockets until the cluster hits its
+      // limit. Idle connections now hand themselves back after a minute.
+      maxIdleTimeMS: 60_000,
       serverSelectionTimeoutMS: 8000,
+      // Fail a request that cannot get a connection rather than let callers
+      // queue up behind an exhausted pool.
+      waitQueueTimeoutMS: 5000,
       retryWrites: true,
     })
       .connect()

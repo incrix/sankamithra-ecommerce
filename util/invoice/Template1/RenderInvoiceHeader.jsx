@@ -56,7 +56,7 @@ export default function RenderInvoiceHeader() {
             maxWidth: 200,
           }}
         >
-          Website: www.shop.sankamithra.com/
+          Website: thunder.sankamithra.com
         </Text>
       </View>
       <View

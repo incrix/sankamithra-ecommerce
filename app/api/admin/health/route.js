@@ -25,6 +25,6 @@ export async function GET() {
     db,
     mail: { ok: mail.ok, stage: mail.stage, host: mail.config?.host, user: mail.config?.user, error: mail.error },
     assets,
-    site: process.env.NEXT_PUBLIC_SITE_URL || "(NEXT_PUBLIC_SITE_URL not set — canonicals default to sankamithra.com)",
+    site: process.env.NEXT_PUBLIC_SITE_URL || "(NEXT_PUBLIC_SITE_URL not set — canonicals default to thunder.sankamithra.com)",
   });
 }

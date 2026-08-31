@@ -32,10 +32,14 @@ export default function ProductClient({ initialProduct }) {
   const [qty, setQty] = useState(1);
   const [toast, setToast] = useState(null);
 
-  const product = useMemo(
-    () => productList.find((p) => String(p.id) === String(id)) || initialProduct,
-    [productList, id, initialProduct]
-  );
+  // Merged, not replaced: the list carries fresher price and stock but no
+  // description - those come from the server-rendered product and would be
+  // blanked out on hydration if the list item simply won.
+  const product = useMemo(() => {
+    const listed = productList.find((p) => String(p.id) === String(id));
+    if (!listed) return initialProduct;
+    return initialProduct ? { ...initialProduct, ...listed } : listed;
+  }, [productList, id, initialProduct]);
 
   const related = useMemo(
     () => productList.filter((p) => p.category === product?.category && p.id !== product?.id).slice(0, 4),
