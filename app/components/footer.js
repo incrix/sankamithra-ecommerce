@@ -19,7 +19,7 @@ import iso from "../../public/images/iso.png";
 const COMPANY = [
   { href: "/", label: "Shop crackers" },
   { href: "/about", label: "About us" },
-  { href: "/factory", label: "Our factory" },
+  { href: "/factory", label: "Why Sivakasi" },
   { href: "/wholesale", label: "Wholesale" },
   { href: "/safety", label: "Safety guide" },
   { href: "/contact", label: "Contact us" },
@@ -83,20 +83,20 @@ export default function Footer() {
             </Stack>
 
             <Typography fontSize={13.5} color="var(--text-color-secondary)" lineHeight={1.7}>
-              Fireworks and crackers manufacturer in Sivakasi, Tamil Nadu. Buy Diwali
-              crackers online direct from our Sattur factory at up to 90% off, with
-              delivery across India.
+              Fireworks and crackers shop in Sivakasi, Tamil Nadu. Buy Diwali crackers
+              online from the town that makes them, at up to 90% off, with delivery
+              across India.
             </Typography>
 
             <Stack gap={0.75} mt={0.5}>
-              <ContactLine icon={<PhoneRoundedIcon sx={ic} />} href="tel:+917548820326">
-                +91 75488 20326
+              <ContactLine icon={<PhoneRoundedIcon sx={ic} />} href="tel:+919489239970">
+                +91 94892 39970
               </ContactLine>
               <ContactLine icon={<MailOutlineRoundedIcon sx={ic} />} href="mailto:sankamithrathunderworld@gmail.com">
                 sankamithrathunderworld@gmail.com
               </ContactLine>
               <ContactLine icon={<PlaceOutlinedIcon sx={ic} />}>
-                Sattur, Tamil Nadu 626203
+                Sattur Road, Sivakasi, Tamil Nadu 626123
               </ContactLine>
             </Stack>
           </Stack>
@@ -148,9 +148,15 @@ export default function Footer() {
               href="https://incrix.com/"
               target="_blank"
               rel="noopener noreferrer"
-              sx={{ fontSize: 13, fontWeight: 800, color: "var(--text-color)", "&:hover": { color: "var(--primary-color)" } }}
+              aria-label="Incrix"
+              sx={{ display: "inline-flex", opacity: 0.85, transition: "opacity var(--transition)", "&:hover": { opacity: 1 } }}
             >
-              Incrix
+              <Box
+                component="img"
+                src="/images/incrix-logo.svg"
+                alt="Incrix"
+                sx={{ height: 15, width: "auto", display: "block" }}
+              />
             </Box>
           </Stack>
         </Stack>

@@ -10,23 +10,24 @@ import green from "@/public/images/green.png";
 import iso from "@/public/images/iso.png";
 
 /**
- * Factory page: who makes the crackers and how.
+ * Why Sivakasi.
  *
- * Rebuilt from the old fixed-width blocks and raw <img> tags into a responsive
- * story - intro, credentials, gallery, then a route into the shop.
+ * This page used to claim an owned factory. Sankamithra is a retailer, so it
+ * now explains the sourcing honestly - where the crackers come from and why
+ * buying in the town that makes them costs less.
  */
 
 const PILLARS = [
-  { icon: <ScienceRoundedIcon />, title: "Made in-house", body: "Every cracker is mixed, filled and finished at our own unit in Sattur — nothing is bought in and relabelled." },
-  { icon: <ShieldRoundedIcon />, title: "Safety first", body: "Licensed magazines, controlled storage and trained handling at every stage of production." },
-  { icon: <GroupsRoundedIcon />, title: "Local craftspeople", body: "A skilled Sivakasi workforce with decades of fireworks experience between them." },
-  { icon: <VerifiedRoundedIcon />, title: "Certified quality", body: "Green-certified and ISO 9001:2015 compliant, checked batch by batch." },
+  { icon: <ScienceRoundedIcon />, title: "Made in Sivakasi", body: "Around 90% of India's fireworks come from this one town. We buy from licensed units here rather than through distributors." },
+  { icon: <ShieldRoundedIcon />, title: "Licensed handling", body: "Stock is kept in licensed storage and handled to licence conditions, from our counter through to transport." },
+  { icon: <GroupsRoundedIcon />, title: "Generations of skill", body: "The units we buy from have been making fireworks here for decades — much of it still finished by hand." },
+  { icon: <VerifiedRoundedIcon />, title: "Certified products", body: "The range includes green-certified and ISO 9001:2015 compliant items, checked before it reaches our shelves." },
 ];
 
 const GALLERY = [
-  { src: "/images/factory1.jpg", alt: "Inside the Sankamithra factory" },
-  { src: "/images/factory2.jpg", alt: "Fireworks production line" },
-  { src: "/images/factory3.jpg", alt: "Finished crackers being packed" },
+  { src: "/images/factory1.jpg", alt: "Fireworks being made in Sivakasi, Tamil Nadu" },
+  { src: "/images/factory2.jpg", alt: "A Sivakasi fireworks production line" },
+  { src: "/images/factory3.jpg", alt: "Crackers packed and ready for dispatch" },
 ];
 
 export default function FactoryContent() {
@@ -43,15 +44,15 @@ export default function FactoryContent() {
         <Stack direction={{ xs: "column", md: "row" }} gap={{ xs: 3, md: 5 }} alignItems="center">
           <Stack flex={1} gap={2} minWidth={0}>
             <Box sx={{ alignSelf: "flex-start", px: 1.5, py: 0.5, borderRadius: "var(--radius-pill)", backgroundColor: "var(--primary-soft)", color: "var(--primary-color)", fontSize: 12, fontWeight: 800 }}>
-              Sattur, Tamil Nadu
+              Sivakasi, Tamil Nadu
             </Box>
-            <Typography component="h1" fontSize={{ xs: 27, sm: 32, md: 40 }} fontWeight={800} lineHeight={1.15} color="var(--text-color)">Our factory</Typography>
+            <Typography component="h1" fontSize={{ xs: 27, sm: 32, md: 40 }} fontWeight={800} lineHeight={1.15} color="var(--text-color)">Why Sivakasi</Typography>
             <Typography fontSize={{ xs: 14.5, md: 16 }} color="var(--text-color-secondary)" lineHeight={1.8}>
-              Sankamithra Thunder World has been making fireworks in the Sivakasi
-              belt for years — the part of Tamil Nadu that supplies most of India&apos;s
-              crackers. Because we manufacture what we sell, there is no
-              distributor markup between our floor and your celebration, and we can
-              stand behind every box that leaves the gate.
+              Almost every cracker sold in India starts in Sivakasi — a single town in
+              Virudhunagar district that has made fireworks for close to a century. Our
+              shop is here, which means we buy from the licensed units themselves rather
+              than from a distributor two states away, and we can pick what we stock
+              rather than take whatever a wholesaler ships.
             </Typography>
             <Stack direction="row" gap={2} alignItems="center" mt={0.5}>
               <Box component="img" src={green.src} alt="Green certified" sx={{ width: 74 }} />
@@ -66,7 +67,7 @@ export default function FactoryContent() {
               boxShadow: "var(--shadow)", aspectRatio: "4 / 3",
             }}
           >
-            <Box component="img" src="/images/fac.jpg" alt="Sankamithra factory" sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+            <Box component="img" src="/images/fac.jpg" alt="Fireworks manufacturing in Sivakasi, Tamil Nadu" sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
           </Box>
         </Stack>
 
@@ -84,9 +85,10 @@ export default function FactoryContent() {
         {/* Gallery */}
         <Stack gap={{ xs: 2, md: 2.5 }}>
           <Stack gap={0.5}>
-            <Typography component="h2" fontSize={{ xs: 20, md: 26 }} fontWeight={800} lineHeight={1.25} color="var(--text-color)">Inside the unit</Typography>
+            <Typography component="h2" fontSize={{ xs: 20, md: 26 }} fontWeight={800} lineHeight={1.25} color="var(--text-color)">How they are made</Typography>
             <Typography fontSize={13.5} color="var(--text-color-secondary)">
-              From mixing and filling through to packing and dispatch.
+              Mixing, filling, finishing and packing — still largely handwork, in the
+              Sivakasi units our stock comes from.
             </Typography>
           </Stack>
           <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: { xs: 1.5, md: 2 } }}>
@@ -114,11 +116,11 @@ export default function FactoryContent() {
           sx={{ p: { xs: 3, md: 5 }, borderRadius: "var(--radius-lg)", backgroundColor: "var(--primary-softer)", border: "1px solid var(--primary-border)" }}
         >
           <Typography fontSize={{ xs: 19, md: 24 }} fontWeight={800} color="var(--text-color)">
-            Buy straight from the makers
+            Buy from the town that makes them
           </Typography>
           <Typography fontSize={14} color="var(--text-color-secondary)" maxWidth={520}>
-            Factory prices, genuine stock, and a team that will confirm your order
-            personally before anything ships.
+            Sivakasi prices, genuine licensed stock, and someone who will confirm your
+            order personally before anything ships.
           </Typography>
           <Button component={Link} href="/shop" endIcon={<ArrowForwardRoundedIcon />}
             sx={{

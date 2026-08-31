@@ -25,7 +25,7 @@ export default function CatalogueIndex({ products, categories }) {
         </Typography>
         <Typography fontSize={14} color="var(--text-color-secondary)" lineHeight={1.7}>
           The full Sankamithra Thunder World price list — {products.length} crackers across{" "}
-          {categories.length} categories, made at our Sattur factory near Sivakasi and sold
+          {categories.length} categories, stocked from licensed makers around Sivakasi and sold
           direct at up to 90% off.
         </Typography>
       </Stack>

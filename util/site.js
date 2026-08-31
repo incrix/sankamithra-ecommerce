@@ -9,7 +9,7 @@
 import { assetUrl } from "@/util/config";
 
 export const SITE_URL = (
-  process.env.NEXT_PUBLIC_SITE_URL || "https://sankamithra.com"
+  process.env.NEXT_PUBLIC_SITE_URL || "https://thunder.sankamithra.com"
 ).replace(/\/$/, "");
 
 export const BUSINESS = {
@@ -18,8 +18,8 @@ export const BUSINESS = {
   alternateName: ["Sankamithra Fireworks", "Sankamithra Crackers", "Sankamithra"],
   tagline: "Fireworks & Crackers from Sivakasi",
   description:
-    "Sankamithra Thunder World is a fireworks and crackers manufacturer in Sivakasi, Tamil Nadu. Buy Diwali crackers online direct from our Sattur factory at up to 90% off, with all-India delivery.",
-  phone: ["+91 99446 95228", "+91 75488 20326", "+91 99620 66648", "+91 84892 92901"],
+    "Sankamithra Thunder World is a fireworks and crackers retailer in Sivakasi, Tamil Nadu. Buy Diwali crackers online from our Sivakasi shop at up to 90% off, with delivery across India.",
+  phone: ["+91 94892 39970", "+91 75488 20326", "+91 99620 66648", "+91 84892 92901"],
   whatsapp: "919489239970",
   email: "sankamithrathunderworld@gmail.com",
   office: {
@@ -27,13 +27,6 @@ export const BUSINESS = {
     locality: "Sivakasi",
     region: "Tamil Nadu",
     postalCode: "626123",
-    country: "IN",
-  },
-  factory: {
-    street: "9/241, Kanmaisurangudi Village",
-    locality: "Sattur",
-    region: "Tamil Nadu",
-    postalCode: "626203",
     country: "IN",
   },
   geo: { latitude: 9.2988567, longitude: 77.8711883 },
@@ -51,15 +44,16 @@ export const KEYWORDS = [
   "Sankamithra fireworks",
   "Sankamithra Thunder World",
   "Sankamithra crackers Sivakasi",
-  "fireworks in Sivakasi",
+  "fireworks shop in Sivakasi",
   "crackers shop in Sivakasi",
   "Sivakasi crackers online",
   "buy crackers online Tamil Nadu",
   "Diwali crackers online",
   "Diwali crackers offer 2025",
-  "fireworks manufacturer Sivakasi",
+  "crackers price list Sivakasi",
+  "Sivakasi crackers direct purchase",
+  "online crackers shopping India",
   "crackers wholesale Sivakasi",
-  "Sattur fireworks factory",
   "cheap crackers online India",
   "gift box crackers Sivakasi",
   "flower pots crackers",
@@ -67,6 +61,7 @@ export const KEYWORDS = [
   "sparklers online India",
   "aerial shots crackers",
   "rockets crackers online",
+  "crackers home delivery Tamil Nadu",
 ];
 
 /** URL-safe, stable, human-readable product slug: "lucky-money-1". */
@@ -131,9 +126,14 @@ export const organizationSchema = () => ({
   },
 });
 
+/**
+ * The shop itself. "Store" rather than a manufacturing type, because that is
+ * what Sankamithra is — and a local search result is judged on address, hours,
+ * phone and area served, all of which are declared here.
+ */
 export const localBusinessSchema = () => ({
   "@context": "https://schema.org",
-  "@type": "Store",
+  "@type": ["Store", "LocalBusiness"],
   "@id": `${SITE_URL}/#store`,
   name: BUSINESS.name,
   image: `${SITE_URL}/images/logo.png`,
@@ -157,7 +157,58 @@ export const localBusinessSchema = () => ({
     opens: "09:00",
     closes: "19:00",
   },
-  areaServed: { "@type": "Country", name: "India" },
+  areaServed: [
+    { "@type": "Country", name: "India" },
+    { "@type": "State", name: "Tamil Nadu" },
+  ],
+  currenciesAccepted: "INR",
+  paymentAccepted: "Cash, UPI, Bank Transfer",
+  keywords: KEYWORDS.slice(0, 10).join(", "),
+  slogan: "Sivakasi crackers, straight from the town that makes them",
+  hasMap: `https://www.google.com/maps/search/?api=1&query=${BUSINESS.geo.latitude},${BUSINESS.geo.longitude}`,
+  sameAs: [],
+});
+
+/**
+ * Tells a search engine the site has its own search, which can earn a sitelinks
+ * search box in results.
+ */
+export const searchActionSchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": `${SITE_URL}/#website-search`,
+  url: SITE_URL,
+  potentialAction: {
+    "@type": "SearchAction",
+    target: { "@type": "EntryPoint", urlTemplate: `${SITE_URL}/?q={search_term_string}` },
+    "query-input": "required name=search_term_string",
+  },
+});
+
+/** Delivery, payment and returns, so an answer engine can state them directly. */
+export const merchantPolicySchema = () => ({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": `${SITE_URL}/#policies`,
+  name: BUSINESS.name,
+  hasMerchantReturnPolicy: {
+    "@type": "MerchantReturnPolicy",
+    applicableCountry: "IN",
+    returnPolicyCategory: "https://schema.org/MerchantReturnNotPermitted",
+    merchantReturnLink: `${SITE_URL}/contact`,
+  },
+  makesOffer: {
+    "@type": "Offer",
+    priceCurrency: "INR",
+    eligibleTransactionVolume: {
+      "@type": "PriceSpecification",
+      minPrice: 3000,
+      priceCurrency: "INR",
+      description: "Minimum order value for online orders",
+    },
+    availableDeliveryMethod: "https://schema.org/ParcelService",
+    areaServed: { "@type": "Country", name: "India" },
+  },
 });
 
 export const websiteSchema = () => ({

@@ -4,34 +4,35 @@ import { Stack } from "@mui/material";
 import { SITE_URL, BUSINESS, KEYWORDS, JsonLd, breadcrumbSchema, faqSchema, organizationSchema } from "@/util/site";
 
 export const metadata = {
-  title: "Our Fireworks Factory in Sattur, Sivakasi",
+  title: "Why Sivakasi — Where Our Crackers Come From",
   description:
-    "Inside the Sankamithra Thunder World fireworks factory at Kanmaisurangudi Village, Sattur, near Sivakasi. Licensed manufacturing, green-certified and ISO 9001:2015, crackers made in-house and sold direct.",
-  keywords: [...KEYWORDS, "fireworks factory Sattur", "cracker factory Sivakasi", "fireworks manufacturing Tamil Nadu"],
+    "Sivakasi makes most of India's fireworks. Sankamithra Thunder World is a crackers shop in the town itself, buying from licensed units so you skip the distributor and city-retailer margins.",
+  keywords: [...KEYWORDS, "why Sivakasi crackers", "Sivakasi fireworks industry", "crackers direct from Sivakasi", "Sivakasi cracker shops"],
   alternates: { canonical: `${SITE_URL}/factory` },
   openGraph: {
-    title: "Our Fireworks Factory in Sattur, Sivakasi",
-    description: "Licensed, green-certified and ISO 9001:2015 cracker manufacturing in the Sivakasi belt.",
+    title: "Why Sivakasi — Where Our Crackers Come From",
+    description: "A crackers shop in the town that makes most of India's fireworks.",
     url: `${SITE_URL}/factory`, siteName: BUSINESS.name, type: "website",
   },
 };
 
 const FAQS = [
-  { q: "Where is the Sankamithra fireworks factory?", a: "Our factory is at 9/241, Kanmaisurangudi Village, Sattur 626203, Tamil Nadu, in the Sivakasi fireworks belt. Our office is at 3/1427/G6, Opposite PRC Bus Depot, Sattur Road, Sivakasi 626123." },
-  { q: "Do you manufacture your own crackers?", a: "Yes. Every cracker we sell is mixed, filled and finished at our own licensed unit in Sattur. We do not buy in stock from other manufacturers and relabel it." },
-  { q: "Is the factory licensed and certified?", a: "Yes. We hold the required manufacturing licences with controlled magazines and trained handling, and we are green-certified and ISO 9001:2015 compliant." },
-  { q: "Can I visit the factory?", a: "Factory access is restricted for safety and licensing reasons. Dealers and bulk buyers can arrange a visit by calling +91 99620 66648 in advance." },
+  { q: "Does Sankamithra Thunder World make its own crackers?", a: "No. We are a retailer, not a manufacturer. We buy from licensed manufacturing units in and around Sivakasi and sell from our shop on Sattur Road and online." },
+  { q: "Why is Sivakasi famous for fireworks?", a: "Sivakasi in Virudhunagar district, Tamil Nadu, has made fireworks for close to a century and produces the large majority of India's crackers. The dry climate suited the industry, and the skills have passed through generations of local families." },
+  { q: "Is it cheaper to buy crackers from Sivakasi?", a: "Yes, usually a lot cheaper. Buying from a shop in Sivakasi skips the distributor and city-retailer margins that a box normally collects on its way elsewhere, which is why our list runs up to 90% below MRP." },
+  { q: "Are the crackers you sell green certified?", a: "The range includes green-certified and ISO 9001:2015 compliant products from licensed units. Ask us about a specific item and we will tell you exactly what it carries." },
+  { q: "Can I visit your Sivakasi shop?", a: "Yes. We are at 3/1427/G6, Opposite PRC Bus Depot, Sattur Road, Sivakasi 626123, open Monday to Saturday, 9am to 7pm. Call +91 94892 39970 before a large purchase so we can have the stock ready." },
 ];
 
 export default function FactoryPage() {
   return (
     <>
       <JsonLd data={organizationSchema()} />
-      <JsonLd data={breadcrumbSchema([{ name: "Crackers", path: "/" }, { name: "Factory", path: "/factory" }])} />
+      <JsonLd data={breadcrumbSchema([{ name: "Crackers", path: "/" }, { name: "Why Sivakasi", path: "/factory" }])} />
       <JsonLd data={faqSchema(FAQS)} />
       <FactoryContent />
       <Stack width="100%" maxWidth="var(--max-width)" mx="auto" px={{ xs: 2, sm: 3, md: 4 }} pb={{ xs: 4, md: 7 }}>
-        <Faq heading="About our factory" faqs={FAQS} />
+        <Faq heading="About Sivakasi and our stock" faqs={FAQS} />
       </Stack>
     </>
   );

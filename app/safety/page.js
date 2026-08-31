@@ -6,7 +6,7 @@ import { SITE_URL, BUSINESS, JsonLd, breadcrumbSchema, faqSchema } from "@/util/
 export const metadata = {
   title: "Firework Safety Guide — How to Burst Crackers Safely",
   description:
-    "How to burst Diwali crackers safely: what to do and what never to do, from a licensed Sivakasi fireworks manufacturer. Supervision, safe distance, water on hand and correct storage.",
+    "How to burst Diwali crackers safely: what to do and what never to do. Supervision, safe distance, water within reach, correct storage and what to do with a dud — from a Sivakasi crackers shop.",
   keywords: [
     "firework safety tips", "how to burst crackers safely", "Diwali safety tips",
     "cracker safety rules India", "firework safety for children", "Sankamithra safety",
@@ -14,7 +14,7 @@ export const metadata = {
   alternates: { canonical: `${SITE_URL}/safety` },
   openGraph: {
     title: "Firework Safety Guide | Sankamithra Thunder World",
-    description: "What to do and what never to do when bursting crackers, from a licensed Sivakasi manufacturer.",
+    description: "What to do and what never to do when bursting crackers.",
     url: `${SITE_URL}/safety`,
     siteName: BUSINESS.name,
     type: "article",
@@ -62,7 +62,7 @@ export default function Safety() {
           "@context": "https://schema.org",
           "@type": "HowTo",
           name: "How to burst crackers safely",
-          description: "Safe handling of fireworks, from a licensed Sivakasi manufacturer.",
+          description: "Safe handling of fireworks, step by step.",
           step: [
             { "@type": "HowToStep", name: "Choose the place", text: "Pick an open outdoor area clear of dry grass, wood, vehicles and buildings." },
             { "@type": "HowToStep", name: "Prepare for fire", text: "Keep a bucket of water, a garden hose or a portable water pump within reach before you light anything." },
@@ -80,8 +80,8 @@ export default function Safety() {
               Firework safety guide
             </Typography>
             <Typography fontSize={{ xs: 15, md: 16.5 }} color="var(--text-color-secondary)" lineHeight={1.85}>
-              We manufacture crackers, so we would rather you enjoyed them and went home
-              safely. A few minutes of preparation prevents almost every firework injury:
+              We sell crackers, so we would rather you enjoyed them and went home safely.
+              A few minutes of preparation prevents almost every firework injury:
               burst in the open, light one at a time, keep water within reach, and keep
               children watching rather than handling.
             </Typography>

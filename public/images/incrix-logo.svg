@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 528 104" role="img" aria-label="Incrix">
+  <g fill="currentColor">
+    <rect x="0" y="0" width="24" height="104"/>
+    <rect x="52" y="0" width="24" height="104"/>
+    <polygon points="52,0 76,0 148,104 124,104"/>
+    <rect x="124" y="0" width="24" height="104"/>
+    <rect x="300" y="0" width="24" height="104"/>
+    <polygon points="336,62 364,62 396,104 366,104"/>
+    <rect x="402" y="36" width="24" height="68"/>
+  </g>
+  <g fill="none" stroke="currentColor" stroke-width="24">
+    <path d="M262 24A40 40 0 1 0 262 80"/>
+    <path d="M324 12A30 30 0 0 1 324 72"/>
+    <path d="M450 0 526 104"/>
+    <path d="M488 52 450 104"/>
+  </g>
+  <g fill="#f04a23">
+    <polygon points="124,0 148,0 148,28"/>
+    <polygon points="402,0 426,0 426,26"/>
+  </g>
+  <path d="M526 0 490 50" fill="none" stroke="#f04a23" stroke-width="24"/>
+</svg>

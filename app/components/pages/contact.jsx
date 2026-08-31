@@ -17,12 +17,12 @@ import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 
 const LOCATIONS = [
   {
-    label: "Office",
+    label: "Shop & office",
     lines: ["3/1427/G6", "Opposite PRC Bus Depot", "Sattur Road", "Sivakasi - 626123"],
-    phones: ["+91 99446 95228", "+91 75488 20326"],
+    phones: ["+91 94892 39970", "+91 75488 20326"],
   },
   {
-    label: "Factory",
+    label: "Sattur branch",
     lines: ["9/241", "Kanmaisurangudi Village", "Sattur - 626203"],
     phones: ["+91 99620 66648", "+91 84892 92901"],
   },
@@ -51,7 +51,7 @@ export default function ContactContent() {
 
         {/* Quick actions first: most people are here to call */}
         <Stack direction={{ xs: "column", sm: "row" }} gap={1.5}>
-          <Button href="tel:+919944695228" startIcon={<PhoneRoundedIcon />} sx={primaryBtn}>
+          <Button href="tel:+919489239970" startIcon={<PhoneRoundedIcon />} sx={primaryBtn}>
             Call the shop
           </Button>
           <Button

@@ -21,7 +21,7 @@ import { PRICE_LIST_URL } from "@/util/config";
 
 const BENEFITS = [
   { icon: <PriceCheckRoundedIcon />, title: "Slab pricing", body: "Rates improve with order size, quoted case by case against the current price list." },
-  { icon: <Inventory2RoundedIcon />, title: "Bulk stock", body: "Direct from our own production, so large quantities are available through the season." },
+  { icon: <Inventory2RoundedIcon />, title: "Bulk stock", body: "We hold bulk stock through the season and can source more from the Sivakasi units we buy from." },
   { icon: <LocalShippingRoundedIcon />, title: "Transport arranged", body: "We help organise licensed transport to your town or godown." },
   { icon: <SupportAgentRoundedIcon />, title: "A person to call", body: "One point of contact from quotation through to dispatch." },
 ];
@@ -45,9 +45,9 @@ export default function WholesaleContent() {
           </Box>
           <Typography component="h1" fontSize={{ xs: 27, sm: 32, md: 40 }} fontWeight={800} lineHeight={1.15} color="var(--text-color)">Wholesale</Typography>
           <Typography fontSize={{ xs: 14.5, md: 16 }} color="var(--text-color-secondary)" lineHeight={1.8}>
-            We supply shops, distributors and event buyers direct from our Sattur
-            factory. Send us your requirement and we&apos;ll come back with a
-            quotation against the current price list — usually the same day.
+            We supply shops, distributors and event buyers from our Sivakasi stock.
+            Send us your requirement and we&apos;ll come back with a quotation against
+            the current price list — usually the same day.
           </Typography>
 
           <Stack direction={{ xs: "column", sm: "row" }} gap={1.5} mt={1}>
@@ -77,7 +77,7 @@ export default function WholesaleContent() {
           <Stack gap={1.5}>
             {[
               "Download the current price list, or browse the catalogue online.",
-              "Send us your item list and quantities on WhatsApp, or call the factory.",
+              "Send us your item list and quantities on WhatsApp, or call the shop.",
               "We confirm availability and quote your slab rate.",
               "On agreement we pack, arrange transport and share dispatch details.",
             ].map((step, i) => (

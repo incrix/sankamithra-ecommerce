@@ -30,7 +30,7 @@ import logo from "../../public/images/logo.svg";
 const LINKS = [
   { href: "/", label: "Shop" },
   { href: "/about", label: "About" },
-  { href: "/factory", label: "Factory" },
+  { href: "/factory", label: "Why Sivakasi" },
   { href: "/wholesale", label: "Wholesale" },
   { href: "/safety", label: "Safety" },
   { href: "/contact", label: "Contact" },

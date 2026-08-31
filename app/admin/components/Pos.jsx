@@ -174,7 +174,7 @@ export default function Pos() {
         .tot { font-weight:bold; font-size:13px; }
       </style></head><body>
         <h2>SANKAMITHRA THUNDER WORLD</h2>
-        <div class="c muted">Fireworks &amp; Crackers · Sivakasi<br>+91 99446 95228</div>
+        <div class="c muted">Fireworks &amp; Crackers · Sivakasi<br>+91 94892 39970</div>
         <div class="rule"></div>
         <div>Bill: <b>${bill.ref}</b></div>
         <div class="muted">${bill.at.toLocaleString("en-IN")}</div>

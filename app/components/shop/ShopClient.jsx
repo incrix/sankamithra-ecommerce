@@ -93,13 +93,13 @@ export default function ShopClient() {
               color="var(--text-color)"
               lineHeight={1.2}
             >
-              Sivakasi Crackers Online — Fireworks at Factory Prices
+              Sivakasi Crackers Online — Up to 90% Off
             </Typography>
           </Stack>
           <Typography fontSize={13.5} color="var(--text-color-secondary)">
-            Buy Diwali crackers direct from the Sankamithra Thunder World factory in
-            Sattur, Sivakasi — up to 90% off, delivered across India. Build your order
-            and edit your cart without leaving this page.
+            Buy Diwali crackers from Sankamithra Thunder World, a crackers shop in
+            Sivakasi — up to 90% off, delivered across India. Build your order and edit
+            your cart without leaving this page.
           </Typography>
         </Stack>
 

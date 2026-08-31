@@ -19,7 +19,7 @@ import { assetUrl } from "@/util/config";
  */
 
 const TRUST = [
-  { icon: <FactoryRoundedIcon />, title: "Direct from Sivakasi", body: "Our own factory, no middlemen" },
+  { icon: <FactoryRoundedIcon />, title: "Direct from Sivakasi", body: "Bought where they are made" },
   { icon: <SavingsRoundedIcon />, title: "Up to 90% off", body: "Straight off the price list" },
   { icon: <VerifiedRoundedIcon />, title: "Licensed & certified", body: "ISO and green-certified" },
   { icon: <LocalShippingRoundedIcon />, title: "All-India delivery", body: "Safely packed and shipped" },
@@ -52,9 +52,9 @@ export default function Hero() {
           </Typography>
 
           <Typography fontSize={{ xs: 14.5, md: 16 }} color="var(--text-color-secondary)" lineHeight={1.7}>
-            Crackers made in our own Sivakasi factory and sold direct, so you get
-            genuine quality at factory prices. Build your order online and we&apos;ll
-            confirm it by phone within 24 hours.
+            A crackers shop in Sivakasi, where almost all of India&apos;s fireworks are
+            made. Buying here skips the distributor and city-shop margins. Build your
+            order online and we&apos;ll confirm it by phone within 24 hours.
           </Typography>
 
           <Stack direction="row" gap={1.25} flexWrap="wrap" mt={0.5}>
@@ -62,7 +62,7 @@ export default function Hero() {
               Shop crackers
             </Button>
             <Button component={Link} href="/factory" sx={ghostBtn}>
-              See our factory
+              Why Sivakasi
             </Button>
           </Stack>
         </Stack>

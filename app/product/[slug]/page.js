@@ -93,7 +93,7 @@ export default async function ProductPage({ params }) {
       a:
         product.countInStock > 0
           ? `Yes, ${product.name} is in stock. Add it to your cart and place your order — the minimum order value is ₹3,000 and we deliver across India.`
-          : `${product.name} is currently out of stock. Call +91 99446 95228 and we will tell you when it is back.`,
+          : `${product.name} is currently out of stock. Call +91 94892 39970 and we will tell you when it is back.`,
     },
   ];
 

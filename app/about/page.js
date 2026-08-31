@@ -8,13 +8,13 @@ import {
 import { getCategories, getProducts } from "@/util/products.server";
 
 export const metadata = {
-  title: "About Us — Fireworks Manufacturer in Sivakasi",
+  title: "About Us — Crackers Shop in Sivakasi, Tamil Nadu",
   description:
-    "Sankamithra Thunder World is a licensed fireworks and crackers manufacturer in Sattur, Sivakasi, Tamil Nadu. Learn who we are, what we make, and why buying direct from the factory costs less.",
-  keywords: [...KEYWORDS, "about Sankamithra", "Sivakasi fireworks company", "cracker manufacturer Tamil Nadu"],
+    "Sankamithra Thunder World is a fireworks and crackers retailer in Sivakasi, Tamil Nadu. Who we are, what we stock, and why buying from Sivakasi itself costs less.",
+  keywords: [...KEYWORDS, "about Sankamithra", "Sivakasi crackers shop", "crackers dealer Tamil Nadu", "fireworks retailer Sivakasi"],
   alternates: { canonical: `${SITE_URL}/about` },
   openGraph: {
-    title: "About Sankamithra Thunder World | Sivakasi Fireworks Manufacturer",
+    title: "About Sankamithra Thunder World | Sivakasi Crackers Shop",
     description: BUSINESS.description,
     url: `${SITE_URL}/about`,
     siteName: BUSINESS.name,
@@ -25,31 +25,35 @@ export const metadata = {
 const FAQS = [
   {
     q: "What is Sankamithra Thunder World?",
-    a: "Sankamithra Thunder World is a fireworks and crackers manufacturer in Sattur, near Sivakasi in Tamil Nadu. We have been making crackers in the Sivakasi belt since 2018 and sell direct to customers, retailers and event buyers across India.",
+    a: "Sankamithra Thunder World is a fireworks and crackers retailer in Sivakasi, Tamil Nadu. We have been selling crackers since 2018, from our shop on Sattur Road and online to customers, retailers and event buyers across India.",
   },
   {
-    q: "Why are Sankamithra crackers cheaper than shops?",
-    a: "Because we manufacture what we sell. There is no distributor or wholesaler markup between our factory floor and your order, which is how we can list crackers at up to 90% off MRP.",
+    q: "Why are Sankamithra crackers cheaper than city shops?",
+    a: "Because we are in Sivakasi, where the crackers are made. We buy in bulk from licensed units here and sell straight to you, so the order skips the layers of distributors and city retailers that each add a margin. That is how the list runs up to 90% below MRP.",
   },
   {
-    q: "Is Sivakasi really the home of Indian fireworks?",
-    a: "Yes. Sivakasi and the surrounding Sattur belt in Virudhunagar district produce the large majority of India's fireworks. Sankamithra Thunder World manufactures in this belt, at our own licensed unit in Kanmaisurangudi Village, Sattur.",
+    q: "Do you make your own crackers?",
+    a: "No — we are a retailer, not a manufacturer. We select and stock crackers from licensed manufacturing units in and around Sivakasi, which lets us carry a much wider range than any single maker produces.",
   },
   {
-    q: "Are your crackers licensed and certified?",
-    a: "Yes. We hold the required manufacturing licences and are green-certified and ISO 9001:2015 compliant, with controlled storage and trained handling at every stage.",
+    q: "Why does buying from Sivakasi matter?",
+    a: "Sivakasi and the surrounding Virudhunagar district produce the large majority of India's fireworks. Buying from a shop in the town itself means shorter supply chains, fresher stock and better prices than the same items reach elsewhere.",
+  },
+  {
+    q: "Are the crackers you sell licensed and certified?",
+    a: "Yes. We stock only from licensed units, and the range includes green-certified and ISO 9001:2015 compliant products. Stock is stored and handled to licence conditions.",
   },
   {
     q: "How do I contact Sankamithra Thunder World?",
-    a: "Call +91 99446 95228 or +91 75488 20326, WhatsApp +91 94892 39970, or email sankamithrathunderworld@gmail.com. Our office is at 3/1427/G6, Opposite PRC Bus Depot, Sattur Road, Sivakasi 626123.",
+    a: "Call or WhatsApp +91 94892 39970, call +91 75488 20326, or email sankamithrathunderworld@gmail.com. The shop is at 3/1427/G6, Opposite PRC Bus Depot, Sattur Road, Sivakasi 626123, open Monday to Saturday, 9am to 7pm.",
   },
 ];
 
 const PILLARS = [
-  ["Direct from the factory", "Every cracker is mixed, filled and finished at our own unit in Sattur. Nothing is bought in and relabelled, so quality is ours to answer for."],
-  ["Up to 90% off list prices", "Selling direct removes the distributor markup. The saving shows on every line of the price list."],
-  ["Licensed and certified", "A licensed manufacturer, green-certified and ISO 9001:2015 compliant, with controlled magazines and trained handling."],
-  ["All-India delivery", "We arrange licensed transport and deliver across India, confirming charges and timelines on the call before dispatch."],
+  ["Bought where they are made", "We are in Sivakasi, so we buy from licensed units here rather than through distributors. Shorter chain, fresher stock, better price."],
+  ["Up to 90% off list prices", "Skipping the distributor and city-retailer margins is what makes the saving; it shows on every line of the price list."],
+  ["A range no single maker offers", "Stocking across many Sivakasi units means 145 products in 13 categories, from ₹12 sparklers to large gift boxes."],
+  ["Licensed stock, safely handled", "Green-certified and ISO 9001:2015 compliant products, stored and handled to licence conditions, with transport arranged across India."],
 ];
 
 export default async function About() {
@@ -71,22 +75,21 @@ export default async function About() {
               About Sankamithra Thunder World
             </Typography>
             <Typography fontSize={{ xs: 15, md: 16.5 }} color="var(--text-color-secondary)" lineHeight={1.85}>
-              Sankamithra Thunder World is a fireworks and crackers manufacturer in the
-              Sivakasi belt of Tamil Nadu — the region that produces most of India&apos;s
-              fireworks. We make our crackers at our own licensed factory in
-              Kanmaisurangudi Village, Sattur, and sell them direct to families, shops
-              and event buyers across the country.
+              Sankamithra Thunder World is a fireworks and crackers shop in Sivakasi,
+              Tamil Nadu — the town that produces most of India&apos;s fireworks. We
+              stock from licensed units across the Sivakasi belt and sell to families,
+              retailers and event buyers, over the counter and online across the country.
             </Typography>
             <Typography fontSize={{ xs: 14.5, md: 15.5 }} color="var(--text-color-secondary)" lineHeight={1.85}>
-              Buying direct is the whole point. There is no distributor between our
-              factory floor and your Diwali, so a box that would carry three markups in
-              a shop reaches you at close to what it costs to make — which is why our
-              price list runs up to 90% below MRP on {products.length} products.
+              Being in Sivakasi is the whole point. A box that picks up a distributor,
+              a wholesaler and a city retailer on its way to a shop elsewhere reaches
+              you here with none of those margins — which is why the price list runs up
+              to 90% below MRP across {products.length} products.
             </Typography>
 
             <Stack direction="row" gap={1.25} flexWrap="wrap" mt={1}>
               <Button component={Link} href="/" sx={primaryBtn}>Browse the catalogue</Button>
-              <Button component={Link} href="/factory" sx={ghostBtn}>See the factory</Button>
+              <Button component={Link} href="/factory" sx={ghostBtn}>Why Sivakasi</Button>
             </Stack>
           </Stack>
 
@@ -102,12 +105,12 @@ export default async function About() {
           <Stack gap={2}>
             <Stack gap={0.5}>
               <Typography component="h2" fontSize={{ xs: 20, md: 26 }} fontWeight={800} color="var(--text-color)">
-                What we manufacture
+                What we stock
               </Typography>
               <Typography fontSize={14} color="var(--text-color-secondary)" lineHeight={1.8}>
-                {categories.length} categories across {products.length} products — from flower pots and
-                ground chakkars to rockets, aerial repeating shots, sparklers, twinkling
-                stars, atom bombs, bijili and Sankamithra special gift items.
+                {categories.length} categories across {products.length} products — flower pots, ground
+                chakkars, one sound crackers, rockets, aerial repeating shots, sparklers,
+                twinkling stars, atom bombs, bijili, pencils, fountains and gift boxes.
               </Typography>
             </Stack>
             <CategoryGrid />

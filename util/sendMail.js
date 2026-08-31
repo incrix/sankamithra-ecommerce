@@ -50,7 +50,7 @@ const SHELL = (title, body) => `
       ${body}
     </div>
     <div style="padding:16px 24px;border-top:1px solid #ededed;color:#7e7e7e;font-size:12px;">
-      Questions? Call +91 75488 20326 or reply to this email.
+      Questions? Call +91 94892 39970 or reply to this email.
     </div>
   </div>
 </main>`;
@@ -90,7 +90,7 @@ export async function sendCustomerMail({ order, invoice, kind = "invoice" }) {
     dispatch: {
       subject: `Your Sankamithra order ${order.ref} has been dispatched`,
       title: "Your order is on its way",
-      lead: `Order <b>${order.ref}</b> has left our factory. We'll be in touch with delivery details.`,
+      lead: `Order <b>${order.ref}</b> has left our shop and is on its way. We'll be in touch with delivery details.`,
     },
     invoice: {
       subject: `Proforma for your Sankamithra order ${order.ref}`,
@@ -100,7 +100,7 @@ export async function sendCustomerMail({ order, invoice, kind = "invoice" }) {
     packing: {
       subject: `We're packing your Sankamithra order ${order.ref}`,
       title: "Your order is being packed",
-      lead: `Good news — we've started packing order <b>${order.ref}</b>. We'll let you know the moment it leaves our factory.`,
+      lead: `Good news — we've started packing order <b>${order.ref}</b>. We'll let you know the moment it is on its way.`,
     },
     packed: {
       subject: `Your Sankamithra order ${order.ref} is packed and ready`,
@@ -110,7 +110,7 @@ export async function sendCustomerMail({ order, invoice, kind = "invoice" }) {
     cancelled: {
       subject: `Your Sankamithra order ${order.ref} has been cancelled`,
       title: "Your order has been cancelled",
-      lead: `Order <b>${order.ref}</b> has been cancelled. If this wasn't expected, please call us on +91 99446 95228 and we'll sort it out.`,
+      lead: `Order <b>${order.ref}</b> has been cancelled. If this wasn't expected, please call us on +91 94892 39970 and we'll sort it out.`,
     },
   }[kind] || {};
 
