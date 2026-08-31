@@ -120,11 +120,17 @@ export default function PageRender({ billingDetails, productList }) {
                 src={Rupee.src}
                 style={{ width: 8, objectFit: "contain" }}
               />
-              {productList.reduce(
-                (a, { price, discount, count }) =>
-                  a + (price - (price * discount) / 100) * count,
-                0
-              )}
+              {/* Round each line before summing, exactly as /checkout and the
+                  cart do - otherwise the invoice total drifts from the figure
+                  the customer agreed to, and prints raw floats like
+                  6148.799999999999. */}
+              {productList
+                .reduce(
+                  (a, { price, discount, count }) =>
+                    a + Math.round((price - (price * discount) / 100) * count),
+                  0
+                )
+                .toLocaleString("en-IN")}
             </Text>
           </View>
         </View>

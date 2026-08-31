@@ -1,18 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "http://192.168.1.5:3333/:path*",
-      },
-    ];
-  },
+  // REMOVED: a catch-all proxy of /api/* to a LAN backend at 192.168.1.5:3333
+  // that no longer exists. Array rewrites run as "afterFiles", which is BEFORE
+  // dynamic routes - so it silently swallowed every dynamic API route
+  // (/api/orders/[id] returned 500 ECONNREFUSED) while static ones worked.
+  // Restore it only alongside a reachable backend, and scope the source so it
+  // cannot shadow this app's own route handlers.
   images: {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "e-com.incrix.com",
+        hostname: "thunder.sankamithra.com",
         port: "",
         pathname: "/**",
       },

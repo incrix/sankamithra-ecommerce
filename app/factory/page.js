@@ -1,282 +1,38 @@
-import { Stack, Typography } from "@mui/material";
-import { Quicksand } from "next/font/google";
-import factory1 from "@/public/images/factory1.jpg";
-import factory2 from "@/public/images/factory2.jpg";
-import factory3 from "@/public/images/factory3.jpg";
-const quicksand = Quicksand({ subsets: ["latin"] });
+import FactoryContent from "@/app/components/pages/factory";
+import Faq from "@/app/components/Faq";
+import { Stack } from "@mui/material";
+import { SITE_URL, BUSINESS, KEYWORDS, JsonLd, breadcrumbSchema, faqSchema, organizationSchema } from "@/util/site";
 
-export default function Factory() {
+export const metadata = {
+  title: "Our Fireworks Factory in Sattur, Sivakasi",
+  description:
+    "Inside the Sankamithra Thunder World fireworks factory at Kanmaisurangudi Village, Sattur, near Sivakasi. Licensed manufacturing, green-certified and ISO 9001:2015, crackers made in-house and sold direct.",
+  keywords: [...KEYWORDS, "fireworks factory Sattur", "cracker factory Sivakasi", "fireworks manufacturing Tamil Nadu"],
+  alternates: { canonical: `${SITE_URL}/factory` },
+  openGraph: {
+    title: "Our Fireworks Factory in Sattur, Sivakasi",
+    description: "Licensed, green-certified and ISO 9001:2015 cracker manufacturing in the Sivakasi belt.",
+    url: `${SITE_URL}/factory`, siteName: BUSINESS.name, type: "website",
+  },
+};
+
+const FAQS = [
+  { q: "Where is the Sankamithra fireworks factory?", a: "Our factory is at 9/241, Kanmaisurangudi Village, Sattur 626203, Tamil Nadu, in the Sivakasi fireworks belt. Our office is at 3/1427/G6, Opposite PRC Bus Depot, Sattur Road, Sivakasi 626123." },
+  { q: "Do you manufacture your own crackers?", a: "Yes. Every cracker we sell is mixed, filled and finished at our own licensed unit in Sattur. We do not buy in stock from other manufacturers and relabel it." },
+  { q: "Is the factory licensed and certified?", a: "Yes. We hold the required manufacturing licences with controlled magazines and trained handling, and we are green-certified and ISO 9001:2015 compliant." },
+  { q: "Can I visit the factory?", a: "Factory access is restricted for safety and licensing reasons. Dealers and bulk buyers can arrange a visit by calling +91 99620 66648 in advance." },
+];
+
+export default function FactoryPage() {
   return (
-    <main
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        width: "100%",
-        padding: "0 40px",
-      }}
-    >
-      <Stack
-        sx={{
-          width: "100%",
-          maxWidth: "var(--max-width)",
-          padding: "40px 0",
-          gap: 5,
-        }}
-      >
-        <Typography
-          className={quicksand.className}
-          variant="h1"
-          fontSize={48}
-          fontWeight={800}
-        >
-          Factory
-        </Typography>
-        <Stack
-          direction={{
-            md: "column-reverse",
-            lg: "row",
-          }}
-          justifyContent={"space-between"}
-          gap={4}
-        >
-          <Stack
-            maxWidth={{
-              md: "100%",
-              lg: 600,
-            }}
-            gap={4}
-          >
-            <Stack gap={1}>
-              <Typography
-                className={quicksand.className}
-                variant="h2"
-                fontSize={24}
-                color={"var(--primary-color)"}
-                fontWeight={500}
-              >
-                Welcome to Sankamithra Fireworks - Where Innovation Ignites the
-                Sky!
-              </Typography>
-              <Typography
-                className={quicksand.className}
-                fontSize={20}
-                fontWeight={400}
-              >
-                The manufacturing unit of Sankamithra Fireworks stands as the
-                pulsating heart of our operations, where creativity, precision,
-                and safety converge to give birth to the mesmerizing displays
-                that light up the skies. Located in the pyrotechnics hub of
-                Sivakasi, our manufacturing unit embodies the rich tradition and
-                innovative spirit that define Sankamithra Fireworks.
-              </Typography>
-            </Stack>
-            <Stack gap={1}>
-              <Typography
-                className={quicksand.className}
-                variant="h2"
-                fontSize={24}
-                fontWeight={500}
-                color={"var(--primary-color)"}
-              >
-                Craftsmanship and Expertise:
-              </Typography>
-              <Typography
-                className={quicksand.className}
-                fontSize={20}
-                fontWeight={400}
-              >
-                At the core of our manufacturing unit is a team of skilled
-                artisans and technicians who bring years of expertise to the
-                table. These craftsmen are the backbone of our operations,
-                meticulously assembling and crafting each firework with a keen
-                eye for detail and a commitment to quality.
-              </Typography>
-            </Stack>
-          </Stack>
-          <Stack
-            width={{
-              md: "100%",
-              lg: "50%",
-            }}
-          >
-            <img
-              style={{
-                width: "100%",
-              }}
-              src={factory1.src}
-            />
-          </Stack>
-        </Stack>
-        <Stack
-          direction={{
-            md: "column-reverse",
-            lg: "row-reverse",
-          }}
-          justifyContent={"space-between"}
-          pt={10}
-          gap={4}
-        >
-          <Stack
-            maxWidth={{
-              md: "100%",
-              lg: 600,
-            }}
-            gap={4}
-          >
-            <Stack gap={1}>
-              <Typography
-                className={quicksand.className}
-                variant="h2"
-                fontSize={24}
-                color={"var(--primary-color)"}
-                fontWeight={500}
-              >
-                Safety Protocols
-              </Typography>
-              <Typography
-                className={quicksand.className}
-                fontSize={20}
-                fontWeight={400}
-              >
-                Safety is paramount in our manufacturing process. We strictly
-                adhere to rigorous safety protocols and industry standards to
-                minimize risks associated with pyrotechnics. Our team undergoes
-                regular training to stay updated on the latest safety measures
-                and to create a secure working environment.
-              </Typography>
-            </Stack>
-            <Stack gap={1}>
-              <Typography
-                className={quicksand.className}
-                variant="h2"
-                fontSize={24}
-                fontWeight={500}
-                color={"var(--primary-color)"}
-              >
-                Quality Control
-              </Typography>
-              <Typography
-                className={quicksand.className}
-                fontSize={20}
-                fontWeight={400}
-              >
-                Quality control is a non-negotiable aspect of our manufacturing
-                process. Every firework undergoes thorough testing and
-                inspection to ensure it meets our stringent quality standards.
-                From the choice of raw materials to the final product, we
-                maintain an unwavering commitment to delivering excellence.
-              </Typography>
-            </Stack>
-          </Stack>
-          <Stack
-            width={{
-              md: "100%",
-              lg: "50%",
-            }}
-          >
-            <img
-              style={{
-                width: "100%",
-              }}
-              src={factory2.src}
-            />
-          </Stack>
-        </Stack>
-        <Stack
-          direction={{
-            md: "column-reverse",
-            lg: "row",
-          }}
-          justifyContent={"space-between"}
-          pt={10}
-          gap={4}
-        >
-          <Stack
-            maxWidth={{
-              md: "100%",
-              lg: 600,
-            }}
-            gap={4}
-          >
-            <Stack gap={1}>
-              <Typography
-                className={quicksand.className}
-                variant="h2"
-                fontSize={24}
-                color={"var(--primary-color)"}
-                fontWeight={500}
-              >
-                Environmental Responsibility:
-              </Typography>
-              <Typography
-                className={quicksand.className}
-                fontSize={20}
-                fontWeight={400}
-              >
-                As part of our manufacturing ethos, we prioritize environmental
-                responsibility. Our processes incorporate eco-friendly materials
-                and energy-efficient practices to minimize the ecological impact
-                of our operations. We believe in enjoying the beauty of
-                fireworks while being mindful of our environmental footprint.
-              </Typography>
-            </Stack>
-            <Stack gap={1}>
-              <Typography
-                className={quicksand.className}
-                variant="h2"
-                fontSize={24}
-                fontWeight={500}
-                color={"var(--primary-color)"}
-              >
-                Art of Authenticity:
-              </Typography>
-              <Typography
-                className={quicksand.className}
-                fontSize={20}
-                fontWeight={400}
-              >
-                The Sankamithra Fireworks manufacturing unit is not just a place
-                of production, it&apos;s a symbol of our commitment to
-                delivering unforgettable moments. It&apos;s where tradition
-                meets innovation, craftsmanship meets technology, and every
-                spark is a testament to our passion for creating joyous
-                celebrations.
-              </Typography>
-            </Stack>
-          </Stack>
-          <Stack
-            width={{
-              md: "100%",
-              lg: "50%",
-            }}
-          >
-            <img
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
-              src={factory3.src}
-            />
-          </Stack>
-        </Stack>
-        <div style={{ padding: "56.25% 0 0 0", position: "relative" }}>
-          <iframe
-            src="https://player.vimeo.com/video/1000663654?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
-            frameborder="0"
-            allow="autoplay; fullscreen; picture-in-picture; clipboard-write"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-            }}
-            title="Sankamithra fireworks | Diwali 2024"
-          ></iframe>
-        </div>
+    <>
+      <JsonLd data={organizationSchema()} />
+      <JsonLd data={breadcrumbSchema([{ name: "Crackers", path: "/" }, { name: "Factory", path: "/factory" }])} />
+      <JsonLd data={faqSchema(FAQS)} />
+      <FactoryContent />
+      <Stack width="100%" maxWidth="var(--max-width)" mx="auto" px={{ xs: 2, sm: 3, md: 4 }} pb={{ xs: 4, md: 7 }}>
+        <Faq heading="About our factory" faqs={FAQS} />
       </Stack>
-    </main>
+    </>
   );
 }

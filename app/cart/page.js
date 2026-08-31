@@ -1,330 +1,209 @@
 "use client";
-import {
-  Stack,
-  Typography,
-  Table,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableContainer,
-  Paper,
-  Button,
-  IconButton,
-} from "@mui/material";
+import { Stack, Typography, Box, Button, Divider, Snackbar, Alert, CircularProgress } from "@mui/material";
 import Link from "next/link";
-import { styled } from "@mui/material/styles";
-import TableCell, { tableCellClasses } from "@mui/material/TableCell";
-import { Quicksand } from "next/font/google";
-const quicksand = Quicksand({ subsets: ["latin"] });
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
+import ShoppingBagRoundedIcon from "@mui/icons-material/ShoppingBagRounded";
+import { useState } from "react";
+import { useProducts } from "@/context/ProductContext";
+import { useCart } from "@/util/cart";
+import CartLine from "@/app/components/commerce/CartLine";
+import MinimumMeter from "@/app/components/commerce/MinimumMeter";
+import GapFillers from "@/app/components/commerce/GapFillers";
 import EmailSubscribe from "../components/emailSubscribe";
-import { Delete } from "@mui/icons-material";
-import { useState, useEffect } from "react";
 
-const StyledTableCell = styled(TableCell)(({ theme }) => ({
-  [`&.${tableCellClasses.head}`]: {
-    backgroundColor: "var(--primary-color)",
-    color: theme.palette.common.white,
-    fontWeight: 800,
-  },
-  [`&.${tableCellClasses.body}`]: {
-    fontSize: 14,
-  },
-}));
+/**
+ * Full-page cart.
+ *
+ * Rebuilt on the shared cart engine: the old page kept its own copy of the
+ * quantity/remove logic and its own total formula, which disagreed with
+ * /checkout by a few rupees - enough to say "you qualify" at the ₹3000
+ * boundary when checkout disagreed. It also rendered a 700px-min table that
+ * scrolled sideways on every phone.
+ */
+export default function CartPage() {
+  const c = useCart();
+  const { productList } = useProducts();
+  const [undo, setUndo] = useState(null);
 
-const StyledTableRow = styled(TableRow)(() => ({
-  "& td, & th": {
-    borderBottom: "1px solid var(--primary-color)",
-  },
-}));
-
-export default function Cart() {
-  const [cart, setCart] = useState([]);
-
-  useEffect(() => {
-    const cartList = localStorage.getItem("cart")
-      ? JSON.parse(localStorage.getItem("cart"))
-      : [];
-    setCart(cartList);
-  }, []);
-  const handleIncrement = (index) => {
-    const newCart = [...cart];
-    newCart[index].count += 1;
-    setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));
+  const handleRemove = (item, index) => {
+    c.remove(item.id);
+    setUndo({ item, index });
   };
 
-  const handleDecrement = (index) => {
-    if (cart[index].count === 1) {
-      return;
-    }
-    const newCart = [...cart];
-    newCart[index].count -= 1;
-    setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));
-  };
+  if (!c.ready) {
+    return <Stack alignItems="center" py={10}><CircularProgress sx={{ color: "var(--primary-color)" }} /></Stack>;
+  }
 
-  const handleRemove = (index) => {
-    const newCart = [...cart];
-    newCart.splice(index, 1);
-    setCart(newCart);
-    localStorage.setItem("cart", JSON.stringify(newCart));
-  };
-
-  // compute total with discount same as your old logic
-  const total = cart.reduce(
-    (acc, item) =>
-      acc +
-      Math.round(item.price - (item.price * (item.discount || 0)) / 100) *
-        (item.count || 0),
-    0
-  );
+  const empty = c.cart.length === 0;
 
   return (
-    <main
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        width: "100%",
-        padding: "0 40px",
-      }}
-    >
+    <main style={{ display: "flex", justifyContent: "center", width: "100%" }}>
       <Stack
-        sx={{
-          width: "100%",
-          minHeight: "50vh",
-          maxWidth: "var(--max-width)",
-          padding: "40px 0",
-          gap: 5,
-        }}
+        width="100%"
+        maxWidth="var(--max-width)"
+        px={{ xs: 2, sm: 3, md: 4 }}
+        py={{ xs: 3, md: 5 }}
+        gap={{ xs: 2.5, md: 4 }}
       >
-        <Stack gap={2}>
-          <Typography
-            className={quicksand.className}
-            variant="h1"
-            fontSize={40}
-            fontWeight={800}
-          >
+        <Stack gap={0.5}>
+          <Typography variant="h1" fontSize={{ xs: 26, md: 36 }} fontWeight={800} color="var(--text-color)">
             Your Cart
           </Typography>
+          {!empty && (
+            <Typography fontSize={13.5} color="var(--text-color-secondary)">
+              {c.cart.length} {c.cart.length === 1 ? "product" : "products"} · {c.itemCount} units
+            </Typography>
+          )}
         </Stack>
-        <Stack
-          direction={{
-            sm: "column",
-            md: "row",
-          }}
-          gap={10}
-        >
-          <Stack
-            width={{
-              sm: "100%",
-              md: "70%",
-            }}
-          >
-            <TableContainer>
-              <Table sx={{ minWidth: 700 }} aria-label="customized table">
-                <TableHead>
-                  <TableRow>
-                    <StyledTableCell className={quicksand.className}>
-                      Products
-                    </StyledTableCell>
-                    <StyledTableCell className={quicksand.className}>
-                      Quantity
-                    </StyledTableCell>
-                    <StyledTableCell
-                      className={quicksand.className}
-                      align="right"
-                    >
-                      Unit price
-                    </StyledTableCell>
-                    <StyledTableCell
-                      className={quicksand.className}
-                      align="right"
-                    >
-                      Subtotal
-                    </StyledTableCell>
-                    <StyledTableCell
-                      className={quicksand.className}
-                      align="right"
-                    >
-                      Remove
-                    </StyledTableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {cart.length === 0 && (
-                    <StyledTableRow>
-                      <StyledTableCell colSpan={5} align={"left"}>
-                        Your cart is empty
-                      </StyledTableCell>
-                    </StyledTableRow>
-                  )}
-                  {cart.map((row, index) => (
-                    <StyledTableRow key={row.id}>
-                      <StyledTableCell component="th" scope="row">
-                        {row.name}
-                      </StyledTableCell>
-                      <StyledTableCell>
-                        <Stack direction={"row"}>
-                          <IconButton
-                            sx={{
-                              color: "white",
-                              fontSize: "14px",
-                              fontWeight: "bold",
-                              width: "30px",
-                              height: "30px",
-                              backgroundColor: "var(--text-color-trinary)",
-                              "&:hover": {
-                                backgroundColor: "var(--text-color-trinary)",
-                              },
-                            }}
-                            onClick={() => handleDecrement(index)}
-                          >
-                            -
-                          </IconButton>
-                          <Typography
-                            sx={{
-                              textAlign: "center",
-                              display: "flex",
-                              justifyContent: "center",
-                              alignItems: "center",
-                              fontSize: "14px",
-                              fontWeight: "bold",
-                              width: "40px",
-                            }}
-                          >
-                            {row.count}
-                          </Typography>
-                          <IconButton
-                            size="small"
-                            sx={{
-                              color: "white",
-                              fontSize: "14px",
-                              fontWeight: "bold",
-                              width: "30px",
-                              height: "30px",
-                              backgroundColor: "var(--text-color-trinary)",
-                              "&:hover": {
-                                backgroundColor: "var(--text-color-trinary)",
-                              },
-                            }}
-                            onClick={() => handleIncrement(index)}
-                          >
-                            +
-                          </IconButton>
-                        </Stack>
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        {Math.round(row.price - (row.price * (row.discount || 0)) / 100)}
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        {Math.round(
-                          row.price - (row.price * (row.discount || 0)) / 100
-                        ) * row.count}
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        <IconButton
-                          size="small"
-                          sx={{
-                            color: "red",
-                          }}
-                          onClick={() => handleRemove(index)}
-                        >
-                          <Delete />
-                        </IconButton>
-                      </StyledTableCell>
-                    </StyledTableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+
+        {empty ? (
+          <Stack alignItems="center" gap={2} py={{ xs: 5, md: 8 }}>
+            <Box sx={{ fontSize: 52, lineHeight: 1 }}>🎆</Box>
+            <Stack alignItems="center" gap={0.5}>
+              <Typography fontSize={19} fontWeight={800} color="var(--text-color)">Your cart is empty</Typography>
+              <Typography fontSize={14} color="var(--text-color-secondary)" textAlign="center">
+                Add some crackers and they&apos;ll show up here.
+              </Typography>
+            </Stack>
+            <Button
+              component={Link}
+              href="/shop"
+              startIcon={<ShoppingBagRoundedIcon />}
+              sx={cta}
+            >
+              Start shopping
+            </Button>
           </Stack>
-          <Stack
-            width={{
-              sm: "100%",
-              md: "30%",
-            }}
-          >
-            <Paper sx={{ padding: 2 }}>
-              <Stack gap={2}>
-                <Typography
-                  className={quicksand.className}
-                  variant="h3"
-                  fontSize={20}
-                  fontWeight={800}
-                >
-                  Cart Summary
-                </Typography>
-                <Stack gap={2}>
-                  <Typography
-                    className={quicksand.className}
-                    fontSize={14}
-                    fontWeight={700}
-                  >
-                    Total: ₹{total}
+        ) : (
+          <Stack direction={{ xs: "column", md: "row" }} gap={{ xs: 2.5, md: 4 }} alignItems="flex-start">
+            {/* Lines */}
+            <Stack flex={1} gap={1.25} width="100%" minWidth={0}>
+              {c.cart.map((item, i) => (
+                <CartLine
+                  key={item.id}
+                  item={item}
+                  onQty={(q) => c.setQty(item.id, q)}
+                  onAdjust={(d) => c.adjust(item.id, d)}
+                  onRemove={() => handleRemove(item, i)}
+                />
+              ))}
+
+              <Button
+                component={Link}
+                href="/shop"
+                sx={{
+                  alignSelf: "flex-start", mt: 1,
+                  textTransform: "none", fontWeight: 700, fontSize: 13.5,
+                  color: "var(--primary-color)",
+                  "&:hover": { backgroundColor: "var(--primary-soft)" },
+                }}
+              >
+                ← Continue shopping
+              </Button>
+            </Stack>
+
+            {/* Summary */}
+            <Stack
+              gap={1.5}
+              sx={{
+                width: { xs: "100%", md: 340 }, flexShrink: 0,
+                position: { md: "sticky" }, top: { md: 24 },
+                backgroundColor: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: "var(--radius-lg)",
+                boxShadow: "var(--shadow)",
+                p: { xs: 2, md: 2.5 },
+              }}
+            >
+              <Typography fontSize={16} fontWeight={800} color="var(--text-color)">
+                Order summary
+              </Typography>
+
+              <MinimumMeter total={c.total} shortBy={c.shortBy} meetsMinimum={c.meetsMinimum} />
+
+              {!c.meetsMinimum && (
+                <GapFillers
+                  products={productList}
+                  cart={c.cart}
+                  shortBy={c.shortBy}
+                  onAdd={(p) => c.add(p, 1)}
+                />
+              )}
+
+              <Stack gap={0.75}>
+                <Row label={`Price (${c.itemCount} units)`} value={`₹${c.mrp.toLocaleString("en-IN")}`} strike />
+                <Row label="Discount" value={`− ₹${c.saved.toLocaleString("en-IN")}`} green />
+                <Divider sx={{ my: 0.5 }} />
+                <Stack direction="row" justifyContent="space-between" alignItems="baseline">
+                  <Typography fontSize={15.5} fontWeight={800} color="var(--text-color)">Total</Typography>
+                  <Typography fontSize={20} fontWeight={800} color="var(--text-color)">
+                    ₹{c.total.toLocaleString("en-IN")}
                   </Typography>
                 </Stack>
-                <Stack gap={2}>
-                  <Button
-                    variant="contained"
-                    sx={{
-                      backgroundColor: "var(--primary-color)",
-                      color: "white",
-                      textTransform: "none",
-                      "&:hover": {
-                        backgroundColor: "var(--primary-color)",
-                      },
-                    }}
-                    disabled={cart.length === 0 || total <= 3000}
-                  >
-                    <Link
-                      style={{
-                        textDecoration: "none",
-                        color: "white",
-                      }}
-                      href="/checkout"
-                    >
-                      Proceed to Checkout
-                    </Link>
-                  </Button>
-                  {total <= 3000 && cart.length > 0 && (
-                    <Typography
-                      className={quicksand.className}
-                      fontSize={13}
-                      fontWeight={600}
-                      color="red"
-                    >
-                      Minimum order amount is ₹3000
-                    </Typography>
-                  )}
-                  <Button
-                    variant="outlined"
-                    sx={{
-                      border: "1px solid var(--primary-color)",
-                      color: "var(--primary-color)",
-                      textTransform: "none",
-                      "&:hover": {
-                        border: "1px solid var(--primary-color)",
-                      },
-                    }}
-                  >
-                    <Link
-                      style={{
-                        textDecoration: "none",
-                        color: "var(--primary-color)",
-                      }}
-                      href="/shop"
-                    >
-                      Continue Shopping
-                    </Link>
-                  </Button>
-                </Stack>
               </Stack>
-            </Paper>
+
+              <Button
+                component={c.meetsMinimum ? Link : "button"}
+                href={c.meetsMinimum ? "/checkout" : undefined}
+                disabled={!c.meetsMinimum}
+                endIcon={<ArrowForwardRoundedIcon />}
+                sx={cta}
+              >
+                {c.meetsMinimum ? "Proceed to Checkout" : `₹${c.shortBy.toLocaleString("en-IN")} to go`}
+              </Button>
+
+              <Typography fontSize={11.5} textAlign="center" color="var(--success)" fontWeight={700}>
+                You saved ₹{c.saved.toLocaleString("en-IN")} on this order 🎉
+              </Typography>
+            </Stack>
           </Stack>
-        </Stack>
+        )}
+
         <EmailSubscribe />
       </Stack>
+
+      <Snackbar
+        open={Boolean(undo)}
+        autoHideDuration={5000}
+        onClose={() => setUndo(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        message={undo ? `${undo.item.name} removed` : ""}
+        action={
+          <Button
+            size="small"
+            onClick={() => { c.restore(undo.item, undo.index); setUndo(null); }}
+            sx={{ color: "#ffb08c", fontWeight: 800, textTransform: "none" }}
+          >
+            UNDO
+          </Button>
+        }
+      />
     </main>
+  );
+}
+
+const cta = {
+  textTransform: "none", fontWeight: 800, fontSize: 14.5,
+  py: 1.2, px: 3, borderRadius: "var(--radius)",
+  color: "#fff", backgroundColor: "var(--primary-color)",
+  "&:hover": { backgroundColor: "var(--primary-dark)" },
+  "&.Mui-disabled": { backgroundColor: "#ffd0bd", color: "#fff" },
+};
+
+function Row({ label, value, strike, green }) {
+  return (
+    <Stack direction="row" justifyContent="space-between">
+      <Typography fontSize={13} fontWeight={green ? 700 : 600} color={green ? "var(--success)" : "var(--text-color-secondary)"}>
+        {label}
+      </Typography>
+      <Typography
+        fontSize={13}
+        fontWeight={green ? 800 : 600}
+        color={green ? "var(--success)" : "var(--text-color-secondary)"}
+        sx={strike ? { textDecoration: "line-through" } : undefined}
+      >
+        {value}
+      </Typography>
+    </Stack>
   );
 }

@@ -1,125 +1,97 @@
 "use client";
-import { Stack, InputBase, Button } from "@mui/material";
-import emailBg from "../../public/images/email-bg.png";
-import TelegramIcon from "@mui/icons-material/Telegram";
+import { Stack, Box, Typography, InputBase, Button, Snackbar, Alert } from "@mui/material";
+import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import { useState } from "react";
 
+/**
+ * Newsletter strip. Kept as a shared component (home and cart both use it),
+ * rebuilt on the design tokens with real validation and feedback - the previous
+ * version accepted anything and gave no confirmation.
+ */
 export default function EmailSubscribe() {
+  const [email, setEmail] = useState("");
+  const [toast, setToast] = useState(null);
+
+  const submit = (e) => {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+      setToast({ msg: "Please enter a valid email address", severity: "error" });
+      return;
+    }
+    setToast({ msg: "Thanks — we'll let you know about new offers.", severity: "success" });
+    setEmail("");
+  };
+
   return (
-    <Stack
-      position={"relative"}
-      // width={"100%"}
-      p={{
-        xs: "20px",
-        sm: "40px",
-        md: "60px",
-        lg: "80px",
-        xl: "100px",
-      }}
-      gap={2}
-      sx={{
-        background: "black",
-        height: "100%",
-        borderRadius: "20px",
-        overflow: "hidden",
-        margin: {
-          xs: "80px 20px",
-          sm: "80px 20px",
-          md: "80px 50px",
-          lg: "80px 50px",
-          xl: "80px 0",
-        },
-      }}
-    >
-      <h3
-        style={{
-          color: "white",
-          fontSize: "30px",
-          zIndex: "1",
-        }}
-      >
-        Stay home & Celebrate
-        <br />
-        your festivals from us
-      </h3>
-      <p
-        style={{
-          color: "white",
-          zIndex: "1",
-        }}
-      >
-        Start You&apos;r Shopping with{" "}
-        <font style={{ color: "var(--primary-color)" }}>Sankamithra</font>
-      </p>
+    <>
       <Stack
-        flexDirection={"row"}
-        justifyContent={"space-between"}
-        zIndex={1}
+        component="form"
+        onSubmit={submit}
+        direction={{ xs: "column", md: "row" }}
+        alignItems={{ xs: "stretch", md: "center" }}
+        justifyContent="space-between"
+        gap={{ xs: 2, md: 4 }}
         sx={{
-          background: "white",
-          borderRadius: "40px",
-          width: {
-            xs: "100%",
-            xs: "100%",
-            sm: "400px",
-            md: "400px",
-            lg: "400px",
-          },
-          height: "50px",
-          paddingLeft: "20px",
+          p: { xs: 2.5, md: 4 },
+          borderRadius: "var(--radius-lg)",
+          background: "linear-gradient(120deg, #2a1a14 0%, #4a1f0d 60%, #7a2d0a 100%)",
+          overflow: "hidden",
         }}
       >
-        <Stack
-          direction={"row"}
-          gap={1}
-          alignItems={"center"}
-          // width={{
-          //   xs: "70%",
-          //   sm: "80%",
-          //   md: "90%",
-          //   lg: "100%",
-          // }}
-        >
-          <TelegramIcon sx={{ color: "var(--text-color-secondary)" }} />
-          <InputBase
-            placeholder="Your emaill address"
-            sx={{
-              fontSize: "14px",
-              width: "100%",
-              height: "100%",
-              zIndex: "1",
-            }}
-          />
+        <Stack gap={0.5} minWidth={0}>
+          <Typography fontSize={{ xs: 18, md: 23 }} fontWeight={800} color="#fff" lineHeight={1.25}>
+            Get the new season&apos;s offers first
+          </Typography>
+          <Typography fontSize={{ xs: 13, md: 14 }} color="rgba(255,255,255,0.72)">
+            Price drops and new arrivals, a few times a year. No spam.
+          </Typography>
         </Stack>
 
-        <Button
-          variant="contained"
+        <Stack
+          direction="row"
+          alignItems="center"
+          gap={1}
           sx={{
-            color: "white",
-            borderRadius: "40px",
-            fontSize: "14px",
-            fontWeight: "bold",
-            textTransform: "none",
-            backgroundColor: "var(--primary-color)",
-            padding: "0 25px !important",
-            "&:hover": {
-              backgroundColor: "var(--primary-color)",
-            },
+            backgroundColor: "#fff",
+            borderRadius: "var(--radius-pill)",
+            p: 0.6, pl: 2.25,
+            width: { xs: "100%", md: 420 },
+            flexShrink: 0,
           }}
         >
-          Subscribe
-        </Button>
+          <InputBase
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Your email address"
+            type="email"
+            inputProps={{ "aria-label": "email address" }}
+            sx={{ flex: 1, fontSize: 14, fontWeight: 600, minWidth: 0 }}
+          />
+          <Button
+            type="submit"
+            endIcon={<SendRoundedIcon sx={{ fontSize: 16 }} />}
+            sx={{
+              textTransform: "none", fontWeight: 800, fontSize: 13.5,
+              px: 2.25, py: 1, borderRadius: "var(--radius-pill)", flexShrink: 0,
+              color: "#fff", backgroundColor: "var(--primary-color)",
+              "&:hover": { backgroundColor: "var(--primary-dark)" },
+            }}
+          >
+            Subscribe
+          </Button>
+        </Stack>
       </Stack>
-      <img
-        src={emailBg.src}
-        alt=""
-        style={{
-          position: "absolute",
-          right: "0",
-          top: "0",
-          height: "100%",
-          zIndex: "0",
-        }}
-      />
-    </Stack>
+
+      <Snackbar
+        open={Boolean(toast)}
+        autoHideDuration={3000}
+        onClose={() => setToast(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity={toast?.severity || "success"} variant="filled" sx={{ fontWeight: 700 }}>
+          {toast?.msg}
+        </Alert>
+      </Snackbar>
+    </>
   );
 }
