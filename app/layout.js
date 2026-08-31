@@ -1,6 +1,7 @@
 import { Quicksand } from "next/font/google";
 import "@/app/globals.css";
 import Header from "@/app/components/header";
+import { getBanner } from "@/util/settingsStore";
 import Footer from "@/app/components/footer";
 import ShopChrome from "@/app/components/shopChrome";
 import { GoogleAnalytics } from "@next/third-parties/google";
@@ -56,7 +57,9 @@ export const viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const banner = await getBanner();
+
   return (
     <html lang="en-IN">
       <body className={quicksand.className}>
@@ -65,7 +68,7 @@ export default function RootLayout({ children }) {
             <ProductProvider>
               {/* Shop chrome is hidden on /admin, which is a work tool */}
               <ShopChrome>
-                <Header />
+                <Header banner={banner} />
               </ShopChrome>
               {children}
               <ShopChrome>

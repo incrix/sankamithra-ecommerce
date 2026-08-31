@@ -18,9 +18,16 @@ export const PRODUCT_SEED_URL = `${ASSET_BASE}/SortedJSON/productData.json`;
 /** Live catalogue for the storefront: the editable store, not the seed file. */
 export const PRODUCT_DATA_URL = "/api/products";
 
-export const PRICE_LIST_URL = `${ASSET_BASE}/${encodeURIComponent(
+/** Used until the admin uploads one - the copy that shipped with the site. */
+export const PRICE_LIST_FALLBACK = `${ASSET_BASE}/${encodeURIComponent(
   "SANKAMITHRA THUNDER WORLD PRICE LIST 2025.pdf"
 )}`;
+
+/**
+ * Every "Download price list" link points here. The route redirects to
+ * whichever PDF the admin last uploaded, so the links never need updating.
+ */
+export const PRICE_LIST_URL = "/api/price-list";
 
 /**
  * Resolves a stored image path to a URL.
@@ -41,3 +48,10 @@ export function assetUrl(path) {
   const encoded = clean.split("/").map(encodeURIComponent).join("/");
   return `${ASSET_BASE}/${encoded}`;
 }
+
+/** Shown in the top strip until the admin edits it. */
+export const DEFAULT_BANNER = {
+  text: "Diwali 2025 Sale LIVE — Up to 90% OFF!",
+  href: "",
+  enabled: true,
+};

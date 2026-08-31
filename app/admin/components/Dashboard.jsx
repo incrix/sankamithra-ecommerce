@@ -6,6 +6,8 @@ import ReceiptLongRoundedIcon from "@mui/icons-material/ReceiptLongRounded";
 import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import RevenueChart, { panel } from "./RevenueChart";
+import PriceListCard from "./PriceListCard";
+import BannerCard from "./BannerCard";
 import { summary, dailySeries, topProducts } from "@/util/analytics";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
@@ -143,6 +145,10 @@ export default function Dashboard({ orders, onJump }) {
           </Stack>
         )}
       </Stack>
+
+      <BannerCard />
+
+      <PriceListCard />
     </Stack>
   );
 }

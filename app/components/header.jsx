@@ -12,7 +12,7 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import PictureAsPdfRoundedIcon from "@mui/icons-material/PictureAsPdfRounded";
 import { useProducts } from "@/context/ProductContext";
 import { useCart } from "@/util/cart";
-import { PRICE_LIST_URL } from "@/util/config";
+import { PRICE_LIST_URL, DEFAULT_BANNER } from "@/util/config";
 import logo from "../../public/images/logo.svg";
 
 /**
@@ -36,7 +36,7 @@ const LINKS = [
   { href: "/contact", label: "Contact" },
 ];
 
-export default function Header() {
+export default function Header({ banner = DEFAULT_BANNER }) {
   const pathname = usePathname() || "/";
   const router = useRouter();
   const { searchTerm, setSearchTerm } = useProducts();
@@ -85,12 +85,17 @@ export default function Header() {
 
   return (
     <Box component="header" sx={{ position: "sticky", top: 0, zIndex: 1100, backgroundColor: "var(--surface)" }}>
-      {/* Announcement */}
-      <Box sx={{ backgroundColor: "var(--primary-color)", py: 0.85, px: 2 }}>
-        <Typography textAlign="center" fontSize={{ xs: 11.5, md: 13 }} fontWeight={800} color="#fff" letterSpacing={0.2}>
-          Diwali 2025 Sale LIVE — Up to 90% OFF!
-        </Typography>
-      </Box>
+      {/* Announcement - text, link and visibility are set in the admin panel */}
+      {banner?.enabled !== false && banner?.text ? (
+        <Box
+          {...(banner.href ? { component: Link, href: banner.href } : {})}
+          sx={{ display: "block", backgroundColor: "var(--primary-color)", py: 0.85, px: 2 }}
+        >
+          <Typography textAlign="center" fontSize={{ xs: 11.5, md: 13 }} fontWeight={800} color="#fff" letterSpacing={0.2}>
+            {banner.text}
+          </Typography>
+        </Box>
+      ) : null}
 
       {/* Brand bar */}
       <Box sx={{ borderBottom: "1px solid var(--border)" }}>
