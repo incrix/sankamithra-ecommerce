@@ -113,43 +113,6 @@ export function AdminProvider({ children }) {
     }
   }, [notify, orders]);
 
-  /**
-   * Ticks a packing line off.
-   *
-   * Deliberately does NOT go through patchOrder: that sets the global `busy`
-   * flag, which disables every checkbox until the round trip finishes, so a
-   * packer working down a list could only tick one box per request. The tick
-   * lands immediately and saves in the background; if the save fails, that one
-   * line rolls back rather than the whole panel.
-   */
-  const toggleItemPacked = useCallback(async (id, itemId, packed) => {
-    const setPacked = (value) =>
-      setOrders((prev) =>
-        prev.map((o) =>
-          o.id !== id
-            ? o
-            : { ...o, items: (o.items || []).map((it) => (it.id === itemId ? { ...it, packed: value } : it)) }
-        )
-      );
-
-    setPacked(packed);
-    try {
-      const res = await fetch(`/api/orders/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ itemId, packed }),
-      });
-      if (!res.ok) throw new Error();
-      const { order } = await res.json();
-      setOrders((prev) => prev.map((o) => (o.id === order.id ? order : o)));
-    } catch {
-      // Revert this line only - reverting a snapshot would also undo any other
-      // tick the packer made while this one was in flight.
-      setPacked(!packed);
-      notify("That tick did not save - try again", "error");
-    }
-  }, [notify]);
-
   const logout = useCallback(async () => {
     await fetch("/api/admin/logout", { method: "POST" });
     setAuthed(false);
@@ -159,7 +122,7 @@ export function AdminProvider({ children }) {
 
   const value = {
     authed, setAuthed, orders, stats, loading, busy, toast, setToast, notify,
-    catalogue, catLoading, loadOrders, loadCatalogue, patchOrder, toggleItemPacked, logout,
+    catalogue, catLoading, loadOrders, loadCatalogue, patchOrder, logout,
   };
 
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;

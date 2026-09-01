@@ -83,7 +83,7 @@ const TABS = [
 
 /** The order queue: filter, sort, open one and work it. */
 export default function Orders() {
-  const { orders, loading, busy, patchOrder, toggleItemPacked, notify } = useAdmin();
+  const { orders, loading, busy, patchOrder, notify } = useAdmin();
 
   // Honours /admin/orders?tab=packed, so a dashboard tile or a bookmark can
   // open the queue already filtered.
@@ -154,7 +154,6 @@ export default function Orders() {
 
   const selected = orders.find((o) => o.id === selectedId) || null;
   const patch = (body) => patchOrder(selected.id, body);
-  const togglePacked = (it) => toggleItemPacked(selected.id, it.id, !it.packed);
 
   return (
     <>
@@ -344,7 +343,7 @@ export default function Orders() {
                    overflow: "hidden" }}>
           {selected ? (
             <OrderDetail order={selected} busy={busy} onClose={() => setSelectedId(null)}
-              onPatch={patch} onTogglePacked={togglePacked} onToast={notify} />
+              onPatch={patch} onToast={notify} />
           ) : (
             <Stack alignItems="center" justifyContent="center" gap={1} sx={{ height: 320, px: 3 }}>
               <Box sx={{ fontSize: 30 }}>👈</Box>
@@ -366,7 +365,7 @@ export default function Orders() {
       >
         {selected && (
           <OrderDetail order={selected} busy={busy} onClose={() => setSelectedId(null)}
-            onPatch={patch} onTogglePacked={togglePacked} onToast={notify} />
+            onPatch={patch} onToast={notify} />
         )}
       </Drawer>
 

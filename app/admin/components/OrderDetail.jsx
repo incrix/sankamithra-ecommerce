@@ -10,7 +10,7 @@ import PackingList from "./PackingList";
 import SubstitutePicker from "./SubstitutePicker";
 import OrderActions from "./OrderActions";
 import StatusChip from "./StatusChip";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const digits = (s) => String(s || "").replace(/\D/g, "");
@@ -22,10 +22,52 @@ const NEXT = {
   packed: { to: "dispatched", label: "Mark dispatched" },
 };
 
-export default function OrderDetail({ order, onClose, onPatch, onTogglePacked, busy, onToast }) {
+export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) {
   // Hooks must run before any early return, or the hook order changes between
   // renders as soon as `order` goes null.
   const [swapFor, setSwapFor] = useState(null);
+
+  /**
+   * Which lines the packer has ticked off, held here rather than in the order.
+   *
+   * A tick is a note to self while walking the shelves - it is not a fact about
+   * the order until the packing is finished. Saving each one cost a round trip
+   * that the packer had to wait through, so ticking now costs nothing and only
+   * "Mark packed" writes, which is also the moment the order genuinely changes.
+   *
+   * Kept in localStorage so closing the panel, or a stray refresh mid-aisle,
+   * does not throw the progress away.
+   */
+  const [ticks, setTicks] = useState({});
+  const orderId = order?.id;
+  const storeKey = orderId ? `stw.packing.${orderId}` : null;
+
+  useEffect(() => {
+    if (!order) return;
+    // Once an order is packed or beyond, the order itself is the truth.
+    const settledStatus = order.status !== "new" && order.status !== "packing";
+    const fromOrder = {};
+    (order.items || []).forEach((it) => { if (it.packed) fromOrder[it.id] = true; });
+    if (settledStatus) { setTicks(fromOrder); return; }
+
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(storeKey) || "null"); } catch {}
+    setTicks(saved && typeof saved === "object" ? saved : fromOrder);
+    // Re-reads when a different order is opened, or when its status moves on.
+  }, [orderId, order?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggleTick = (it) =>
+    setTicks((prev) => {
+      const nextTicks = { ...prev, [it.id]: !prev[it.id] };
+      try { localStorage.setItem(storeKey, JSON.stringify(nextTicks)); } catch {}
+      return nextTicks;
+    });
+
+  // The list renders from the packer's ticks, not from what is stored.
+  const items = useMemo(
+    () => (order?.items || []).map((it) => ({ ...it, packed: Boolean(ticks[it.id]) })),
+    [order?.items, ticks]
+  );
 
   if (!order) return null;
 
@@ -33,7 +75,7 @@ export default function OrderDetail({ order, onClose, onPatch, onTogglePacked, b
   const next = NEXT[order.status];
   // A line the packer could not fill is settled too - it must not block the
   // order from being completed.
-  const allSettled = order.items.every((i) => i.packed || (i.unavailable && !i.substitute));
+  const allSettled = items.every((i) => i.packed || (i.unavailable && !i.substitute));
   const adjusted = (order.originalTotal ?? order.total) !== order.total;
 
   const waText = encodeURIComponent(
@@ -119,9 +161,9 @@ export default function OrderDetail({ order, onClose, onPatch, onTogglePacked, b
         <Divider />
 
         <PackingList
-          items={order.items}
+          items={items}
           busy={busy}
-          onToggle={onTogglePacked}
+          onToggle={toggleTick}
           onUnavailable={(it, flag) => onPatch({ itemId: it.id, unavailable: flag })}
           onSubstitute={(it) => setSwapFor(it)}
         />
@@ -182,7 +224,10 @@ export default function OrderDetail({ order, onClose, onPatch, onTogglePacked, b
           <Button
             fullWidth
             disabled={busy || (order.status === "packing" && !allSettled)}
-            onClick={() => onPatch({ status: next?.to })}
+            onClick={() => {
+              if (next?.to === "packed") { try { localStorage.removeItem(storeKey); } catch {} }
+              onPatch({ status: next?.to });
+            }}
             sx={{
               textTransform: "none", fontWeight: 800, fontSize: 14.5, py: 1.15, borderRadius: "10px",
               color: "#fff", backgroundColor: "var(--primary-color)",
@@ -191,7 +236,7 @@ export default function OrderDetail({ order, onClose, onPatch, onTogglePacked, b
             }}
           >
             {order.status === "packing" && !allSettled
-              ? `${order.items.filter((i) => !(i.packed || (i.unavailable && !i.substitute))).length} lines left`
+              ? `${items.filter((i) => !(i.packed || (i.unavailable && !i.substitute))).length} lines left`
               : next?.label}
           </Button>
         )}
