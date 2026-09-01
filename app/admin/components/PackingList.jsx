@@ -1,5 +1,6 @@
 "use client";
 import { Stack, Typography, Box, Checkbox, LinearProgress, Chip, Button, Tooltip } from "@mui/material";
+import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import RemoveShoppingCartRoundedIcon from "@mui/icons-material/RemoveShoppingCartRounded";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
@@ -15,20 +16,40 @@ const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
  * with another product; a line the packer can't fill never blocks the order
  * from being completed.
  */
-export default function PackingList({ items, onToggle, onUnavailable, onSubstitute, busy }) {
+export default function PackingList({ items, onToggle, onTickAll, onUnavailable, onSubstitute, busy, locked }) {
   // A line is settled once it's packed, or once the packer has recorded that
   // it couldn't be filled. Both count as "dealt with".
   const settled = items.filter((i) => i.packed || (i.unavailable && !i.substitute)).length;
   const pct = items.length ? (settled / items.length) * 100 : 0;
   const short = items.filter((i) => i.unavailable).length;
+  // "Tick all" flips to "Clear all" once every fillable line is ticked.
+  const tickable = items.filter((i) => !(i.unavailable && !i.substitute));
+  const allTicked = tickable.length > 0 && tickable.every((i) => i.packed);
 
   return (
     <Stack gap={1.5}>
-      <Stack direction="row" justifyContent="space-between" alignItems="baseline" gap={1}>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
         <Typography fontSize={14} fontWeight={800} color="var(--text-color)">Packing list</Typography>
-        <Typography fontSize={12} fontWeight={700} color="var(--text-color-secondary)">
-          {settled}/{items.length} done{short ? ` · ${short} short` : ""}
-        </Typography>
+        <Stack direction="row" alignItems="center" gap={1.25}>
+          <Typography fontSize={12} fontWeight={700} color="var(--text-color-secondary)">
+            {settled}/{items.length} done{short ? ` · ${short} short` : ""}
+          </Typography>
+          {onTickAll && !locked && (
+            <Button
+              size="small"
+              onClick={onTickAll}
+              startIcon={<DoneAllRoundedIcon sx={{ fontSize: 15 }} />}
+              sx={{
+                textTransform: "none", fontWeight: 800, fontSize: 12, py: 0.25, px: 1.25,
+                minWidth: 0, borderRadius: "var(--radius-pill)", color: "var(--primary-color)",
+                border: "1px solid var(--primary-color)",
+                "&:hover": { backgroundColor: "var(--primary-soft)" },
+              }}
+            >
+              {allTicked ? "Clear all" : "Tick all"}
+            </Button>
+          )}
+        </Stack>
       </Stack>
 
       <LinearProgress

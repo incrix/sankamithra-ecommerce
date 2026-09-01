@@ -1,5 +1,5 @@
 "use client";
-import { Stack, Typography, Button, Menu, MenuItem, CircularProgress, Divider } from "@mui/material";
+import { Stack, Box, Typography, Button, Menu, MenuItem, CircularProgress, Divider } from "@mui/material";
 import MailOutlineRoundedIcon from "@mui/icons-material/MailOutlineRounded";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
@@ -8,6 +8,7 @@ import PrintRoundedIcon from "@mui/icons-material/PrintRounded";
 import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import { useState } from "react";
 import { buildProformaBlob } from "@/util/proforma";
+import { DOCS, saveBlob, printBlob } from "@/util/docs";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const digits = (s) => String(s || "").replace(/\D/g, "");
@@ -19,11 +20,13 @@ const digits = (s) => String(s || "").replace(/\D/g, "");
  * notes over and over, and typing them by hand on a phone at the packing table
  * is where mistakes and delays come from.
  */
-export default function OrderActions({ order, onToast, onPrint }) {
+export default function OrderActions({ order, onToast }) {
   const [mailAnchor, setMailAnchor] = useState(null);
   const [waAnchor, setWaAnchor] = useState(null);
   const [sending, setSending] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [slipAnchor, setSlipAnchor] = useState(null);
+  const [slipBusy, setSlipBusy] = useState(null);
 
   const c = order.customer;
   const adjusted = order.originalTotal != null && order.originalTotal !== order.total;
@@ -53,6 +56,23 @@ export default function OrderActions({ order, onToast, onPrint }) {
       text: `Hello ${c.name}, your Sankamithra order ${order.ref} (${inr(order.total)}) has been dispatched. We'll share delivery details shortly.\n\nThank you for shopping with us!`,
     },
   ];
+
+  /** Builds one of the order documents, then either saves or prints it. */
+  const makeDoc = async (key, action) => {
+    setSlipAnchor(null);
+    setSlipBusy(`${key}:${action}`);
+    try {
+      const doc = DOCS[key];
+      const blob = await doc.build(order);
+      if (action === "print") printBlob(blob);
+      else saveBlob(blob, doc.file(order));
+    } catch (err) {
+      console.error("document failed:", err);
+      onToast(`Could not produce the ${DOCS[key].label.toLowerCase()}`, "error");
+    } finally {
+      setSlipBusy(null);
+    }
+  };
 
   const sendMail = async (kind) => {
     setMailAnchor(null);
@@ -141,10 +161,35 @@ export default function OrderActions({ order, onToast, onPrint }) {
           Proforma
         </Button>
 
-        <Button onClick={onPrint} startIcon={<PrintRoundedIcon sx={{ fontSize: 15 }} />} sx={btn}>
+        <Button
+          onClick={(e) => setSlipAnchor(e.currentTarget)}
+          startIcon={slipBusy ? <CircularProgress size={13} /> : <PrintRoundedIcon sx={{ fontSize: 15 }} />}
+          endIcon={<ExpandMoreRoundedIcon sx={{ fontSize: 15 }} />}
+          sx={btn}
+        >
           Print slip
         </Button>
       </Stack>
+
+      <Menu anchorEl={slipAnchor} open={Boolean(slipAnchor)} onClose={() => setSlipAnchor(null)}
+        PaperProps={{ sx: { borderRadius: "var(--radius)", minWidth: 250 } }}>
+        {Object.entries(DOCS).map(([key, doc], i) => (
+          <Box key={key}>
+            {i > 0 && <Divider />}
+            <Typography fontSize={11} fontWeight={800} color="var(--text-color-trinary)" sx={{ px: 2, pt: 1.25, pb: 0.5 }}>
+              {doc.label.toUpperCase()}
+            </Typography>
+            <MenuItem onClick={() => makeDoc(key, "print")} sx={{ fontSize: 13.5, fontWeight: 600, gap: 1.25 }}>
+              <PrintRoundedIcon sx={{ fontSize: 16, color: "var(--text-color-secondary)" }} />
+              Print
+            </MenuItem>
+            <MenuItem onClick={() => makeDoc(key, "download")} sx={{ fontSize: 13.5, fontWeight: 600, gap: 1.25 }}>
+              <DownloadRoundedIcon sx={{ fontSize: 16, color: "var(--text-color-secondary)" }} />
+              Download PDF
+            </MenuItem>
+          </Box>
+        ))}
+      </Menu>
 
       <Menu anchorEl={waAnchor} open={Boolean(waAnchor)} onClose={() => setWaAnchor(null)}
         PaperProps={{ sx: { borderRadius: "var(--radius)", minWidth: 230 } }}>

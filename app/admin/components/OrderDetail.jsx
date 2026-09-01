@@ -63,6 +63,21 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
       return nextTicks;
     });
 
+  /**
+   * Ticks every line at once, or clears them if they are already all ticked.
+   *
+   * Lines that could not be filled are skipped: they are settled by being
+   * marked out of stock, and ticking one would claim it went in the box.
+   */
+  const tickAll = () => {
+    const tickable = (order?.items || []).filter((it) => !(it.unavailable && !it.substitute));
+    const allOn = tickable.length > 0 && tickable.every((it) => ticks[it.id]);
+    const nextTicks = { ...ticks };
+    tickable.forEach((it) => { nextTicks[it.id] = !allOn; });
+    try { localStorage.setItem(storeKey, JSON.stringify(nextTicks)); } catch {}
+    setTicks(nextTicks);
+  };
+
   // The list renders from the packer's ticks, not from what is stored.
   const items = useMemo(
     () => (order?.items || []).map((it) => ({ ...it, packed: Boolean(ticks[it.id]) })),
@@ -82,38 +97,6 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
     `Hello ${c.name}, this is Sankamithra Thunder World about your order ${order.ref} (${inr(order.total)}). `
   );
 
-  const printSlip = () => {
-    const w = window.open("", "_blank", "width=800,height=900");
-    if (!w) return;
-    w.document.write(`
-      <html><head><title>Packing slip ${order.ref}</title>
-      <style>
-        body{font-family:system-ui,-apple-system,sans-serif;padding:24px;color:#222}
-        h1{font-size:20px;margin:0 0 4px} .muted{color:#666;font-size:12px}
-        table{width:100%;border-collapse:collapse;margin-top:16px;font-size:13px}
-        th,td{border:1px solid #ddd;padding:7px 9px;text-align:left}
-        th{background:#f4f4f4} .qty{text-align:center;font-weight:700;width:60px}
-        .tick{width:34px} tfoot td{font-weight:700} .out{color:#999;background:#fafafa}
-      </style></head><body>
-      <h1>Sankamithra Thunder World — Packing slip</h1>
-      <div class="muted">Order ${order.ref} · ${new Date(order.createdAt).toLocaleString("en-IN")}</div>
-      <p><b>${c.name}</b><br>${c.address}<br>${c.city}, ${c.state} — ${c.zip}<br>${c.phone}</p>
-      <table><thead><tr><th class="tick">✓</th><th>Item</th><th class="qty">Qty</th></tr></thead>
-      <tbody>${order.items.map((i) => {
-        if (i.substitute) {
-          return `<tr><td class="tick"></td><td><s>${i.name}</s><br><b>&#8594; ${i.substitute.name}</b> <i>(replacement)</i></td><td class="qty">${i.substitute.count}</td></tr>`;
-        }
-        if (i.unavailable) {
-          return `<tr class="out"><td class="tick">&#10007;</td><td><s>${i.name}</s> <i>(out of stock &#8212; not supplied)</i></td><td class="qty">&#8212;</td></tr>`;
-        }
-        return `<tr><td class="tick"></td><td>${i.name}</td><td class="qty">${i.count}</td></tr>`;
-      }).join("")}</tbody>
-      <tfoot><tr><td></td><td>Total ${order.items.length} lines / ${order.itemCount} units${order.originalTotal && order.originalTotal !== order.total ? " &#183; adjusted from " + inr(order.originalTotal) : ""}</td><td class="qty">${inr(order.total)}</td></tr></tfoot>
-      </table></body></html>`);
-    w.document.close();
-    w.focus();
-    w.print();
-  };
 
   return (
     // flex:1 + minHeight:0 inside the parent's flex column is what lets the
@@ -156,7 +139,7 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
 
         </Stack>
 
-        <OrderActions order={order} onToast={onToast} onPrint={printSlip} />
+        <OrderActions order={order} onToast={onToast} />
 
         <Divider />
 
@@ -164,6 +147,8 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
           items={items}
           busy={busy}
           onToggle={toggleTick}
+          onTickAll={tickAll}
+          locked={order.status !== "new" && order.status !== "packing"}
           onUnavailable={(it, flag) => onPatch({ itemId: it.id, unavailable: flag })}
           onSubstitute={(it) => setSwapFor(it)}
         />
