@@ -47,3 +47,24 @@ export const getBanner = unstable_cache(
   ["site-banner"],
   { tags: [BANNER_TAG], revalidate: 3600 }
 );
+
+export const WHOLESALE_KEY = "wholesaleSlug";
+
+/**
+ * The one unguessable path the dealer list lives behind.
+ *
+ * Generated once and then left alone - the shop shares this link with dealers
+ * and a changing address would break every copy of it already sent out. It is
+ * kept in the database rather than the source so it never reaches the repo.
+ */
+export async function getWholesaleSlug({ create = false } = {}) {
+  const existing = await getSetting(WHOLESALE_KEY);
+  if (existing?.slug) return existing.slug;
+  if (!create) return null;
+
+  const slug = [...crypto.getRandomValues(new Uint8Array(12))]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+  await setSetting(WHOLESALE_KEY, { slug, createdAt: new Date().toISOString() });
+  return slug;
+}

@@ -30,7 +30,7 @@ export async function GET() {
  */
 export async function POST(request) {
   try {
-    const { billingDetails, productList, invoice, source, note } = await request.json();
+    const { billingDetails, productList, invoice, source, note, clientRef } = await request.json();
 
     // A counter sale is staff-created, so it requires an admin session. Without
     // this check anyone could post orders that look like they came from the shop.
@@ -44,7 +44,13 @@ export async function POST(request) {
       return Response.json({ error: "Invalid order payload" }, { status: 400 });
     }
 
-    const order = await createOrder({ billingDetails, productList, emailSent: false, source: isPos ? "pos" : "online", note });
+    const order = await createOrder({ billingDetails, productList, emailSent: false, source: isPos ? "pos" : "online", note, clientRef });
+
+    // A retry of a bill that already landed: return it without billing again
+    // and without sending the confirmation emails a second time.
+    if (order.duplicate) {
+      return Response.json({ ok: true, ref: order.ref, id: order.id, duplicate: true });
+    }
 
     let mail = { customer: false, shop: false, errors: {} };
     try {

@@ -25,6 +25,20 @@ function normalise(p, id) {
     category: String(p.category || "Others").trim(),
     price: Math.max(0, num(p.price)),
     discount: Math.min(95, Math.max(0, num(p.discount))),
+    // Pricelist 2: a second, lower MRP used only for counter billing. Null
+    // until it is supplied, and counter billing falls back to `price`.
+    mrp2: p.mrp2 == null || p.mrp2 === "" ? null : Math.max(0, num(p.mrp2)),
+    // Position in the printed price list, so the website reads in the same
+    // order as the sheet the shop hands over the counter. Items not on the
+    // list sort after it.
+    sortOrder: p.sortOrder == null ? null : num(p.sortOrder),
+    plSection: String(p.plSection || "").trim(),
+    // Wholesale is its own trade: its own rate, its own pack size and its own
+    // stock, none of which touch the counter or the website. A product only
+    // reaches the dealer list once a box rate and stock are set on it.
+    wsBoxRate: p.wsBoxRate == null || p.wsBoxRate === "" ? null : Math.max(0, num(p.wsBoxRate)),
+    wsCase: p.wsCase == null || p.wsCase === "" ? null : Math.max(0, Math.round(num(p.wsCase))),
+    wsStock: p.wsStock == null || p.wsStock === "" ? null : Math.max(0, Math.round(num(p.wsStock))),
     countInStock: Math.max(0, num(p.countInStock)),
     image: Array.isArray(p.image) ? p.image.filter(Boolean) : [],
     brand: p.brand || "Sankamithra",
@@ -76,7 +90,7 @@ export async function getCatalogue() {
   if (!useDb()) return fileStore.getCatalogue();
   await seedIfEmpty();
   const [items, categories] = await Promise.all([
-    (await products()).find({}).sort({ id: 1 }).toArray(),
+    (await products()).find({}).sort({ sortOrder: 1, id: 1 }).toArray(),
     categoryList(),
   ]);
   return { products: items.map(strip), categories: [...categories].sort() };
@@ -85,7 +99,7 @@ export async function getCatalogue() {
 export async function getPublicProducts() {
   if (!useDb()) return fileStore.getPublicProducts();
   await seedIfEmpty();
-  const items = await (await products()).find({ active: { $ne: false } }).sort({ id: 1 }).toArray();
+  const items = await (await products()).find({ active: { $ne: false } }).sort({ sortOrder: 1, id: 1 }).toArray();
   return items.map(strip);
 }
 

@@ -9,10 +9,14 @@ export const dynamic = "force-dynamic";
  * description and shortDescription are 76% of this payload and are only ever
  * read on a product's own page - which is server-rendered and already has
  * them. Every visitor was downloading ~120 KB of prose the list never shows.
+ * The Pricelist 2 rate and the wholesale figures are dropped here too: they
+ * are for counter billing and dealers, and the admin reads them from ?all=1.
  */
 async function getStorefrontList() {
   const products = await getPublicProducts();
-  return products.map(({ description, shortDescription, ...rest }) => rest);
+  // mrp2 is the counter price list - lower than the website's, and nobody
+  // outside the shop has any business seeing it.
+  return products.map(({ description, shortDescription, mrp2, wsBoxRate, wsCase, wsStock, ...rest }) => rest);
 }
 
 /** Public catalogue for the storefront; ?all=1 returns everything for the admin. */

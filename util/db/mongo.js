@@ -71,6 +71,12 @@ async function ensureIndexes(db) {
     db.collection("orders").createIndex({ id: 1 }, { unique: true }),
     db.collection("orders").createIndex({ ref: 1 }, { unique: true }),
     db.collection("orders").createIndex({ createdAt: -1 }),
+    // Partial, so the many older orders without a key do not collide on null.
+    db.collection("orders").createIndex(
+      { clientRef: 1 },
+      { unique: true, partialFilterExpression: { clientRef: { $type: "string" } } }
+    ),
+    db.collection("orders").createIndex({ source: 1, createdAt: -1 }),
     db.collection("orders").createIndex({ status: 1 }),
     db.collection("products").createIndex({ id: 1 }, { unique: true }),
     db.collection("products").createIndex({ category: 1 }),

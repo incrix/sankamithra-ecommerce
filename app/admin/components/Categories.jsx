@@ -96,7 +96,7 @@ export default function Categories({ catalogue, onReload, onToast }) {
         {categories.length} categories across {products.length} products
       </Typography>
 
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" }, gap: 2 }}>
+      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0,1fr)", lg: "minmax(0,1fr) minmax(0,1fr)" }, gap: 2 }}>
         {/* Categories */}
         <Stack gap={1.5} sx={panel}>
           <Typography fontSize={14} fontWeight={800} color="var(--text-color)">Categories</Typography>

@@ -1,7 +1,7 @@
 "use client";
 import {
   Stack, Box, Typography, InputBase, Chip, Button, IconButton, TextField,
-  CircularProgress, Divider, Drawer, Badge,
+  CircularProgress, Divider, Drawer, Badge, Switch,
 } from "@mui/material";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -17,8 +17,38 @@ import QtyStepper from "@/app/components/commerce/QtyStepper";
 import { useAdmin } from "../AdminContext";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
-const net = (p) => Math.round(p.price - (p.price * (p.discount || 0)) / 100);
+/**
+ * Counter pricing.
+ *
+ * Pricelist 1 is the website list: an MRP with the product's own discount.
+ * Pricelist 2 is a separate, lower set of MRPs carrying no product discount -
+ * the biller gives away margin themselves through ExtraDiscount instead.
+ *
+ * Both lists resolve to a single effective discount off a single MRP, because
+ * that is the only shape the server prices an order in. The server recomputes
+ * from exactly these two numbers with the same formula, so what the biller sees
+ * is what gets stored - and no price is ever taken from the browser, which
+ * matters because the order endpoint is public.
+ */
+const basisMrp = (p, list2) => (list2 ? (p.mrp2 ?? p.price) : p.price);
+
+const effDiscount = (p, list2, extra) => {
+  const base = list2 ? 0 : Number(p.discount) || 0;
+  const e = Math.min(95, Math.max(0, Number(extra) || 0));
+  // Compounded, not added: ExtraDiscount comes off what is already discounted.
+  return Math.round((1 - (1 - base / 100) * (1 - e / 100)) * 10000) / 100;
+};
+
+const unitOf = (p, list2, extra) => {
+  const m = basisMrp(p, list2);
+  return Math.round(m - (m * effDiscount(p, list2, extra)) / 100);
+};
 const PAGE = 40;
+
+/** Unique per bill attempt; crypto.randomUUID is absent on older Safari. */
+const newKey = () =>
+  globalThis.crypto?.randomUUID?.() ??
+  `pos-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 
 /**
  * Counter billing.
@@ -46,6 +76,13 @@ export default function Pos() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [visible, setVisible] = useState(PAGE);
   const [confirmClear, setConfirmClear] = useState(false);
+  // Identifies this bill across retries. Several devices bill at the same
+  // counter, and a slow reply invites a second tap - the server uses this to
+  // recognise the repeat instead of writing a second bill.
+  const billKey = useRef(newKey());
+  // Counter billing only. The storefront never sees either of these.
+  const [list2, setList2] = useState(false);
+  const [extra, setExtra] = useState("");
 
   /**
    * The bill is rendered once, either as the desktop column or the mobile
@@ -114,11 +151,16 @@ export default function Pos() {
   const adjust = (id, delta) =>
     setLines((prev) => prev.map((l) => (l.id === id ? { ...l, count: l.count + delta } : l)).filter((l) => l.count > 0));
 
+  const net = (l) => unitOf(l, list2, extra);
   const total = lines.reduce((a, l) => a + Math.round(net(l) * l.count), 0);
-  const mrp = lines.reduce((a, l) => a + Math.round(l.price * l.count), 0);
+  const mrp = lines.reduce((a, l) => a + Math.round(basisMrp(l, list2) * l.count), 0);
+  // The same basket on the other list, so the biller can see both at once.
+  const otherTotal = lines.reduce(
+    (a, l) => a + Math.round(unitOf(l, !list2, extra) * l.count), 0
+  );
   const units = lines.reduce((a, l) => a + l.count, 0);
 
-  const reset = () => { setConfirmClear(false); setLines([]); setCustomer({ name: "", phone: "", email: "", address: "", city: "", state: "Tamil Nadu", zip: "" }); setNote(""); };
+  const reset = () => { billKey.current = newKey(); setConfirmClear(false); setLines([]); setList2(false); setExtra(""); setCustomer({ name: "", phone: "", email: "", address: "", city: "", state: "Tamil Nadu", zip: "" }); setNote(""); };
 
   const createBill = async () => {
     if (!lines.length) { notify("Add at least one product", "error"); return; }
@@ -131,14 +173,21 @@ export default function Pos() {
       if (customer.email?.trim()) {
         const { buildProformaBase64 } = await import("@/util/proforma");
         invoice = await buildProformaBase64({ customer, items: lines.map((l) => ({
-          name: l.name, mrp: l.price, discount: l.discount, count: l.count,
+          name: l.name, mrp: basisMrp(l, list2), discount: effDiscount(l, list2, extra), count: l.count,
         })) }).catch(() => undefined);
       }
 
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: "pos", note, billingDetails: customer, productList: lines, invoice }),
+        // Lines are sent on the list they were billed on, so the server prices
+        // them exactly as the counter screen showed them.
+        body: JSON.stringify({
+          source: "pos", note, billingDetails: customer, invoice, clientRef: billKey.current,
+          productList: lines.map((l) => ({
+            ...l, price: basisMrp(l, list2), discount: effDiscount(l, list2, extra),
+          })),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { notify(data.error || "Could not create the bill", "error"); return; }
@@ -253,7 +302,31 @@ export default function Pos() {
               </Stack>
             ))}
 
-            <Stack direction="row" justifyContent="flex-end" sx={{ pt: 0.5 }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} sx={{ pt: 0.5 }}>
+              {/* Which price list this bill is on. Left of Clear all, where the
+                  biller is already looking when reviewing the basket. */}
+              <Stack direction="row" alignItems="center" gap={0.5}>
+                <Switch
+                  size="small"
+                  checked={list2}
+                  onChange={(e) => setList2(e.target.checked)}
+                  inputProps={{ "aria-label": "use pricelist 2" }}
+                  sx={{ "& .Mui-checked": { color: "var(--primary-color)" },
+                        "& .Mui-checked + .MuiSwitch-track": { backgroundColor: "var(--primary-color)" } }}
+                />
+                <Stack>
+                  <Typography fontSize={12} fontWeight={800}
+                    color={list2 ? "var(--primary-color)" : "var(--text-color)"}>
+                    {list2 ? "Pricelist 2" : "Pricelist 1"}
+                  </Typography>
+                  {lines.length > 0 && (
+                    <Typography fontSize={10.5} color="var(--text-color-secondary)">
+                      other list: {inr(otherTotal)}
+                    </Typography>
+                  )}
+                </Stack>
+              </Stack>
+
               {confirmClear ? (
                 <Stack direction="row" gap={1} alignItems="center">
                   <Typography fontSize={12} color="var(--text-color-secondary)">Clear all items?</Typography>
@@ -278,6 +351,23 @@ export default function Pos() {
                 </Button>
               )}
             </Stack>
+
+            {/* Sits under the products, where the bill is totted up. Pricelist 2
+                carries no product discount, so this is where that bill's
+                concession is given. */}
+            <TextField
+              size="small"
+              label="ExtraDiscount %"
+              value={extra}
+              onChange={(e) => setExtra(e.target.value.replace(/[^0-9.]/g, "").slice(0, 5))}
+              inputProps={{ inputMode: "decimal", "aria-label": "extra discount percent" }}
+              helperText={
+                Number(extra) > 0
+                  ? `${Number(extra)}% off every line${list2 ? "" : ", on top of the product discount"}`
+                  : "Optional — a concession for this bill only"
+              }
+              sx={fld}
+            />
           </Stack>
         )}
 
@@ -363,7 +453,7 @@ export default function Pos() {
         ) : (
           <Box sx={{ flex: 1, minHeight: 0, overflowY: { lg: "auto" }, pr: { lg: 0.5 },
                      display: "grid", gap: 1,
-                     gridTemplateColumns: { xs: "repeat(2,1fr)", sm: "repeat(3,1fr)", xl: "repeat(4,1fr)" },
+                     gridTemplateColumns: { xs: "repeat(2,minmax(0,1fr))", sm: "repeat(3,minmax(0,1fr))", xl: "repeat(4,minmax(0,1fr))" },
                      alignContent: "start" }}>
             {shown.map((p) => {
               const n = countOf(p.id);

@@ -83,8 +83,22 @@ export async function getOrder(id) {
   return doc ? strip(doc) : null;
 }
 
-export async function createOrder({ billingDetails, productList, emailSent, source = "online", note = "" }) {
+/**
+ * Creates an order.
+ *
+ * `clientRef` makes this safe to retry. Several people bill on their own
+ * devices at the same counter, and a slow response invites a second tap - so
+ * the same key is only ever written once, and a repeat returns the order that
+ * already exists rather than a second bill with a second reference number.
+ */
+export async function createOrder({ billingDetails, productList, emailSent, source = "online", note = "", clientRef = "" }) {
   if (!useDb()) return fileStore.createOrder({ billingDetails, productList, emailSent, source, note });
+
+  const key = String(clientRef || "").slice(0, 80);
+  if (key) {
+    const existing = await (await orders()).findOne({ clientRef: key });
+    if (existing) return { ...strip(existing), duplicate: true };
+  }
 
   const items = (productList || []).map((p) => ({
     id: p.id,
@@ -124,10 +138,21 @@ export async function createOrder({ billingDetails, productList, emailSent, sour
     items,
     mrp: items.reduce((a, i) => a + Math.round(i.mrp * i.count), 0),
     note: note || "",
+    ...(key ? { clientRef: key } : {}),
     history: [{ at: now, event: source === "pos" ? "Billed at the counter" : "Order received" }],
   });
 
-  await (await orders()).insertOne({ ...order });
+  try {
+    await (await orders()).insertOne({ ...order });
+  } catch (err) {
+    // Two devices raced on the same key; the unique index caught the second.
+    // Hand back the bill that won rather than surfacing an error to the biller.
+    if (err?.code === 11000 && key) {
+      const winner = await (await orders()).findOne({ clientRef: key });
+      if (winner) return { ...strip(winner), duplicate: true };
+    }
+    throw err;
+  }
   return order;
 }
 

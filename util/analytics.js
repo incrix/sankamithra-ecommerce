@@ -107,3 +107,76 @@ export function summary(orders) {
     by,
   };
 }
+
+/**
+ * Sales split by where the money came from.
+ *
+ * "pos" is a bill written at the counter, "online" is an order the customer
+ * placed on the website. They run the same pipeline afterwards, so nothing
+ * else distinguishes them - but they are different businesses to the owner and
+ * the one question the dashboard could not answer was which is which.
+ *
+ * Gross is what the goods list at (MRP); net is what was actually charged.
+ * The gap between them is the discount given away, which on an 80%-off list is
+ * the number that decides whether a season worked.
+ */
+export function channelBreakdown(orders) {
+  const blank = () => ({ orders: 0, net: 0, gross: 0, units: 0, cancelled: 0, cancelledValue: 0 });
+  const out = { pos: blank(), online: blank() };
+
+  orders.forEach((o) => {
+    const k = o.source === "pos" ? "pos" : "online";
+    const b = out[k];
+    if (o.status === "cancelled") {
+      b.cancelled += 1;
+      b.cancelledValue += o.total || 0;
+      return;
+    }
+    b.orders += 1;
+    b.net += o.total || 0;
+    b.gross += o.mrp || 0;
+    b.units += o.itemCount || 0;
+  });
+
+  for (const k of ["pos", "online"]) {
+    const b = out[k];
+    b.discount = Math.max(0, b.gross - b.net);
+    b.avg = b.orders ? Math.round(b.net / b.orders) : 0;
+  }
+
+  const net = out.pos.net + out.online.net;
+  out.total = {
+    orders: out.pos.orders + out.online.orders,
+    net,
+    gross: out.pos.gross + out.online.gross,
+    units: out.pos.units + out.online.units,
+    discount: Math.max(0, out.pos.gross + out.online.gross - net),
+    cancelled: out.pos.cancelled + out.online.cancelled,
+    cancelledValue: out.pos.cancelledValue + out.online.cancelledValue,
+    avg: out.pos.orders + out.online.orders ? Math.round(net / (out.pos.orders + out.online.orders)) : 0,
+  };
+  out.posShare = net ? Math.round((out.pos.net / net) * 100) : 0;
+  return out;
+}
+
+/**
+ * The same split over a window, so "this is what today took" can be read off
+ * without mentally filtering the order list.
+ */
+export function channelsSince(orders, days) {
+  const from = new Date();
+  from.setHours(0, 0, 0, 0);
+  from.setDate(from.getDate() - (days - 1));
+  return channelBreakdown(orders.filter((o) => new Date(o.createdAt) >= from));
+}
+
+/**
+ * What substitutions cost. A packer replacing or dropping a line moves the
+ * total away from what the customer first agreed to, and the shop should be
+ * able to see the size of that in money, not just a count of orders.
+ */
+export function adjustmentImpact(orders) {
+  const touched = orders.filter((o) => o.status !== "cancelled" && o.originalTotal != null && o.originalTotal !== o.total);
+  const delta = touched.reduce((a, o) => a + (o.total - o.originalTotal), 0);
+  return { count: touched.length, delta };
+}

@@ -13,7 +13,7 @@ import { assetUrl } from "@/util/config";
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const BLANK = {
   name: "", category: "", price: "", discount: "", countInStock: "",
-  sku: "", shortDescription: "", description: "", image: [], active: true,
+  sku: "", shortDescription: "", description: "", image: [], active: true, mrp2: "",
 };
 
 /**
@@ -165,7 +165,7 @@ export default function ProductEditor({ open, product, categories, onClose, onSa
           </Stack>
 
           {/* Details */}
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(2,1fr)" }, gap: 2 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0,1fr)", sm: "repeat(2,minmax(0,1fr))" }, gap: 2 }}>
             <Box sx={{ gridColumn: { sm: "span 2" } }}>
               <TextField fullWidth size="small" label="Product name" value={form.name} onChange={set("name")} sx={fld} />
             </Box>
@@ -182,6 +182,10 @@ export default function ProductEditor({ open, product, categories, onClose, onSa
             <TextField fullWidth size="small" label="Discount (%)" value={form.discount} onChange={set("discount")}
               inputProps={{ inputMode: "numeric" }} sx={fld}
               helperText={price > 0 ? `Customer pays ${inr(net)} — saving ${inr(price - net)}` : " "} />
+
+            <TextField fullWidth size="small" label="Pricelist 2 MRP (₹)" value={form.mrp2 ?? ""} onChange={set("mrp2")}
+              inputProps={{ inputMode: "numeric" }} sx={fld}
+              helperText="Counter billing only. Leave blank to bill this item at the Pricelist 1 price." />
 
             <TextField fullWidth size="small" label="Stock" value={form.countInStock} onChange={set("countInStock")}
               inputProps={{ inputMode: "numeric" }} sx={fld} />

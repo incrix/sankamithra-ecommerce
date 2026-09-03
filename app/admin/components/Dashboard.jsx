@@ -7,6 +7,7 @@ import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import RevenueChart, { panel } from "./RevenueChart";
 import PriceListCard from "./PriceListCard";
+import SalesBreakdown from "./SalesBreakdown";
 import BannerCard from "./BannerCard";
 import { summary, dailySeries, topProducts } from "@/util/analytics";
 
@@ -30,7 +31,10 @@ export default function Dashboard({ orders, onJump }) {
   return (
     <Stack gap={2}>
       {/* Headline numbers. Revenue leads because it's the question owners ask first. */}
-      <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "repeat(2,1fr)", md: "repeat(4,1fr)" } }}>
+      {/* minmax(0,1fr), not 1fr: a plain 1fr track refuses to shrink below its
+          content, so one long figure widened the whole grid and pushed the
+          admin past the width of a phone. */}
+      <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "repeat(2,minmax(0,1fr))", md: "repeat(4,minmax(0,1fr))" } }}>
         <Kpi
           icon={<TrendingUpRoundedIcon />}
           label="Revenue"
@@ -77,7 +81,7 @@ export default function Dashboard({ orders, onJump }) {
         </Stack>
       )}
 
-      <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", lg: "1.55fr 1fr" } }}>
+      <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "minmax(0,1fr)", lg: "minmax(0,1.55fr) minmax(0,1fr)" } }}>
         <RevenueChart data={series} />
 
         {/* Pipeline. Discrete counts with a direct label on every row - identity
@@ -145,6 +149,8 @@ export default function Dashboard({ orders, onJump }) {
           </Stack>
         )}
       </Stack>
+
+      <SalesBreakdown orders={orders} />
 
       <BannerCard />
 
