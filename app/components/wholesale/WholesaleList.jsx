@@ -5,6 +5,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import { BUSINESS } from "@/util/site";
+import { assetUrl } from "@/util/config";
 
 /**
  * The dealer catalogue.
@@ -44,7 +45,7 @@ export default function WholesaleList({ categories, count }) {
           Sankamithra Fireworks
         </Typography>
         <Typography fontSize={13} color="var(--text-color-secondary)">
-          Wholesale price list · rates are per box
+          Wholesale price list 2026 · effective 1 May 2026
         </Typography>
         <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mt: 1 }}>
           <Action href={WA} icon={<WhatsAppIcon sx={{ fontSize: 16 }} />} label="Order on WhatsApp" primary />
@@ -84,7 +85,7 @@ export default function WholesaleList({ categories, count }) {
               </Stack>
 
               <Box sx={{ display: "grid", gap: 1.25,
-                         gridTemplateColumns: { xs: "minmax(0,1fr)", sm: "repeat(2,minmax(0,1fr))", lg: "repeat(3,minmax(0,1fr))" } }}>
+                         gridTemplateColumns: { xs: "minmax(0,1fr)", md: "repeat(2,minmax(0,1fr))", xl: "repeat(3,minmax(0,1fr))" } }}>
                 {c.items.map((i) => <Card key={i.id} item={i} />)}
               </Box>
             </Stack>
@@ -92,7 +93,8 @@ export default function WholesaleList({ categories, count }) {
         )}
 
         <Typography fontSize={11.5} color="var(--text-color-secondary)" textAlign="center" sx={{ pt: 2, pb: 4 }}>
-          Sankamithra Fireworks · wholesale only. Rates and stock change through the season.
+          Prices are ex-factory. Handling &amp; forwarding @3%, GST and bank commission extra.
+          Rates are subject to revision without notice. 100% advance with order. Subject to Sivakasi jurisdiction.
         </Typography>
       </Stack>
     </Box>
@@ -100,29 +102,34 @@ export default function WholesaleList({ categories, count }) {
 }
 
 function Card({ item }) {
-  const low = item.stock <= 5;
+  const low = item.stock != null && item.stock <= 5;
   return (
-    <Stack gap={1} sx={{ p: 1.5, borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--surface)" }}>
+    <Stack gap={1.25} sx={{ p: 1.5, borderRadius: "var(--radius)", border: "1px solid var(--border)", backgroundColor: "var(--surface)" }}>
       <Stack direction="row" gap={1.25} alignItems="flex-start">
         {item.image && (
-          <Box component="img" src={item.image} alt="" loading="lazy"
-            sx={{ width: 52, height: 52, borderRadius: "var(--radius-sm)", objectFit: "cover", flexShrink: 0, backgroundColor: "#f6f6f6" }} />
+          // Large enough to tell two similar fountains apart across a phone
+          // screen - at thumbnail size a dealer was reading the name to work
+          // out what the picture was, which defeats having one.
+          <Box component="img" src={assetUrl(item.image)} alt="" loading="lazy"
+            sx={{ width: { xs: 88, sm: 96 }, height: { xs: 88, sm: 96 },
+                  borderRadius: "var(--radius)", objectFit: "cover", flexShrink: 0,
+                  backgroundColor: "#f6f6f6", border: "1px solid var(--border)" }} />
         )}
         <Stack flex={1} minWidth={0} gap={0.25}>
-          <Typography fontSize={14} fontWeight={800} color="var(--text-color)" lineHeight={1.3}>{item.name}</Typography>
-          <Typography fontSize={11.5} color="var(--text-color-secondary)">{item.category}</Typography>
+          <Typography fontSize={14.5} fontWeight={800} color="var(--text-color)" lineHeight={1.3}>{item.name}</Typography>
+          <Typography fontSize={11} color="var(--text-color-trinary)" fontFamily="monospace">{item.code}</Typography>
         </Stack>
       </Stack>
 
       <Stack direction="row" gap={1}>
-        <Cell label="Per box" value={inr(item.boxRate)} accent />
-        <Cell label="Case contents" value={item.caseContents ? `${item.caseContents} box` : "—"} />
-        <Cell label="In stock" value={`${item.stock} case${item.stock === 1 ? "" : "s"}`} warn={low} />
+        {item.contents ? <Cell label="Box contents" value={item.contents} /> : null}
+        <Cell label={`Price / ${item.per}`} value={inr(item.price)} accent />
+        <Cell label="Cs / Cont" value={`${item.caseQty} ${item.caseUnit}`} />
       </Stack>
 
-      {item.caseRate && (
-        <Typography fontSize={11.5} color="var(--text-color-secondary)">
-          Full case {inr(item.caseRate)} · {item.caseContents} × {inr(item.boxRate)}
+      {item.stock != null && (
+        <Typography fontSize={11.5} fontWeight={700} color={low ? "#b26a00" : "var(--text-color-secondary)"}>
+          {item.stock} {item.stock === 1 ? "case" : "cases"} in stock
         </Typography>
       )}
     </Stack>

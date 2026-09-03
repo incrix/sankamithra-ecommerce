@@ -1,10 +1,10 @@
 "use client";
-import { useEffect } from "react";
 import Wholesale from "../components/Wholesale";
 import { useAdmin } from "../AdminContext";
 
 export default function AdminWholesalePage() {
-  const { catalogue, catLoading, loadCatalogue, notify } = useAdmin();
-  useEffect(() => { if (!catalogue) loadCatalogue(); }, [catalogue, loadCatalogue]);
-  return <Wholesale catalogue={catalogue} loading={catLoading} onReload={loadCatalogue} onToast={notify} />;
+  // The dealer list is its own collection, so this page loads its own data
+  // rather than waiting on the shop catalogue.
+  const { notify } = useAdmin();
+  return <Wholesale onToast={notify} />;
 }
