@@ -57,7 +57,7 @@ export default function Wholesale({ onToast }) {
   useEffect(() => { load(); }, []);            // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setShown(PAGE); }, [q, sec, filter]);
 
-  const items = data?.items || [];
+  const items = useMemo(() => data?.items || [], [data]);
   const sections = [...new Set(items.map((i) => i.section))];
   const isListed = (i) => i.active !== false && i.stock !== 0;
   const liveCount = items.filter(isListed).length;

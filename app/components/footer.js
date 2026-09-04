@@ -84,7 +84,7 @@ export default function Footer() {
 
             <Typography fontSize={13.5} color="var(--text-color-secondary)" lineHeight={1.7}>
               Fireworks and crackers shop in Sivakasi, Tamil Nadu. Buy Diwali crackers
-              online from the town that makes them, at up to 90% off, with delivery
+              online from the town that makes them, at up to 80% off, with delivery
               across India.
             </Typography>
 

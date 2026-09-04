@@ -46,7 +46,7 @@ export default function Pricing({ catalogue, loading, onReload, onToast }) {
   const sentinel = useRef(null);
   const compact = useMediaQuery("(max-width:900px)", { noSsr: true });
 
-  const products = catalogue?.products || [];
+  const products = useMemo(() => catalogue?.products || [], [catalogue]);
   const categories = catalogue?.categories || [];
 
   const rows = useMemo(() => {

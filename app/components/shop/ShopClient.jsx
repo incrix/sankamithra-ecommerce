@@ -2,10 +2,9 @@
 import { useMemo, useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  Stack, Typography, Box, Chip, InputBase, Drawer, Button,
+  Stack, Typography, Box, Chip, Drawer, Button,
   Snackbar, Alert, Badge, CircularProgress,
 } from "@mui/material";
-import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import ShoppingCartRoundedIcon from "@mui/icons-material/ShoppingCartRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useProducts } from "@/context/ProductContext";
@@ -22,13 +21,17 @@ import CartPanel from "@/app/components/commerce/CartPanel";
  * products all happen without a navigation.
  */
 export default function ShopClient() {
-  const { productList, loading } = useProducts();
+  const { productList, loading, searchTerm, setSearchTerm } = useProducts();
   const c = useCart();
 
   const params = useSearchParams();
-  const [query, setQuery] = useState("");
+  // Deliberately the shared term, not local state: the header search box
+  // writes here, and while the grid kept its own copy a customer could type
+  // "rocket" into the most prominent field on the page and nothing happened.
+  const query = searchTerm || "";
   // Links like /?category=Rockets arrive from the footer and category grid.
   const [category, setCategory] = useState(params.get("category") || "All");
+  const [sort, setSort] = useState("popular");
 
   useEffect(() => {
     const c = params.get("category");
@@ -44,20 +47,37 @@ export default function ShopClient() {
     return () => { document.body.style.overflow = ""; };
   }, [drawerOpen]);
 
+  // Chip order follows the arrangement the shop saved in the admin panel, not
+  // the product count - otherwise adding stock to a category silently promoted
+  // it past one the shop had deliberately put first.
   const categories = useMemo(() => {
     const counts = new Map();
     productList.forEach((p) => counts.set(p.category, (counts.get(p.category) || 0) + 1));
-    return [["All", productList.length], ...[...counts.entries()].sort((a, b) => b[1] - a[1])];
+    const seen = new Set();
+    const ordered = [];
+    // Products already arrive in sortOrder, so first appearance is the order.
+    productList.forEach((p) => {
+      if (!seen.has(p.category)) { seen.add(p.category); ordered.push([p.category, counts.get(p.category)]); }
+    });
+    return [["All", productList.length], ...ordered];
   }, [productList]);
+
+  const net = (p) => Math.round(p.price - (p.price * (p.discount || 0)) / 100);
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return productList.filter(
+    const list = productList.filter(
       (p) =>
         (category === "All" || p.category === category) &&
         (!q || p.name.toLowerCase().includes(q))
     );
-  }, [productList, category, query]);
+    // "popular" is the price-list order the shop already curates, so it stays
+    // the default rather than something derived from sales we cannot see.
+    if (sort === "low") return [...list].sort((a, b) => net(a) - net(b));
+    if (sort === "high") return [...list].sort((a, b) => net(b) - net(a));
+    if (sort === "name") return [...list].sort((a, b) => a.name.localeCompare(b.name));
+    return list;
+  }, [productList, category, query, sort]);
 
   const handleAdd = (p) => {
     c.add(p, 1);
@@ -93,45 +113,78 @@ export default function ShopClient() {
               color="var(--text-color)"
               lineHeight={1.2}
             >
-              Sivakasi Crackers Online — Up to 90% Off
+              Sivakasi Crackers Online — Up to 80% Off
             </Typography>
           </Stack>
           <Typography fontSize={13.5} color="var(--text-color-secondary)">
             Buy Diwali crackers from Sankamithra Thunder World, a crackers shop in
-            Sivakasi — up to 90% off, delivered across India. Build your order and edit
+            Sivakasi — up to 80% off, delivered across India. Build your order and edit
             your cart without leaving this page.
           </Typography>
         </Stack>
 
-        {/* Search + categories stay pinned so filtering never needs a scroll back up */}
+        {/* What the shop promises, before the grid - a first-time buyer decides
+            here whether to bother scrolling. */}
+        <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mb: 0.5 }}>
+          {[
+            ["Delivered across India", "🚚"],
+            ["Minimum order ₹3,000", "🧾"],
+            ["Licensed Sivakasi shop", "✅"],
+            ["Pay on confirmation", "🤝"],
+          ].map(([label, icon]) => (
+            <Stack key={label} direction="row" alignItems="center" gap={0.6}
+              sx={{ px: 1.25, py: 0.6, borderRadius: "var(--radius-pill)",
+                    backgroundColor: "var(--surface-muted)", border: "1px solid var(--border)" }}>
+              <Box sx={{ fontSize: 13 }}>{icon}</Box>
+              <Typography fontSize={11.5} fontWeight={700} color="var(--text-color-secondary)">{label}</Typography>
+            </Stack>
+          ))}
+        </Stack>
+
+        {/* Categories and sorting stay pinned so refining never needs a scroll
+            back up. The search itself lives once, in the header. */}
         <Stack
-          gap={1.25}
+          gap={1}
           sx={{
             position: "sticky", top: 0, zIndex: 5,
             backgroundColor: "#fff", pt: 1, pb: 1.25,
             borderBottom: "1px solid #f0f0f0",
           }}
         >
-          <Stack
-            direction="row" alignItems="center" gap={1}
-            sx={{
-              border: "1.5px solid #ececec", borderRadius: "10px", px: 1.5, py: 0.75,
-              maxWidth: 420, "&:focus-within": { borderColor: "var(--primary-color)" },
-            }}
-          >
-            <SearchRoundedIcon sx={{ color: "var(--text-color-trinary)", fontSize: 20 }} />
-            <InputBase
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search crackers..."
-              sx={{ flex: 1, fontSize: 14, fontWeight: 600 }}
-            />
+          <Stack direction="row" alignItems="center" gap={1.5} flexWrap="wrap">
+            <Typography fontSize={13} fontWeight={800} color="var(--text-color)">
+              {shown.length} {shown.length === 1 ? "cracker" : "crackers"}
+              {category !== "All" ? ` in ${category}` : ""}
+            </Typography>
             {query && (
-              <CloseRoundedIcon
-                onClick={() => setQuery("")}
-                sx={{ fontSize: 18, cursor: "pointer", color: "var(--text-color-trinary)" }}
+              <Chip
+                label={`"${query}"`}
+                size="small"
+                onDelete={() => setSearchTerm("")}
+                deleteIcon={<CloseRoundedIcon />}
+                sx={{ fontWeight: 700, fontSize: 11.5, backgroundColor: "var(--primary-soft)", color: "var(--primary-color)" }}
               />
             )}
+            <Box flex={1} />
+            <Stack direction="row" alignItems="center" gap={0.5}>
+              <Typography fontSize={11.5} fontWeight={700} color="var(--text-color-trinary)">Sort</Typography>
+              {[["popular", "Featured"], ["low", "Price ↓"], ["high", "Price ↑"], ["name", "A–Z"]].map(([k, label]) => (
+                <Box
+                  key={k}
+                  onClick={() => setSort(k)}
+                  role="button"
+                  sx={{
+                    px: 1, py: 0.4, borderRadius: "var(--radius-pill)", cursor: "pointer",
+                    fontSize: 11.5, fontWeight: 800, whiteSpace: "nowrap",
+                    color: sort === k ? "var(--primary-color)" : "var(--text-color-secondary)",
+                    backgroundColor: sort === k ? "var(--primary-soft)" : "transparent",
+                    "&:hover": { backgroundColor: "var(--surface-muted)" },
+                  }}
+                >
+                  {label}
+                </Box>
+              ))}
+            </Stack>
           </Stack>
 
           <Stack

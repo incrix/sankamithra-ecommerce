@@ -20,7 +20,7 @@ import { assetUrl } from "@/util/config";
 
 const TRUST = [
   { icon: <FactoryRoundedIcon />, title: "Direct from Sivakasi", body: "Bought where they are made" },
-  { icon: <SavingsRoundedIcon />, title: "Up to 90% off", body: "Straight off the price list" },
+  { icon: <SavingsRoundedIcon />, title: "Up to 80% off", body: "Straight off the price list" },
   { icon: <VerifiedRoundedIcon />, title: "Licensed & certified", body: "ISO and green-certified" },
   { icon: <LocalShippingRoundedIcon />, title: "All-India delivery", body: "Safely packed and shipped" },
 ];

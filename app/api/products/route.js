@@ -1,4 +1,4 @@
-import { getPublicProducts, getCatalogue, createProduct, applyBulkDiscount } from "@/util/productsStore";
+import { getPublicProducts, getCatalogue, createProduct, applyBulkDiscount, reorderProducts } from "@/util/productsStore";
 import { requireAdmin } from "@/util/admin/auth";
 
 export const dynamic = "force-dynamic";
@@ -49,6 +49,10 @@ export async function POST(request) {
   try {
     const body = await request.json();
     // A bulk sale comes through the same endpoint with an explicit action.
+    if (body?.action === "reorder") {
+      const changed = await reorderProducts(body.ids);
+      return Response.json({ ok: true, changed });
+    }
     if (body?.action === "bulkDiscount") {
       const changed = await applyBulkDiscount(body);
       return Response.json({ ok: true, changed });

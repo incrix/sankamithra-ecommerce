@@ -18,7 +18,7 @@ export const BUSINESS = {
   alternateName: ["Sankamithra Fireworks", "Sankamithra Crackers", "Sankamithra"],
   tagline: "Fireworks & Crackers from Sivakasi",
   description:
-    "Sankamithra Thunder World is a fireworks and crackers retailer in Sivakasi, Tamil Nadu. Buy Diwali crackers online from our Sivakasi shop at up to 90% off, with delivery across India.",
+    "Sankamithra Thunder World is a fireworks and crackers retailer in Sivakasi, Tamil Nadu. Buy Diwali crackers online from our Sivakasi shop at up to 80% off, with delivery across India.",
   phone: ["+91 94892 39970", "+91 75488 20326", "+91 99620 66648", "+91 84892 92901"],
   whatsapp: "919489239970",
   email: "sankamithrathunderworld@gmail.com",

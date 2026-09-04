@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/util/admin/auth";
-import { getSetting, setSetting } from "@/util/settingsStore";
+import { getSettingSafe, setSetting } from "@/util/settingsStore";
 import { collection, isDbConfigured } from "@/util/db/mongo";
 import { PRICE_LIST_FALLBACK } from "@/util/config";
 
@@ -23,7 +23,7 @@ const MAX_BYTES = 14 * 1024 * 1024;
  * third-party setting to remember.
  */
 export async function GET(request) {
-  const current = await getSetting(KEY);
+  const current = await getSettingSafe(KEY);
   const wantsInfo = request.nextUrl.searchParams.get("info") === "1";
 
   // Describes the current file rather than serving it, for the admin card.

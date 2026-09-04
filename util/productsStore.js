@@ -93,7 +93,9 @@ export async function getCatalogue() {
     (await products()).find({}).sort({ sortOrder: 1, id: 1 }).toArray(),
     categoryList(),
   ]);
-  return { products: items.map(strip), categories: [...categories].sort() };
+  // Not sorted: the order the shop arranged them in is the order they are
+  // stored in, and alphabetising here threw that away every time it was read.
+  return { products: items.map(strip), categories };
 }
 
 export async function getPublicProducts() {
@@ -170,4 +172,42 @@ export async function applyBulkDiscount({ discount, category, ids }) {
     : {};
   const res = await (await products()).updateMany(filter, { $set: { discount: pct } });
   return res.modifiedCount;
+}
+
+/** Stores the category order exactly as the shop arranged it. */
+export async function reorderCategories(values) {
+  if (!useDb()) return fileStore.getCatalogue().then((c) => c.categories);
+  const current = await categoryList();
+  const wanted = (values || []).filter((v) => current.includes(v));
+  // Anything the client did not send keeps its place at the end, so a stale
+  // page cannot silently drop a category that was added meanwhile.
+  const missing = current.filter((v) => !wanted.includes(v));
+  const next = [...wanted, ...missing];
+  await (await settings()).updateOne({ _id: "categories" }, { $set: { values: next } }, { upsert: true });
+  return next;
+}
+
+/**
+ * Reorders products within one category.
+ *
+ * The sortOrder slots those products already occupy are reused, so reordering
+ * inside Rockets shuffles the rockets among themselves without moving any of
+ * them past a sparkler in the all-products view.
+ */
+export async function reorderProducts(ids) {
+  if (!useDb()) return 0;
+  const col = await products();
+  const list = ids.map(Number).filter(Number.isFinite);
+  if (!list.length) return 0;
+
+  const docs = await col.find({ id: { $in: list } }).toArray();
+  const slots = docs
+    .map((d) => (d.sortOrder == null ? 9999 + d.id : d.sortOrder))
+    .sort((a, b) => a - b);
+
+  const ops = list.map((id, i) => ({
+    updateOne: { filter: { id }, update: { $set: { sortOrder: slots[i] } } },
+  }));
+  const res = await col.bulkWrite(ops);
+  return res.modifiedCount ?? list.length;
 }

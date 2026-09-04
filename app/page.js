@@ -21,7 +21,7 @@ import { getProducts, getCategories } from "@/util/products.server";
 export const metadata = {
   title: "Sankamithra Thunder World | Sivakasi Crackers & Fireworks Online",
   description:
-    "Buy Sivakasi crackers online from Sankamithra Thunder World, a fireworks and crackers shop in Sivakasi, Tamil Nadu. 145+ Diwali crackers at up to 90% off, delivered across India.",
+    "Buy Sivakasi crackers online from Sankamithra Thunder World, a fireworks and crackers shop in Sivakasi, Tamil Nadu. 145+ Diwali crackers at up to 80% off, delivered across India.",
   keywords: KEYWORDS,
   alternates: { canonical: SITE_URL },
   openGraph: {
@@ -30,13 +30,13 @@ export const metadata = {
     siteName: BUSINESS.name,
     title: "Sankamithra Thunder World | Sivakasi Crackers & Fireworks Online",
     description:
-      "Diwali crackers from our Sivakasi shop at up to 90% off. Flower pots, ground chakkars, rockets, aerial shots, sparklers and gift boxes.",
+      "Diwali crackers from our Sivakasi shop at up to 80% off. Flower pots, ground chakkars, rockets, aerial shots, sparklers and gift boxes.",
     images: [{ url: `${SITE_URL}/images/logo.png`, width: 512, height: 512, alt: BUSINESS.name }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Sankamithra Thunder World | Sivakasi Crackers Online",
-    description: "Buy Diwali crackers online from our Sivakasi shop at up to 90% off.",
+    description: "Buy Diwali crackers online from our Sivakasi shop at up to 80% off.",
   },
 };
 
@@ -55,7 +55,7 @@ const FAQS = [
   },
   {
     q: "How much do Sivakasi crackers cost at Sankamithra?",
-    a: "Prices run from around ₹12 for single items to a few thousand rupees for large gift boxes and aerial shots, at up to 90% off the printed list price. The full price list is on this page and downloadable as a PDF; the minimum order value is ₹3,000.",
+    a: "Prices run from around ₹12 for single items to a few thousand rupees for large gift boxes and aerial shots, at up to 80% off the printed list price. The full price list is on this page and downloadable as a PDF; the minimum order value is ₹3,000.",
   },
   {
     q: "What is the minimum order value?",

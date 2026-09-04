@@ -13,9 +13,14 @@ import { DEFAULT_BANNER } from "@/util/config";
 
 export async function getSetting(key) {
   if (!isDbConfigured()) return null;
+  const doc = await (await collection("settings")).findOne({ key });
+  return doc?.value ?? null;
+}
+
+/** Swallows a read failure. Use only where a missing value is survivable. */
+export async function getSettingSafe(key) {
   try {
-    const doc = await (await collection("settings")).findOne({ key });
-    return doc?.value ?? null;
+    return await getSetting(key);
   } catch (err) {
     console.error("getSetting failed:", err);
     return null;
@@ -42,11 +47,29 @@ export const BANNER_TAG = "site-banner";
  * root layout would opt every page out of static rendering. The admin's save
  * calls revalidateTag(BANNER_TAG), so an edit still appears immediately.
  */
-export const getBanner = unstable_cache(
+const readBanner = unstable_cache(
   async () => (await getSetting(BANNER_KEY)) || DEFAULT_BANNER,
   ["site-banner"],
   { tags: [BANNER_TAG], revalidate: 3600 }
 );
+
+/**
+ * A failed read must not be cached.
+ *
+ * The cached function used to swallow database errors and return the built-in
+ * default, so one momentary blip on a free-tier cluster got stored as though it
+ * were the truth - and the site then advertised last year's sale for an hour.
+ * The error now escapes the cache and is handled out here, where returning the
+ * default costs nothing beyond this one request.
+ */
+export async function getBanner() {
+  try {
+    return await readBanner();
+  } catch (err) {
+    console.error("banner unavailable, using the default:", err.message);
+    return DEFAULT_BANNER;
+  }
+}
 
 export const WHOLESALE_KEY = "wholesaleSlug";
 
@@ -58,7 +81,7 @@ export const WHOLESALE_KEY = "wholesaleSlug";
  * kept in the database rather than the source so it never reaches the repo.
  */
 export async function getWholesaleSlug({ create = false } = {}) {
-  const existing = await getSetting(WHOLESALE_KEY);
+  const existing = await getSettingSafe(WHOLESALE_KEY);
   if (existing?.slug) return existing.slug;
   if (!create) return null;
 

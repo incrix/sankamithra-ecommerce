@@ -21,7 +21,7 @@ const BATCH = 40;
 
 /** Catalogue management: search, edit, add, hide and remove products. */
 export default function Products({ catalogue, loading, onReload, onToast }) {
-  const products = catalogue?.products || [];
+  const products = useMemo(() => catalogue?.products || [], [catalogue]);
   const categories = catalogue?.categories || [];
 
   const [query, setQuery] = useState("");

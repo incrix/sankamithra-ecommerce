@@ -51,7 +51,7 @@ export function assetUrl(path) {
 
 /** Shown in the top strip until the admin edits it. */
 export const DEFAULT_BANNER = {
-  text: "Diwali 2025 Sale LIVE — Up to 90% OFF!",
+  text: "Diwali 2025 Sale LIVE — Up to 80% OFF!",
   href: "",
   enabled: true,
 };

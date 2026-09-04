@@ -12,6 +12,7 @@ import ListAltRoundedIcon from "@mui/icons-material/ListAltRounded";
 import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
 import SellRoundedIcon from "@mui/icons-material/SellRounded";
 import PriceChangeRoundedIcon from "@mui/icons-material/PriceChangeRounded";
+import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import WarehouseRoundedIcon from "@mui/icons-material/WarehouseRounded";
 import PointOfSaleRoundedIcon from "@mui/icons-material/PointOfSaleRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
@@ -31,6 +32,7 @@ export const NAV = [
   { href: "/admin/pos",        label: "New bill",   blurb: "Bill a walk-in customer at the counter",     icon: <PointOfSaleRoundedIcon /> },
   { href: "/admin/orders",     label: "Orders",     blurb: "Track, pack and dispatch every order",        icon: <ListAltRoundedIcon /> },
   { href: "/admin/products",   label: "Products",   blurb: "Edit titles, prices, stock and images",      icon: <Inventory2RoundedIcon /> },
+  { href: "/admin/arrange",   label: "Arrange",     blurb: "Drag categories and products into the order you want", icon: <SwapVertRoundedIcon /> },
   { href: "/admin/pricing",    label: "Price lists", blurb: "Pricelist 1 and 2, side by side",             icon: <PriceChangeRoundedIcon /> },
   { href: "/admin/wholesale",  label: "Wholesale",   blurb: "Dealer rates, case sizes and the shareable link", icon: <WarehouseRoundedIcon /> },
   { href: "/admin/categories", label: "Categories", blurb: "Manage categories and run a discount sale",  icon: <SellRoundedIcon /> },

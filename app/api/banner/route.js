@@ -1,6 +1,6 @@
 import { revalidateTag } from "next/cache";
 import { requireAdmin } from "@/util/admin/auth";
-import { getSetting, setSetting, BANNER_KEY, BANNER_TAG } from "@/util/settingsStore";
+import { getSettingSafe, setSetting, BANNER_KEY, BANNER_TAG } from "@/util/settingsStore";
 import { isDbConfigured } from "@/util/db/mongo";
 import { DEFAULT_BANNER } from "@/util/config";
 
@@ -17,7 +17,7 @@ const MAX_TEXT = 120;
  * revalidates that tag so a save shows up straight away.
  */
 export async function GET() {
-  const current = await getSetting(BANNER_KEY);
+  const current = await getSettingSafe(BANNER_KEY);
   return Response.json({ ...(current || DEFAULT_BANNER), custom: Boolean(current) });
 }
 

@@ -29,7 +29,7 @@ const FAQS = [
   },
   {
     q: "Why are Sankamithra crackers cheaper than city shops?",
-    a: "Because we are in Sivakasi, where the crackers are made. We buy in bulk from licensed units here and sell straight to you, so the order skips the layers of distributors and city retailers that each add a margin. That is how the list runs up to 90% below MRP.",
+    a: "Because we are in Sivakasi, where the crackers are made. We buy in bulk from licensed units here and sell straight to you, so the order skips the layers of distributors and city retailers that each add a margin. That is how the list runs up to 80% below MRP.",
   },
   {
     q: "Do you make your own crackers?",
@@ -51,7 +51,7 @@ const FAQS = [
 
 const PILLARS = [
   ["Bought where they are made", "We are in Sivakasi, so we buy from licensed units here rather than through distributors. Shorter chain, fresher stock, better price."],
-  ["Up to 90% off list prices", "Skipping the distributor and city-retailer margins is what makes the saving; it shows on every line of the price list."],
+  ["Up to 80% off list prices", "Skipping the distributor and city-retailer margins is what makes the saving; it shows on every line of the price list."],
   ["A range no single maker offers", "Stocking across many Sivakasi units means 145 products in 13 categories, from ₹12 sparklers to large gift boxes."],
   ["Licensed stock, safely handled", "Green-certified and ISO 9001:2015 compliant products, stored and handled to licence conditions, with transport arranged across India."],
 ];
@@ -84,7 +84,7 @@ export default async function About() {
               Being in Sivakasi is the whole point. A box that picks up a distributor,
               a wholesaler and a city retailer on its way to a shop elsewhere reaches
               you here with none of those margins — which is why the price list runs up
-              to 90% below MRP across {products.length} products.
+              to 80% below MRP across {products.length} products.
             </Typography>
 
             <Stack direction="row" gap={1.25} flexWrap="wrap" mt={1}>

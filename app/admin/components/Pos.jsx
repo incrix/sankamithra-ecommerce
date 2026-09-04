@@ -63,7 +63,13 @@ const newKey = () =>
  */
 export default function Pos() {
   const { catalogue, catLoading, loadCatalogue, notify, loadOrders } = useAdmin();
-  const products = catalogue?.products?.filter((p) => p.active !== false) || [];
+  // Wrapped: `catalogue?.products || []` builds a new array on every render,
+  // so every useMemo downstream saw a changed dependency and recomputed - on a
+  // 184-product catalogue that ran on every keystroke.
+  const products = useMemo(
+    () => catalogue?.products?.filter((p) => p.active !== false) || [],
+    [catalogue]
+  );
   const categories = catalogue?.categories || [];
 
   const [query, setQuery] = useState("");
