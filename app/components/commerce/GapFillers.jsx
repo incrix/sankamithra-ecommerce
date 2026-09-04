@@ -18,7 +18,7 @@ export default function GapFillers({ products, cart, shortBy, onAdd }) {
 
   const inCart = new Set(cart.map((c) => c.id));
   const candidates = products
-    .filter((p) => !inCart.has(p.id) && p.countInStock > 0)
+    .filter((p) => !inCart.has(p.id))
     .map((p) => ({ p, price: unitPrice(p) }))
     .filter(({ price }) => price > 0);
 

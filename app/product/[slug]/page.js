@@ -74,10 +74,10 @@ export default async function ProductPage({ params }) {
       url,
       priceCurrency: "INR",
       price,
-      availability:
-        product.countInStock > 0
-          ? "https://schema.org/InStock"
-          : "https://schema.org/OutOfStock",
+      // Always InStock: the shop takes the order regardless and confirms by
+      // phone. Declaring OutOfStock would drop the product out of Google's
+      // shopping results for something that can, in fact, still be bought.
+      availability: "https://schema.org/InStock",
       seller: { "@id": `${SITE_URL}/#organization` },
       priceValidUntil: `${new Date().getFullYear() + 1}-03-31`,
     },
@@ -90,10 +90,7 @@ export default async function ProductPage({ params }) {
     },
     {
       q: `Is ${product.name} available online?`,
-      a:
-        product.countInStock > 0
-          ? `Yes, ${product.name} is in stock. Add it to your cart and place your order — the minimum order value is ₹3,000 and we deliver across India.`
-          : `${product.name} is currently out of stock. Call +91 94892 39970 and we will tell you when it is back.`,
+      a: `Yes. Add ${product.name} to your cart and place your order — the minimum order value is ₹3,000 and we deliver across India, and we confirm every order by phone within 24 hours.`,
     },
   ];
 

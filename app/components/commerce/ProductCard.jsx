@@ -17,7 +17,10 @@ import { unitPrice } from "@/util/cart";
  */
 export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
   const price = unitPrice(product);
-  const out = product.countInStock <= 0;
+  // Stock is tracked for the shop's own benefit but never blocks a customer:
+  // the counter can source almost anything, and an order the shop can fulfil
+  // by tomorrow is worth far more than a dead end on the page.
+  const out = false;
   const added = Boolean(line);
 
   return (
@@ -31,7 +34,6 @@ export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
         position: "relative",
         transition: "transform .15s, box-shadow .15s, border-color .15s",
         "&:hover": { transform: "translateY(-2px)", boxShadow: "0 8px 22px rgba(0,0,0,.08)" },
-        opacity: out ? 0.55 : 1,
       }}
     >
       {product.discount > 0 && (
@@ -100,11 +102,7 @@ export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
         </Typography>
       </Stack>
 
-      {out ? (
-        <Typography fontSize={12} fontWeight={800} color="#e03131" py={0.75}>
-          Out of stock
-        </Typography>
-      ) : added ? (
+      {added ? (
         // In-place editing - no need to open the cart to change quantity
         <Stack direction="row" alignItems="center" justifyContent="space-between" gap={0.5}>
           <QtyStepper
