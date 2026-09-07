@@ -6,8 +6,12 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import PrintRoundedIcon from "@mui/icons-material/PrintRounded";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
+import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
+import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import PackingList from "./PackingList";
 import SubstitutePicker from "./SubstitutePicker";
+import AddItemPicker from "./AddItemPicker";
 import OrderActions from "./OrderActions";
 import StatusChip from "./StatusChip";
 import { useState, useEffect, useMemo } from "react";
@@ -26,6 +30,11 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
   // Hooks must run before any early return, or the hook order changes between
   // renders as soon as `order` goes null.
   const [swapFor, setSwapFor] = useState(null);
+  // Editing the bill is a separate mode from packing it. The two want opposite
+  // things from the same rows - one ticks what went in the box, the other
+  // changes what the customer is being charged for - so they never show at once.
+  const [editing, setEditing] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
   /**
    * Which lines the packer has ticked off, held here rather than in the order.
@@ -143,14 +152,62 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
 
         <Divider />
 
+        <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
+          <Button
+            onClick={() => setEditing((v) => !v)}
+            disabled={busy || order.status === "cancelled"}
+            startIcon={editing ? <CheckRoundedIcon sx={{ fontSize: 16 }} /> : <EditRoundedIcon sx={{ fontSize: 16 }} />}
+            sx={{ textTransform: "none", fontWeight: 800, fontSize: 12.5, px: 1.5,
+                  borderRadius: "var(--radius-pill)",
+                  color: editing ? "#fff" : "var(--primary-color)",
+                  backgroundColor: editing ? "var(--primary-color)" : "var(--primary-soft)",
+                  "&:hover": { backgroundColor: editing ? "#e34100" : "var(--primary-border)" } }}
+          >
+            {editing ? "Done editing" : "Edit items"}
+          </Button>
+          {editing && (
+            <Button
+              onClick={() => setAddOpen(true)}
+              disabled={busy}
+              startIcon={<AddRoundedIcon sx={{ fontSize: 17 }} />}
+              sx={{ textTransform: "none", fontWeight: 800, fontSize: 12.5, px: 1.5,
+                    borderRadius: "var(--radius-pill)", border: "1px solid var(--primary-color)",
+                    color: "var(--primary-color)" }}
+            >
+              Add product
+            </Button>
+          )}
+          {editing && order.status === "dispatched" && (
+            <Typography fontSize={11.5} fontWeight={700} color="var(--warning)">
+              This order has already been dispatched.
+            </Typography>
+          )}
+        </Stack>
+
         <PackingList
           items={items}
           busy={busy}
+          editing={editing}
           onToggle={toggleTick}
           onTickAll={tickAll}
           locked={order.status !== "new" && order.status !== "packing"}
           onUnavailable={(it, flag) => onPatch({ itemId: it.id, unavailable: flag })}
           onSubstitute={(it) => setSwapFor(it)}
+          onCount={(it, q) => onPatch({ itemId: it.id, count: q })}
+          onRemove={(it) => onPatch({ removeItem: it.id })}
+        />
+
+        <AddItemPicker
+          open={addOpen}
+          order={order}
+          busy={busy}
+          onClose={() => setAddOpen(false)}
+          onAdd={(p, qty) => {
+            onPatch({ addItem: { id: p.id, name: p.name, category: p.category,
+                                 image: p.image?.[0] || null, price: p.price,
+                                 discount: p.discount, count: qty } });
+            setAddOpen(false);
+          }}
         />
 
         <SubstitutePicker

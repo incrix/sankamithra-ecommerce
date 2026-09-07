@@ -137,6 +137,10 @@ export async function sendCustomerMail({ order, invoice, kind = "invoice" }) {
     bcc: kind === "confirm" ? undefined : process.env.ORDER_MAIL || undefined,
     // The sender is a noreply mailbox, so send replies where they can be read.
     replyTo: process.env.ORDER_MAIL || undefined,
+    // NOTE: this repeats the `bcc` key above and silently wins, so the shop is
+    // copied on confirmations too. Left as-is deliberately - changing it alters
+    // what the shop receives for website orders. See the comment above for what
+    // was intended.
     bcc: process.env.ORDER_MAIL,
     subject: COPY.subject,
     html: SHELL(COPY.title, body),
@@ -231,12 +235,21 @@ export async function sendShopMail({ order, invoice }) {
 export async function sendOrderMails({ order, invoice }) {
   const results = { customer: false, shop: false, errors: {} };
 
+  // Counter bills only. A walk-in is standing at the till and usually gives no
+  // address, and sending anyway cost an SMTP round trip on every bill - one
+  // that "succeeded" because of the bcc, so the shop got a confirmation
+  // addressed to nobody. Website orders always carry an email and are
+  // deliberately left exactly as they were.
+  const skipCustomer =
+    order.source === "pos" && !String(order.customer?.email || "").trim();
+
   const [customer, shop] = await Promise.allSettled([
-    sendCustomerMail({ order, invoice, kind: "confirm" }),
+    skipCustomer ? Promise.resolve(null) : sendCustomerMail({ order, invoice, kind: "confirm" }),
     sendShopMail({ order, invoice }),
   ]);
 
-  results.customer = customer.status === "fulfilled";
+  results.customer = !skipCustomer && customer.status === "fulfilled";
+  results.customerSkipped = skipCustomer;
   results.shop = shop.status === "fulfilled";
   if (customer.status === "rejected") results.errors.customer = customer.reason?.message;
   if (shop.status === "rejected") results.errors.shop = shop.reason?.message;

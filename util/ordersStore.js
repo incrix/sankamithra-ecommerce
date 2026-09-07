@@ -199,6 +199,63 @@ async function applyOnce(id, patch) {
   if (typeof patch.note === "string") next.note = patch.note;
   if (typeof patch.emailSent === "boolean") next.emailSent = patch.emailSent;
 
+  /**
+   * Adding and removing whole lines, which the packing patches above cannot do.
+   *
+   * A different intent from marking something unavailable: that records what
+   * the shop could not fill, this is the shop correcting the bill itself -
+   * a customer ringing back to add two more boxes, or a line keyed twice.
+   * Both are recorded in the history so the change is never silent.
+   */
+  if (patch.addItem) {
+    const a = patch.addItem;
+    const id = Number(a.id);
+    const count = Math.max(1, Math.round(Number(a.count) || 1));
+    const mrp = Math.max(0, Number(a.price) || 0);
+    const discount = Math.min(95, Math.max(0, Number(a.discount) || 0));
+    const unitPrice = Math.round(mrp - (mrp * discount) / 100);
+
+    const items = [...(next.items || prev.items)];
+    const at = items.findIndex((i) => i.id === id);
+
+    if (at >= 0) {
+      // Already on the bill: top it up rather than repeat the line.
+      const was = items[at].count;
+      const now = was + count;
+      items[at] = { ...items[at], count: now, total: Math.round(items[at].unitPrice * now), unavailable: false };
+      next.history = [...(next.history || []),
+        { at: next.updatedAt, event: `${items[at].name} quantity ${was} -> ${now}` }];
+    } else {
+      items.push({
+        id,
+        name: String(a.name || "").trim(),
+        category: a.category || "",
+        image: a.image || null,
+        unitPrice,
+        mrp,
+        discount,
+        count,
+        total: Math.round(unitPrice * count),
+        packed: false,
+        unavailable: false,
+        substitute: null,
+      });
+      next.history = [...(next.history || []),
+        { at: next.updatedAt, event: `Added ${a.name} x${count}` }];
+    }
+    next.items = items;
+  }
+
+  if (patch.removeItem !== undefined) {
+    const id = Number(patch.removeItem);
+    const gone = (next.items || prev.items).find((i) => i.id === id);
+    next.items = (next.items || prev.items).filter((i) => i.id !== id);
+    if (gone) {
+      next.history = [...(next.history || []),
+        { at: next.updatedAt, event: `Removed ${gone.name}` }];
+    }
+  }
+
   if (patch.itemId !== undefined) {
     const events = [];
     next.items = (next.items || prev.items).map((it) => {

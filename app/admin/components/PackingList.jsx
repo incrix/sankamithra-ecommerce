@@ -1,6 +1,8 @@
 "use client";
-import { Stack, Typography, Box, Checkbox, LinearProgress, Chip, Button, Tooltip } from "@mui/material";
+import { Stack, Typography, Box, Checkbox, LinearProgress, Chip, Button, Tooltip, IconButton } from "@mui/material";
 import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import QtyStepper from "@/app/components/commerce/QtyStepper";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import RemoveShoppingCartRoundedIcon from "@mui/icons-material/RemoveShoppingCartRounded";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
@@ -16,7 +18,7 @@ const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
  * with another product; a line the packer can't fill never blocks the order
  * from being completed.
  */
-export default function PackingList({ items, onToggle, onTickAll, onUnavailable, onSubstitute, busy, locked }) {
+export default function PackingList({ items, onToggle, onTickAll, onUnavailable, onSubstitute, onCount, onRemove, editing, busy, locked }) {
   // A line is settled once it's packed, or once the packer has recorded that
   // it couldn't be filled. Both count as "dealt with".
   const settled = items.filter((i) => i.packed || (i.unavailable && !i.substitute)).length;
@@ -82,14 +84,14 @@ export default function PackingList({ items, onToggle, onTickAll, onUnavailable,
               }}
             >
               <Stack direction="row" alignItems="center" gap={1.25}>
-                <Checkbox
+                {editing ? null : <Checkbox
                   checked={Boolean(it.packed)}
                   disabled={dropped}
                   onChange={() => onToggle(it)}
                   disableRipple
                   inputProps={{ "aria-label": `packed: ${it.name}` }}
                   sx={{ p: 0.5, color: "var(--text-color-trinary)", "&.Mui-checked": { color: "var(--success)" } }}
-                />
+                />}
 
                 <Box component="img" src={assetUrl(it.image)} alt=""
                   sx={{ width: 42, height: 42, borderRadius: "var(--radius-sm)", objectFit: "cover", flexShrink: 0, backgroundColor: "#f6f6f6" }} />
@@ -107,15 +109,32 @@ export default function PackingList({ items, onToggle, onTickAll, onUnavailable,
                   </Typography>
                 </Stack>
 
-                <Chip
-                  label={`× ${it.count}`}
-                  sx={{
-                    fontWeight: 800, fontSize: 13, height: 30, minWidth: 52,
-                    backgroundColor: it.packed ? "var(--success-soft)" : "var(--primary-soft)",
-                    color: it.packed ? "var(--success-ink)" : "var(--primary-color)",
-                    opacity: dropped || swapped ? 0.5 : 1,
-                  }}
-                />
+                {editing ? (
+                  <Stack direction="row" alignItems="center" gap={0.5}>
+                    <QtyStepper
+                      size="sm"
+                      value={it.count}
+                      onChange={(q) => onCount(it, q)}
+                      onAdjust={(d) => onCount(it, Math.max(0, it.count + d))}
+                    />
+                    <Tooltip title="Take this off the order">
+                      <IconButton size="small" onClick={() => onRemove(it)} aria-label={`remove ${it.name}`}
+                        sx={{ color: "var(--text-color-trinary)", "&:hover": { color: "var(--danger)" } }}>
+                        <DeleteOutlineRoundedIcon sx={{ fontSize: 18 }} />
+                      </IconButton>
+                    </Tooltip>
+                  </Stack>
+                ) : (
+                  <Chip
+                    label={`× ${it.count}`}
+                    sx={{
+                      fontWeight: 800, fontSize: 13, height: 30, minWidth: 52,
+                      backgroundColor: it.packed ? "var(--success-soft)" : "var(--primary-soft)",
+                      color: it.packed ? "var(--success-ink)" : "var(--primary-color)",
+                      opacity: dropped || swapped ? 0.5 : 1,
+                    }}
+                  />
+                )}
               </Stack>
 
               {/* Replacement chosen for this line */}

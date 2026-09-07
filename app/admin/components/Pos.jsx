@@ -386,7 +386,7 @@ export default function Pos() {
             <TextField size="small" fullWidth label="Phone" value={customer.phone}
               onChange={(e) => setCustomer({ ...customer, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
               inputProps={{ inputMode: "numeric" }} sx={fld} />
-            <TextField size="small" fullWidth label="Email (for the proforma)" value={customer.email}
+            <TextField size="small" fullWidth label="Email (optional)" value={customer.email}
               onChange={(e) => setCustomer({ ...customer, email: e.target.value })} sx={fld} />
           </Stack>
           <TextField size="small" label="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} sx={fld} />
