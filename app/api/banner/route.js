@@ -1,7 +1,7 @@
 import { revalidateTag } from "next/cache";
 import { requireAdmin } from "@/util/admin/auth";
 import { getSettingSafe, setSetting, BANNER_KEY, BANNER_TAG } from "@/util/settingsStore";
-import { isDbConfigured } from "@/util/db/mongo";
+import { isDbConfigured } from "@/util/db/dynamo";
 import { DEFAULT_BANNER } from "@/util/config";
 
 export const dynamic = "force-dynamic";

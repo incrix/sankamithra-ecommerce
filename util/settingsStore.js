@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import { collection, isDbConfigured } from "@/util/db/mongo";
+import { TABLE, getItem, putItem, isDbConfigured } from "@/util/db/dynamo";
 import { DEFAULT_BANNER } from "@/util/config";
 
 /**
@@ -13,7 +13,7 @@ import { DEFAULT_BANNER } from "@/util/config";
 
 export async function getSetting(key) {
   if (!isDbConfigured()) return null;
-  const doc = await (await collection("settings")).findOne({ key });
+  const doc = await getItem(TABLE.settings, key);
   return doc?.value ?? null;
 }
 
@@ -29,11 +29,9 @@ export async function getSettingSafe(key) {
 
 export async function setSetting(key, value) {
   if (!isDbConfigured()) throw new Error("No database configured");
-  await (await collection("settings")).updateOne(
-    { key },
-    { $set: { key, value, updatedAt: new Date().toISOString() } },
-    { upsert: true }
-  );
+  // A whole-item write, not a field patch: these rows are one value each, so
+  // there is nothing beside it that a replace could clobber.
+  await putItem(TABLE.settings, { key, value, updatedAt: new Date().toISOString() });
   return value;
 }
 

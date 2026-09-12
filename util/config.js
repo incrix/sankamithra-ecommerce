@@ -12,6 +12,22 @@ export const ASSET_BASE = (
   process.env.NEXT_PUBLIC_ASSET_BASE || "https://thunder.sankamithra.com/database"
 ).replace(/\/$/, "");
 
+/**
+ * Makes an asset URL absolute.
+ *
+ * ASSET_BASE is allowed to be a site-relative path ("/database", serving from
+ * public/), which browsers resolve happily. Server-side callers cannot: fetch()
+ * and Response.redirect() both reject a relative URL outright, so the price
+ * list 500'd and the catalogue seed threw as soon as the base was set that way
+ * - which is the very value this file recommends for local development.
+ */
+export function absoluteAssetUrl(url, origin) {
+  if (/^https?:\/\//.test(url)) return url;
+  const base = origin || process.env.NEXT_PUBLIC_SITE_URL || "";
+  if (!base) throw new Error(`cannot resolve "${url}" without an origin — set NEXT_PUBLIC_SITE_URL`);
+  return new URL(url, base).href;
+}
+
 /** The catalogue seed, read once by the product store to populate itself. */
 export const PRODUCT_SEED_URL = `${ASSET_BASE}/SortedJSON/productData.json`;
 

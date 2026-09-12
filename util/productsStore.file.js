@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { PRODUCT_SEED_URL } from "@/util/config";
+import { PRODUCT_SEED_URL, absoluteAssetUrl } from "@/util/config";
 
 /**
  * File-backed product catalogue.
@@ -27,7 +27,8 @@ const LOCAL_SEED = path.join(process.cwd(), "database", "SortedJSON", "productDa
  */
 async function loadSeed() {
   try {
-    const res = await fetch(PRODUCT_SEED_URL, { cache: "no-store" });
+    // Absolute: a site-relative ASSET_BASE cannot be fetched server-side.
+  const res = await fetch(absoluteAssetUrl(PRODUCT_SEED_URL), { cache: "no-store" });
     if (!res.ok) throw new Error(`seed responded ${res.status}`);
     const data = await res.json();
     if (!Array.isArray(data) || !data.length) throw new Error("seed was empty");

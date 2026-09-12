@@ -1,19 +1,36 @@
 import crypto from "crypto";
-import { collection, isDbConfigured } from "@/util/db/mongo";
+import { TABLE, getItem, putItem, putIfAbsent, putIfRev, scanAll, bumpCounter, isDbConfigured } from "@/util/db/dynamo";
 import * as fileStore from "./ordersStore.file";
+import { getCatalogue } from "@/util/productsStore";
+import { basisMrp, effDiscount, unitOf } from "@/util/pricing";
 
 /**
  * Order storage.
  *
- * MongoDB when MONGODB_URI is set, otherwise the original JSON file store so
+ * DynamoDB when AWS credentials are set, otherwise the original JSON file store so
  * local development works without a cluster. The database exists because a
  * serverless host has a read-only, ephemeral filesystem - writing orders to
  * disk there fails outright.
  */
 
 const useDb = () => isDbConfigured();
-const orders = () => collection("orders");
-const counters = () => collection("counters");
+/**
+ * Duplicate-guard rows share the orders table under a reserved id.
+ *
+ * DynamoDB has no unique secondary index, so the till's clientRef cannot simply
+ * be declared unique. Instead the first writer claims `claim#<clientRef>` with
+ * a conditional write, which the service evaluates atomically - a second device
+ * racing on the same bill loses the claim rather than writing a second order.
+ * They expire, because they only matter for as long as a till might retry.
+ */
+const claimId = (key) => `claim#${key}`;
+const isClaim = (row) => String(row?.id || "").startsWith("claim#");
+const CLAIM_TTL_DAYS = 7;
+
+/** Every real order. Claim rows are an implementation detail and never leak. */
+async function allOrders() {
+  return (await scanAll(TABLE.orders)).filter((o) => !isClaim(o));
+}
 
 export const STATUSES = ["new", "packing", "packed", "dispatched", "cancelled"];
 
@@ -54,17 +71,12 @@ function recomputeTotals(order) {
 /**
  * Next sequential reference: STW-0001, STW-0002, ...
  *
- * A findOneAndUpdate with $inc is atomic in MongoDB, so two customers checking
- * out at the same instant cannot be handed the same number - which scanning for
- * the highest existing ref would allow.
+ * ADD is applied by DynamoDB itself and returns the value it settled on, so two
+ * customers checking out at the same instant cannot be handed the same number -
+ * which scanning for the highest existing ref would allow.
  */
 async function nextRef() {
-  const res = await (await counters()).findOneAndUpdate(
-    { _id: "orderRef" },
-    { $inc: { seq: 1 } },
-    { upsert: true, returnDocument: "after" }
-  );
-  const seq = res?.seq ?? res?.value?.seq ?? 1;
+  const seq = await bumpCounter("orderRef", 1);
   return "STW-" + String(seq).padStart(4, "0");
 }
 
@@ -73,13 +85,14 @@ const strip = ({ _id, ...rest }) => rest;
 
 export async function listOrders() {
   if (!useDb()) return fileStore.listOrders();
-  const docs = await (await orders()).find({}).sort({ createdAt: -1 }).toArray();
+  // Sorted here: a Scan comes back in no particular order.
+  const docs = (await allOrders()).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
   return docs.map(strip);
 }
 
 export async function getOrder(id) {
   if (!useDb()) return fileStore.getOrder(id);
-  const doc = await (await orders()).findOne({ id });
+  const doc = await getItem(TABLE.orders, id);
   return doc ? strip(doc) : null;
 }
 
@@ -96,8 +109,11 @@ export async function createOrder({ billingDetails, productList, emailSent, sour
 
   const key = String(clientRef || "").slice(0, 80);
   if (key) {
-    const existing = await (await orders()).findOne({ clientRef: key });
-    if (existing) return { ...strip(existing), duplicate: true };
+    const claimed = await getItem(TABLE.orders, claimId(key));
+    if (claimed?.orderId) {
+      const existing = await getItem(TABLE.orders, claimed.orderId);
+      if (existing) return { ...strip(existing), duplicate: true };
+    }
   }
 
   const items = (productList || []).map((p) => ({
@@ -146,17 +162,26 @@ export async function createOrder({ billingDetails, productList, emailSent, sour
     history: [{ at: now, event: source === "pos" ? "Billed at the counter" : "Order received" }],
   });
 
-  try {
-    await (await orders()).insertOne({ ...order });
-  } catch (err) {
-    // Two devices raced on the same key; the unique index caught the second.
-    // Hand back the bill that won rather than surfacing an error to the biller.
-    if (err?.code === 11000 && key) {
-      const winner = await (await orders()).findOne({ clientRef: key });
+  // Claim the bill BEFORE writing it. Losing the claim means another device
+  // already wrote this same bill, so hand back theirs rather than surfacing an
+  // error to the biller - or writing a second order with a second reference.
+  if (key) {
+    const won = await putIfAbsent(TABLE.orders, {
+      id: claimId(key),
+      orderId: order.id,
+      createdAt: now,
+      expiresAt: Math.floor(Date.now() / 1000) + CLAIM_TTL_DAYS * 86400,
+    });
+    if (!won) {
+      const claimed = await getItem(TABLE.orders, claimId(key));
+      const winner = claimed?.orderId ? await getItem(TABLE.orders, claimed.orderId) : null;
       if (winner) return { ...strip(winner), duplicate: true };
+      // The claim exists but its order does not - the winner died between the
+      // two writes. Take it over rather than leaving the till unable to bill.
     }
-    throw err;
   }
+
+  await putItem(TABLE.orders, { ...order });
   return order;
 }
 
@@ -211,6 +236,43 @@ async function applyOnce(id, patch) {
    * a customer ringing back to add two more boxes, or a line keyed twice.
    * Both are recorded in the history so the change is never silent.
    */
+  /**
+   * Moves the whole bill onto a different price list.
+   *
+   * Distinct from adding a line on a different list: this restates what the
+   * customer is being charged for everything already on the order, so it is
+   * only ever reached through an explicit confirmation in the admin. Lines are
+   * repriced from the catalogue rather than scaled from their stored figures -
+   * scaling would compound the rounding already baked into them.
+   *
+   * A line whose product has since left the catalogue is left exactly as it is
+   * and reported, rather than being guessed at or silently dropped.
+   */
+  if (patch.reprice) {
+    const list2 = Number(patch.reprice.priceList) === 2;
+    const extra = Math.min(95, Math.max(0, Number(patch.reprice.extraDiscount) || 0));
+    const { products: catalogue } = await getCatalogue();
+    const byId = new Map(catalogue.map((p) => [Number(p.id), p]));
+
+    const missing = [];
+    next.items = (next.items || prev.items || []).map((line) => {
+      const product = byId.get(Number(line.id));
+      if (!product) { missing.push(line.name); return line; }
+      const mrp = basisMrp(product, list2);
+      const discount = effDiscount(product, list2, extra);
+      const unitPrice = Math.round(mrp - (mrp * discount) / 100);
+      return { ...line, mrp, discount, unitPrice, total: Math.round(unitPrice * (line.count || 0)) };
+    });
+
+    next.priceList = list2 ? 2 : 1;
+    next.extraDiscount = extra;
+    next.history = [...(next.history || []), {
+      at: next.updatedAt,
+      event: `Repriced on Pricelist ${list2 ? 2 : 1}${extra > 0 ? ` with ${extra}% ExtraDiscount` : ""}`
+        + (missing.length ? ` (left unchanged: ${missing.join(", ")})` : ""),
+    }];
+  }
+
   if (patch.addItem) {
     const a = patch.addItem;
     const id = Number(a.id);
@@ -315,15 +377,16 @@ async function applyOnce(id, patch) {
 
   // Orders written before revisions existed have no rev field, which matches
   // null in a query - so those are accepted on their first guarded write.
-  const guard = prev.rev == null ? { $in: [null, 0] } : prev.rev;
-  const res = await (await orders()).replaceOne({ id, rev: guard }, { ...saved });
-  return res.matchedCount === 1 ? saved : CONFLICT;
+  const won = await putIfRev(TABLE.orders, { ...saved }, prev.rev == null ? null : prev.rev);
+  return won ? saved : CONFLICT;
 }
 
 export async function orderStats() {
   if (!useDb()) return fileStore.orderStats();
 
-  const all = await (await orders()).find({}, { projection: { status: 1, total: 1 } }).toArray();
+  // No projection: DynamoDB charges for the item it reads, not the fields
+  // returned, so asking for two attributes would cost exactly the same.
+  const all = await allOrders();
   const by = Object.fromEntries(STATUSES.map((s) => [s, 0]));
   let revenue = 0;
   for (const o of all) {

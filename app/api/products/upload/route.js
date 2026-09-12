@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { requireAdmin } from "@/util/admin/auth";
-import { collection, isDbConfigured } from "@/util/db/mongo";
+import { putMedia, isMediaConfigured } from "@/util/db/media";
 import { uploadImage, isCloudinaryConfigured } from "@/util/cloudinary";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ const MAX_BYTES = 5 * 1024 * 1024;
  * Stores a product image and returns the path the catalogue should reference.
  *
  * Three tiers, in order of preference: Cloudinary (CDN-delivered, keeps large
- * binaries out of the database), then MongoDB, then the local filesystem.
+ * binaries out of the object store), then S3, then the local filesystem.
  * public/uploads only works where the filesystem persists — on a serverless
  * host it is read-only and wiped between deploys.
  */
@@ -48,14 +48,9 @@ export async function POST(request) {
       return Response.json({ ok: true, path: url });
     }
 
-    if (isDbConfigured()) {
-      await (await collection("media")).insertOne({
-        name,
-        contentType: file.type,
-        size: bytes.length,
-        data: bytes,
-        createdAt: new Date().toISOString(),
-      });
+    // Only reached when Cloudinary is not configured; it handles images above.
+    if (isMediaConfigured()) {
+      await putMedia({ name, contentType: file.type, bytes });
       return Response.json({ ok: true, path: `media/${name}` });
     }
 

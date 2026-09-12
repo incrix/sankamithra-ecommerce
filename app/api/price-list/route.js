@@ -1,13 +1,15 @@
 import { requireAdmin } from "@/util/admin/auth";
 import { getSettingSafe, setSetting } from "@/util/settingsStore";
-import { collection, isDbConfigured } from "@/util/db/mongo";
-import { PRICE_LIST_FALLBACK } from "@/util/config";
+import { isDbConfigured } from "@/util/db/dynamo";
+import { getMedia, putMedia, isMediaConfigured } from "@/util/db/media";
+import { PRICE_LIST_FALLBACK, absoluteAssetUrl } from "@/util/config";
 
 export const dynamic = "force-dynamic";
 
 const KEY = "priceList";
 const DOC = "price-list.pdf";
-// Comfortably under MongoDB's 16 MB per-document ceiling.
+// S3 has no practical object-size limit at this scale; the cap is about not
+// accepting a mis-selected file, not about storage.
 const MAX_BYTES = 14 * 1024 * 1024;
 
 /**
@@ -17,7 +19,7 @@ const MAX_BYTES = 14 * 1024 * 1024;
  * link in the site can stay a plain constant (/api/price-list) and still track
  * whatever the admin last uploaded. Nothing else needs changing on upload.
  *
- * Stored in MongoDB rather than Cloudinary: Cloudinary denies delivery of PDF
+ * Stored in S3 rather than Cloudinary: Cloudinary denies delivery of PDF
  * and raw files by default (x-cld-error: "deny or ACL failure"), so an upload
  * would succeed and then 401 on download. This keeps it working with no
  * third-party setting to remember.
@@ -32,12 +34,14 @@ export async function GET(request) {
   }
 
   // Nothing uploaded yet: fall back to the copy that shipped with the site.
-  if (!current) return Response.redirect(PRICE_LIST_FALLBACK, 302);
+  // Resolved against this request: the fallback may be a site-relative path.
+  const fallback = absoluteAssetUrl(PRICE_LIST_FALLBACK, request.url);
+  if (!current) return Response.redirect(fallback, 302);
 
-  const doc = await (await collection("media")).findOne({ name: DOC });
-  if (!doc) return Response.redirect(PRICE_LIST_FALLBACK, 302);
+  const doc = await getMedia(DOC);
+  if (!doc) return Response.redirect(fallback, 302);
 
-  return new Response(doc.data.buffer ?? doc.data, {
+  return new Response(doc.data, {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `inline; filename="${current.name.replace(/[^\w.\- ]/g, "")}"`,
@@ -72,13 +76,9 @@ export async function POST(request) {
     }
 
     const bytes = Buffer.from(await file.arrayBuffer());
-    // A fixed document name, so each upload replaces the last rather than
-    // leaving a trail of old price lists in the database.
-    await (await collection("media")).updateOne(
-      { name: DOC },
-      { $set: { name: DOC, contentType: "application/pdf", size: bytes.length, data: bytes, createdAt: new Date().toISOString() } },
-      { upsert: true }
-    );
+    // A fixed object name, so each upload replaces the last rather than
+    // leaving a trail of old price lists behind.
+    await putMedia({ name: DOC, contentType: "application/pdf", bytes });
 
     const value = {
       url: "/api/price-list",

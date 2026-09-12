@@ -1,4 +1,4 @@
-import { collection, isDbConfigured } from "@/util/db/mongo";
+import { TABLE, getItem, putItem, scanAll, isEmpty, batchWrite, isDbConfigured } from "@/util/db/dynamo";
 import LIST from "@/util/data/wholesale2026.json";
 
 /**
@@ -14,15 +14,13 @@ import LIST from "@/util/data/wholesale2026.json";
  * expected to move day to day.
  */
 
-const items = () => collection("wholesale");
 
 const strip = ({ _id, ...rest }) => rest;
 
 /** Populates the collection from the printed list, once. */
 async function seedIfEmpty() {
-  const col = await items();
-  if (await col.countDocuments({}, { limit: 1 })) return;
-  await col.insertMany(
+  if (!(await isEmpty(TABLE.wholesale))) return;
+  await batchWrite(TABLE.wholesale,
     LIST.map((r, i) => ({ ...r, order: i, stock: null, image: null, active: true }))
   );
   console.log(`wholesale list seeded with ${LIST.length} items`);
@@ -31,12 +29,13 @@ async function seedIfEmpty() {
 export async function getWholesaleItems() {
   if (!isDbConfigured()) return [];
   await seedIfEmpty();
-  const docs = await (await items()).find({}).sort({ order: 1 }).toArray();
+  // Sorted here: a Scan comes back in no particular order, and `order` is the
+  // sequence of the printed list, which the dealer page reads top to bottom.
+  const docs = (await scanAll(TABLE.wholesale)).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   return docs.map(strip);
 }
 
 export async function updateWholesaleItem(code, patch) {
-  const col = await items();
   const set = {};
   // Only these are editable. Names, codes and pack sizes come off the printed
   // list and should change with the list, not by hand.
@@ -49,9 +48,13 @@ export async function updateWholesaleItem(code, patch) {
   if ("image" in patch) set.image = patch.image ? String(patch.image).slice(0, 500) : null;
   if (!Object.keys(set).length) return null;
 
-  const res = await col.findOneAndUpdate({ code }, { $set: set }, { returnDocument: "after" });
-  const doc = res?.value ?? res;
-  return doc ? strip(doc) : null;
+  // Read-merge-write: DynamoDB has no findOneAndUpdate, and only the editable
+  // fields above are ever touched, so nothing else on the row can be lost.
+  const existing = await getItem(TABLE.wholesale, code);
+  if (!existing) return null;
+  const merged = { ...existing, ...set };
+  await putItem(TABLE.wholesale, merged);
+  return strip(merged);
 }
 
 /**
@@ -65,7 +68,6 @@ export async function updateWholesaleItem(code, patch) {
  * picture rather than borrowing a wrong one.
  */
 export async function matchImages(products) {
-  const col = await items();
 
   const clean = (s) =>
     String(s || "").toLowerCase()
@@ -117,7 +119,7 @@ export async function matchImages(products) {
     return hit / Math.max(A.size, B.size);
   };
 
-  const docs = await col.find({}).toArray();
+  const docs = await scanAll(TABLE.wholesale);
   let matched = 0;
   for (const d of docs) {
     let best = null, bestScore = 0;
@@ -129,7 +131,7 @@ export async function matchImages(products) {
     }
     // Every meaningful word of the shorter name has to be present.
     if (best && bestScore >= 0.6) {
-      await col.updateOne({ code: d.code }, { $set: { image: best.image[0] } });
+      await putItem(TABLE.wholesale, { ...d, image: best.image[0] });
       matched++;
     }
   }

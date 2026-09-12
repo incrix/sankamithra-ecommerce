@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/util/admin/auth";
-import { dbDiagnostics } from "@/util/db/mongo";
+import { dbDiagnostics } from "@/util/db/dynamo";
 import { mailDiagnostics } from "@/util/sendMail";
 import { PRODUCT_SEED_URL, ASSET_BASE } from "@/util/config";
 
@@ -21,7 +21,7 @@ export async function GET() {
   return Response.json({
     ok: db.ok && mail.ok && assets.ok,
     // Storage is the one that decides whether a serverless deploy can work at all.
-    storage: db.configured ? "mongodb" : "filesystem (will fail on serverless)",
+    storage: db.configured ? "dynamodb" : "filesystem (will fail on serverless)",
     db,
     mail: { ok: mail.ok, stage: mail.stage, host: mail.config?.host, user: mail.config?.user, error: mail.error },
     assets,

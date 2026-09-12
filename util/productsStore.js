@@ -1,19 +1,47 @@
-import { collection, isDbConfigured } from "@/util/db/mongo";
-import { PRODUCT_SEED_URL } from "@/util/config";
+import { TABLE, getItem, putItem, deleteItem, scanAll, isEmpty, batchWrite, isDbConfigured } from "@/util/db/dynamo";
+import { PRODUCT_SEED_URL, absoluteAssetUrl } from "@/util/config";
 import * as fileStore from "./productsStore.file";
 
 /**
  * Catalogue storage.
  *
- * MongoDB when MONGODB_URI is set, otherwise the JSON file store for local
+ * DynamoDB when AWS credentials are set, otherwise the JSON file store for local
  * development. On first run the products collection seeds itself from the
  * hosted catalogue, so a fresh deployment comes up with a full shop rather
  * than an empty one.
  */
 
 const useDb = () => isDbConfigured();
-const products = () => collection("products");
-const settings = () => collection("settings");
+
+/**
+ * Categories are one row holding an ordered list, not a row per category.
+ *
+ * The order is the shop's arrangement and has to survive a read, so it lives as
+ * a list rather than being recovered by sorting rows - which is exactly what
+ * alphabetising on read used to throw away.
+ */
+const CATEGORY_KEY = "categories";
+
+async function readCategoryRow() {
+  return (await getItem(TABLE.settings, CATEGORY_KEY)) || { key: CATEGORY_KEY, values: [] };
+}
+
+async function writeCategories(values) {
+  await putItem(TABLE.settings, { key: CATEGORY_KEY, values, updatedAt: new Date().toISOString() });
+  return values;
+}
+
+/** Everything in the catalogue, in the shop's arranged order. */
+async function allProducts() {
+  const items = await scanAll(TABLE.products);
+  // Sorted here rather than by the store: DynamoDB returns a Scan in whatever
+  // order it likes, and the arranged order is the whole point of sortOrder.
+  return items.sort((a, b) => {
+    const sa = a.sortOrder == null ? Number.MAX_SAFE_INTEGER : a.sortOrder;
+    const sb = b.sortOrder == null ? Number.MAX_SAFE_INTEGER : b.sortOrder;
+    return sa - sb || a.id - b.id;
+  });
+}
 
 const strip = ({ _id, ...rest }) => rest;
 
@@ -52,10 +80,10 @@ function normalise(p, id) {
 
 /** Populates an empty collection from the hosted catalogue, once. */
 async function seedIfEmpty() {
-  const col = await products();
-  if (await col.countDocuments({}, { limit: 1 })) return;
+  if (!(await isEmpty(TABLE.products))) return;
 
-  const res = await fetch(PRODUCT_SEED_URL, { cache: "no-store" });
+  // Absolute: a site-relative ASSET_BASE cannot be fetched server-side.
+  const res = await fetch(absoluteAssetUrl(PRODUCT_SEED_URL), { cache: "no-store" });
   if (!res.ok) throw new Error(`catalogue seed responded ${res.status}`);
   const raw = await res.json();
   if (!Array.isArray(raw) || !raw.length) throw new Error("catalogue seed was empty");
@@ -63,36 +91,26 @@ async function seedIfEmpty() {
   // NOT .map(normalise): map passes the index, which normalise would take as
   // the id and renumber the whole catalogue.
   const docs = raw.map((item) => normalise(item));
-  await col.insertMany(docs);
-  await (await settings()).updateOne(
-    { _id: "categories" },
-    { $set: { values: [...new Set(docs.map((d) => d.category))].sort() } },
-    { upsert: true }
-  );
+  await batchWrite(TABLE.products, docs);
+  await writeCategories([...new Set(docs.map((d) => d.category))].sort());
   console.log(`catalogue seeded with ${docs.length} products`);
 }
 
 async function categoryList() {
-  const doc = await (await settings()).findOne({ _id: "categories" });
-  return doc?.values || [];
+  return (await readCategoryRow()).values || [];
 }
 
 async function addToCategories(name) {
   if (!name) return;
-  await (await settings()).updateOne(
-    { _id: "categories" },
-    { $addToSet: { values: name } },
-    { upsert: true }
-  );
+  const values = await categoryList();
+  if (values.includes(name)) return;
+  await writeCategories([...values, name]);
 }
 
 export async function getCatalogue() {
   if (!useDb()) return fileStore.getCatalogue();
   await seedIfEmpty();
-  const [items, categories] = await Promise.all([
-    (await products()).find({}).sort({ sortOrder: 1, id: 1 }).toArray(),
-    categoryList(),
-  ]);
+  const [items, categories] = await Promise.all([allProducts(), categoryList()]);
   // Not sorted: the order the shop arranged them in is the order they are
   // stored in, and alphabetising here threw that away every time it was read.
   return { products: items.map(strip), categories };
@@ -101,36 +119,40 @@ export async function getCatalogue() {
 export async function getPublicProducts() {
   if (!useDb()) return fileStore.getPublicProducts();
   await seedIfEmpty();
-  const items = await (await products()).find({ active: { $ne: false } }).sort({ sortOrder: 1, id: 1 }).toArray();
+  // Filtered here rather than in the Scan: at ~145 items the whole table is one
+  // read either way, and a FilterExpression would not make it cheaper - Dynamo
+  // charges for what it reads, not for what survives the filter.
+  const items = (await allProducts()).filter((p) => p.active !== false);
   return items.map(strip);
 }
 
 export async function createProduct(input) {
   if (!useDb()) return fileStore.createProduct(input);
-  const col = await products();
-  const highest = await col.find({}).sort({ id: -1 }).limit(1).toArray();
-  const product = normalise(input, (highest[0]?.id || 0) + 1);
+  const existing = await scanAll(TABLE.products);
+  const highest = existing.reduce((a, p) => Math.max(a, Number(p.id) || 0), 0);
+  const product = normalise(input, highest + 1);
   if (!product.name) throw new Error("A product name is required");
-  await col.insertOne({ ...product });
+  await putItem(TABLE.products, { ...product });
   await addToCategories(product.category);
   return product;
 }
 
 export async function updateProduct(id, patch) {
   if (!useDb()) return fileStore.updateProduct(id, patch);
-  const col = await products();
-  const existing = await col.findOne({ id: Number(id) });
+  const existing = await getItem(TABLE.products, Number(id));
   if (!existing) return null;
   const merged = normalise({ ...strip(existing), ...patch }, existing.id);
-  await col.replaceOne({ id: existing.id }, { ...merged });
+  await putItem(TABLE.products, { ...merged });
   await addToCategories(merged.category);
   return merged;
 }
 
 export async function deleteProduct(id) {
   if (!useDb()) return fileStore.deleteProduct(id);
-  const res = await (await products()).deleteOne({ id: Number(id) });
-  return res.deletedCount > 0;
+  const existing = await getItem(TABLE.products, Number(id));
+  if (!existing) return false;
+  await deleteItem(TABLE.products, Number(id));
+  return true;
 }
 
 export async function addCategory(name) {
@@ -145,33 +167,42 @@ export async function renameCategory(from, to) {
   if (!useDb()) return fileStore.renameCategory(from, to);
   const clean = String(to || "").trim();
   if (!clean) throw new Error("A category name is required");
-  await (await products()).updateMany({ category: from }, { $set: { category: clean } });
+  // No server-side updateMany in DynamoDB: read the affected rows, rewrite
+  // them in batches of 25.
+  const affected = (await scanAll(TABLE.products)).filter((p) => p.category === from);
+  if (affected.length) {
+    await batchWrite(TABLE.products, affected.map((p) => ({ ...p, category: clean })));
+  }
   const values = (await categoryList()).map((c) => (c === from ? clean : c));
-  await (await settings()).updateOne(
-    { _id: "categories" },
-    { $set: { values: [...new Set(values)].sort() } },
-    { upsert: true }
-  );
-  return [...new Set(values)].sort();
+  const next = [...new Set(values)].sort();
+  await writeCategories(next);
+  return next;
 }
 
 export async function deleteCategory(name) {
   if (!useDb()) return fileStore.deleteCategory(name);
-  const inUse = await (await products()).countDocuments({ category: name });
+  const inUse = (await scanAll(TABLE.products)).filter((p) => p.category === name).length;
   if (inUse) throw new Error(`${inUse} product(s) still use "${name}"`);
-  await (await settings()).updateOne({ _id: "categories" }, { $pull: { values: name } });
-  return (await categoryList()).sort();
+  const next = (await categoryList()).filter((c) => c !== name);
+  await writeCategories(next);
+  return [...next].sort();
 }
 
 export async function applyBulkDiscount({ discount, category, ids }) {
   if (!useDb()) return fileStore.applyBulkDiscount({ discount, category, ids });
   const pct = Math.min(95, Math.max(0, Number(discount) || 0));
-  const filter =
-    Array.isArray(ids) && ids.length ? { id: { $in: ids.map(Number) } }
-    : category ? { category }
-    : {};
-  const res = await (await products()).updateMany(filter, { $set: { discount: pct } });
-  return res.modifiedCount;
+  const wanted = Array.isArray(ids) && ids.length ? new Set(ids.map(Number)) : null;
+
+  const affected = (await scanAll(TABLE.products)).filter((p) =>
+    wanted ? wanted.has(Number(p.id)) : category ? p.category === category : true
+  );
+  // Skip rows already at this discount - a sale re-applied over the same
+  // selection would otherwise rewrite the whole catalogue for nothing.
+  const changing = affected.filter((p) => Number(p.discount) !== pct);
+  if (changing.length) {
+    await batchWrite(TABLE.products, changing.map((p) => ({ ...p, discount: pct })));
+  }
+  return changing.length;
 }
 
 /** Stores the category order exactly as the shop arranged it. */
@@ -183,7 +214,7 @@ export async function reorderCategories(values) {
   // page cannot silently drop a category that was added meanwhile.
   const missing = current.filter((v) => !wanted.includes(v));
   const next = [...wanted, ...missing];
-  await (await settings()).updateOne({ _id: "categories" }, { $set: { values: next } }, { upsert: true });
+  await writeCategories(next);
   return next;
 }
 
@@ -196,18 +227,18 @@ export async function reorderCategories(values) {
  */
 export async function reorderProducts(ids) {
   if (!useDb()) return 0;
-  const col = await products();
   const list = ids.map(Number).filter(Number.isFinite);
   if (!list.length) return 0;
 
-  const docs = await col.find({ id: { $in: list } }).toArray();
+  const byId = new Map((await scanAll(TABLE.products)).map((p) => [Number(p.id), p]));
+  const docs = list.map((id) => byId.get(id)).filter(Boolean);
+  if (!docs.length) return 0;
+
   const slots = docs
     .map((d) => (d.sortOrder == null ? 9999 + d.id : d.sortOrder))
     .sort((a, b) => a - b);
 
-  const ops = list.map((id, i) => ({
-    updateOne: { filter: { id }, update: { $set: { sortOrder: slots[i] } } },
-  }));
-  const res = await col.bulkWrite(ops);
-  return res.modifiedCount ?? list.length;
+  const moved = docs.map((d, i) => ({ ...d, sortOrder: slots[i] }));
+  await batchWrite(TABLE.products, moved);
+  return moved.length;
 }

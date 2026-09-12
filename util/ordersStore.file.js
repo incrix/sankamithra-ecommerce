@@ -1,11 +1,12 @@
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
+import { basisMrp, effDiscount } from "@/util/pricing";
 
 /**
  * File-backed order store — the local-development fallback.
  *
- * Used when MONGODB_URI is unset. See ordersStore.js for the database-backed
+ * Used when AWS credentials are unset. See ordersStore.js for the database-backed
  * implementation that production uses.
  *
  * Original notes:
@@ -200,6 +201,74 @@ export async function updateOrder(id, patch) {
 
     if (typeof patch.note === "string") next.note = patch.note;
     if (typeof patch.emailSent === "boolean") next.emailSent = patch.emailSent;
+
+    /**
+     * Line and pricing edits, mirroring ordersStore.js.
+     *
+     * These were missing here for as long as the feature has existed, so adding
+     * a product, removing one, or repricing a bill did nothing at all in local
+     * development while working in production - the patch was accepted, the
+     * order came back unchanged, and nothing reported a problem.
+     */
+    if (patch.addItem) {
+      const a = patch.addItem;
+      const addId = Number(a.id);
+      const count = Math.max(1, Math.round(Number(a.count) || 1));
+      const mrp = Math.max(0, Number(a.price) || 0);
+      const discount = Math.min(95, Math.max(0, Number(a.discount) || 0));
+      const unitPrice = Math.round(mrp - (mrp * discount) / 100);
+
+      const items = [...(next.items || prev.items)];
+      const at = items.findIndex((i) => i.id === addId);
+      if (at >= 0) {
+        const was = items[at].count;
+        const now = was + count;
+        items[at] = { ...items[at], count: now, total: Math.round(items[at].unitPrice * now), unavailable: false };
+        next.history = [...(next.history || []), { at: next.updatedAt, event: `${items[at].name} quantity ${was} -> ${now}` }];
+      } else {
+        items.push({
+          id: addId, name: String(a.name || "").trim(), category: a.category || "",
+          image: a.image || null, unitPrice, mrp, discount, count,
+          total: Math.round(unitPrice * count),
+          packed: false, unavailable: false, substitute: null,
+        });
+        next.history = [...(next.history || []), { at: next.updatedAt, event: `Added ${a.name} x${count}` }];
+      }
+      next.items = items;
+    }
+
+    if (patch.removeItem !== undefined) {
+      const rid = Number(patch.removeItem);
+      const gone = (next.items || prev.items).find((i) => i.id === rid);
+      next.items = (next.items || prev.items).filter((i) => i.id !== rid);
+      if (gone) next.history = [...(next.history || []), { at: next.updatedAt, event: `Removed ${gone.name}` }];
+    }
+
+    if (patch.reprice) {
+      const list2 = Number(patch.reprice.priceList) === 2;
+      const extra = Math.min(95, Math.max(0, Number(patch.reprice.extraDiscount) || 0));
+      const { getCatalogue } = await import("./productsStore.js");
+      const { products: catalogue } = await getCatalogue();
+      const byId = new Map(catalogue.map((p) => [Number(p.id), p]));
+
+      const missing = [];
+      next.items = (next.items || prev.items || []).map((line) => {
+        const product = byId.get(Number(line.id));
+        if (!product) { missing.push(line.name); return line; }
+        const mrp = basisMrp(product, list2);
+        const discount = effDiscount(product, list2, extra);
+        const unitPrice = Math.round(mrp - (mrp * discount) / 100);
+        return { ...line, mrp, discount, unitPrice, total: Math.round(unitPrice * (line.count || 0)) };
+      });
+
+      next.priceList = list2 ? 2 : 1;
+      next.extraDiscount = extra;
+      next.history = [...(next.history || []), {
+        at: next.updatedAt,
+        event: `Repriced on Pricelist ${list2 ? 2 : 1}${extra > 0 ? ` with ${extra}% ExtraDiscount` : ""}`
+          + (missing.length ? ` (left unchanged: ${missing.join(", ")})` : ""),
+      }];
+    }
 
     // Per-line packer actions. Auto-advance New -> Packing on the first one so
     // the owner never has to set the status by hand.

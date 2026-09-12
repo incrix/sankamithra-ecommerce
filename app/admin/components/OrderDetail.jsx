@@ -12,7 +12,8 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import PackingList from "./PackingList";
 import SubstitutePicker from "./SubstitutePicker";
 import AddItemPicker from "./AddItemPicker";
-import { basisMrp, effDiscount, orderBasis, basisLabel, inferBasis } from "@/util/pricing";
+import BillingBasis from "./BillingBasis";
+import { basisMrp, effDiscount, orderBasis, inferBasis } from "@/util/pricing";
 import OrderActions from "./OrderActions";
 import StatusChip from "./StatusChip";
 import { useAdmin } from "../AdminContext";
@@ -47,7 +48,13 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
    * discount - so the biller picks the list, and `assumed` holds that choice
    * for as long as the panel is open.
    */
-  const [assumed, setAssumed] = useState(null);
+  /**
+   * `primary` is how the bill was written; `chosen` is what the next line added
+   * will be charged at. They start equal and the biller may separate them, so
+   * they are held apart rather than one being derived from the other.
+   */
+  const [chosenList, setChosenList] = useState(null);
+  const [chosenExtra, setChosenExtra] = useState(null);
 
   /**
    * Pricing against mrp2 needs the admin catalogue - /api/products?all=1. The
@@ -73,11 +80,24 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
     () => (recorded.recorded ? null : inferBasis(order, adminProducts)),
     [recorded.recorded, order, adminProducts]
   );
-  const basis = recorded.recorded
+
+  /** How the bill was written. A fact, never edited here. */
+  const primary = recorded.recorded
     ? recorded
-    : assumed != null
-      ? { recorded: false, list2: assumed === 2, extra: guess?.list2 === (assumed === 2) ? guess.extra : 0 }
-      : guess || { recorded: false, list2: false, extra: 0 };
+    : guess || { recorded: false, list2: false, extra: 0 };
+
+  /**
+   * What new lines cost. Follows `primary` until the biller moves it, and
+   * resets when a different order is opened - carrying one order's override
+   * onto the next would misprice it silently.
+   */
+  const basis = {
+    recorded: primary.recorded,
+    list2: chosenList == null ? primary.list2 : chosenList === 2,
+    extra: chosenExtra == null ? primary.extra || 0 : Math.min(95, Math.max(0, Number(chosenExtra) || 0)),
+  };
+
+  useEffect(() => { setChosenList(null); setChosenExtra(null); }, [order?.id]);
 
   /**
    * Which lines the packer has ticked off, held here rather than in the order.
@@ -226,45 +246,22 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
             </Typography>
           )}
 
-          {/* The rates this bill was written on. Shown whenever the bill is
-              open for editing, because anything added has to be charged on the
-              same list as everything already on it. */}
-          {editing && (
-            basis.recorded ? (
-              <Chip
-                size="small"
-                label={basisLabel(basis)}
-                sx={{ height: 22, fontSize: 11, fontWeight: 800,
-                      backgroundColor: "var(--surface-muted)", color: "var(--text-color-secondary)" }}
-              />
-            ) : (
-              /* Billed before the list was recorded. It is worked out from the
-                 MRPs on the bill's own lines where that is possible, shown as a
-                 guess rather than a fact, and always overridable - the guess is
-                 wrong if a product was repriced after the bill was written. */
-              <Stack direction="row" alignItems="center" gap={0.75} flexWrap="wrap">
-                <Typography fontSize={11.5} fontWeight={700} color="var(--warning)">
-                  {catLoading
-                    ? "Checking which pricelist this bill used…"
-                    : guess
-                      ? `${basisLabel(basis)} — charge additions on:`
-                      : "Pricelist not recorded — charge additions on:"}
-                </Typography>
-                {[1, 2].map((n) => (
-                  <Chip
-                    key={n}
-                    size="small"
-                    label={`Pricelist ${n}`}
-                    onClick={() => setAssumed(n)}
-                    sx={{ height: 22, fontSize: 11, fontWeight: 800, cursor: "pointer",
-                          backgroundColor: (basis.list2 ? 2 : 1) === n ? "var(--primary-color)" : "var(--surface-muted)",
-                          color: (basis.list2 ? 2 : 1) === n ? "#fff" : "var(--text-color-secondary)" }}
-                  />
-                ))}
-              </Stack>
-            )
-          )}
         </Stack>
+
+        {/* Kept out of the toolbar above: it is two related settings and a
+            consequence, which a row of chips could not say clearly. */}
+        {editing && (
+          <BillingBasis
+            primary={primary}
+            list2={basis.list2}
+            extra={chosenExtra == null ? String(primary.extra || 0) : chosenExtra}
+            loading={catLoading && !catalogue}
+            busy={busy}
+            onList={(n) => setChosenList(n)}
+            onExtra={(v) => setChosenExtra(v)}
+            onReprice={(r) => { onPatch({ reprice: r }); setChosenList(null); setChosenExtra(null); }}
+          />
+        )}
 
         <PackingList
           items={items}
