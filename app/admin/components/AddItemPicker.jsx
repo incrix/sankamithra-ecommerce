@@ -5,9 +5,8 @@ import {
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
-import { useProducts } from "@/context/ProductContext";
 import { assetUrl } from "@/util/config";
-import { unitPrice } from "@/util/cart";
+import { unitOf, basisLabel } from "@/util/pricing";
 import QtyStepper from "@/app/components/commerce/QtyStepper";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
@@ -19,9 +18,18 @@ const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
  * common case is a customer ringing back to add two more of something they
  * already bought, and quietly filtering it out would look like the shop had
  * stopped selling it. Picking one that is on the bill tops up its quantity.
+ *
+ * Prices come from the list the bill was written on, not the website list.
+ * Adding to a Pricelist 2 bill at the Pricelist 1 rate silently overcharges
+ * the customer against every other line on the same bill.
+ *
+ * `products` must come from the ADMIN catalogue (/api/products?all=1), not the
+ * ProductContext the storefront uses: that response strips mrp2, so every
+ * Pricelist 2 lookup silently fell back to the Pricelist 1 MRP.
  */
-export default function AddItemPicker({ open, order, onClose, onAdd, busy }) {
-  const { productList } = useProducts();
+export default function AddItemPicker({ open, order, onClose, onAdd, busy, products = [], loading = false, basis = { recorded: false, list2: false, extra: 0 } }) {
+  const { list2, extra } = basis;
+  const priceOf = (p) => unitOf(p, list2, extra);
   const [query, setQuery] = useState("");
   const [picked, setPicked] = useState(null);
   const [qty, setQty] = useState(1);
@@ -33,10 +41,10 @@ export default function AddItemPicker({ open, order, onClose, onAdd, busy }) {
 
   const options = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return productList
+    return products
       .filter((p) => (q ? p.name.toLowerCase().includes(q) : true))
       .slice(0, 60);
-  }, [productList, query]);
+  }, [products, query]);
 
   const close = () => { setPicked(null); setQty(1); setQuery(""); onClose(); };
 
@@ -49,6 +57,12 @@ export default function AddItemPicker({ open, order, onClose, onAdd, busy }) {
             <Typography fontSize={15} fontWeight={800} color="var(--text-color)">Add to this order</Typography>
             <Typography fontSize={12.5} color="var(--text-color-secondary)" noWrap>
               {order?.ref} · {order?.customer?.name}
+            </Typography>
+            {/* Which rates these prices are on. The biller is about to charge
+                against it, so it is stated rather than left to be inferred. */}
+            <Typography fontSize={11} fontWeight={700}
+              color={basis.recorded ? "var(--text-color-trinary)" : "var(--warning)"}>
+              {basisLabel(basis)}
             </Typography>
           </Stack>
           <IconButton size="small" onClick={close} disabled={busy}>
@@ -65,7 +79,10 @@ export default function AddItemPicker({ open, order, onClose, onAdd, busy }) {
 
         <Stack sx={{ maxHeight: 320, overflowY: "auto", overscrollBehavior: "contain",
                      border: "1px solid var(--border)", borderRadius: "var(--radius)" }}>
-          {options.length === 0 && (
+          {loading && options.length === 0 && (
+            <Stack alignItems="center" py={4}><CircularProgress size={20} sx={{ color: "var(--primary-color)" }} /></Stack>
+          )}
+          {!loading && options.length === 0 && (
             <Typography fontSize={13} color="var(--text-color-secondary)" textAlign="center" py={4}>
               Nothing matches that.
             </Typography>
@@ -92,7 +109,7 @@ export default function AddItemPicker({ open, order, onClose, onAdd, busy }) {
                           backgroundColor: "var(--surface-muted)", color: "var(--text-color-secondary)" }} />
                 )}
                 <Typography fontSize={13} fontWeight={800} color="var(--text-color)" sx={{ minWidth: 54, textAlign: "right" }}>
-                  {inr(unitPrice(p))}
+                  {inr(priceOf(p))}
                 </Typography>
               </Stack>
             );
@@ -105,13 +122,13 @@ export default function AddItemPicker({ open, order, onClose, onAdd, busy }) {
             <Stack flex={1} minWidth={0}>
               <Typography fontSize={13} fontWeight={800} color="var(--text-color)" noWrap>{picked.name}</Typography>
               <Typography fontSize={11.5} color="var(--text-color-secondary)">
-                {inr(unitPrice(picked))} each
+                {inr(priceOf(picked))} each
                 {onBill.has(picked.id) ? ` · already ${onBill.get(picked.id)} on the bill` : ""}
               </Typography>
             </Stack>
             <QtyStepper size="sm" value={qty} onChange={setQty} onAdjust={(d) => setQty((q) => Math.max(1, q + d))} />
             <Typography fontSize={14} fontWeight={800} color="var(--primary-color)" sx={{ minWidth: 70, textAlign: "right" }}>
-              + {inr(unitPrice(picked) * qty)}
+              + {inr(priceOf(picked) * qty)}
             </Typography>
           </Stack>
         )}

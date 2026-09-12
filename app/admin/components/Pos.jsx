@@ -14,35 +14,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { assetUrl } from "@/util/config";
 import QtyStepper from "@/app/components/commerce/QtyStepper";
+import { basisMrp, effDiscount, unitOf } from "@/util/pricing";
 import { useAdmin } from "../AdminContext";
+import { BAR_H } from "./AdminShell";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
-/**
- * Counter pricing.
- *
- * Pricelist 1 is the website list: an MRP with the product's own discount.
- * Pricelist 2 is a separate, lower set of MRPs carrying no product discount -
- * the biller gives away margin themselves through ExtraDiscount instead.
- *
- * Both lists resolve to a single effective discount off a single MRP, because
- * that is the only shape the server prices an order in. The server recomputes
- * from exactly these two numbers with the same formula, so what the biller sees
- * is what gets stored - and no price is ever taken from the browser, which
- * matters because the order endpoint is public.
- */
-const basisMrp = (p, list2) => (list2 ? (p.mrp2 ?? p.price) : p.price);
-
-const effDiscount = (p, list2, extra) => {
-  const base = list2 ? 0 : Number(p.discount) || 0;
-  const e = Math.min(95, Math.max(0, Number(extra) || 0));
-  // Compounded, not added: ExtraDiscount comes off what is already discounted.
-  return Math.round((1 - (1 - base / 100) * (1 - e / 100)) * 10000) / 100;
-};
-
-const unitOf = (p, list2, extra) => {
-  const m = basisMrp(p, list2);
-  return Math.round(m - (m * effDiscount(p, list2, extra)) / 100);
-};
 const PAGE = 40;
 
 /** Unique per bill attempt; crypto.randomUUID is absent on older Safari. */
@@ -188,8 +164,16 @@ export default function Pos() {
         headers: { "Content-Type": "application/json" },
         // Lines are sent on the list they were billed on, so the server prices
         // them exactly as the counter screen showed them.
+        //
+        // `priceList` and `extraDiscount` record WHICH list that was. The lines
+        // alone cannot say: they arrive already flattened to an MRP and one
+        // effective discount, and that flattening is not reversible. Without
+        // this, anything added to the bill later - a line, a replacement - got
+        // priced off Pricelist 1 no matter what the bill was written on.
         body: JSON.stringify({
           source: "pos", note, billingDetails: customer, invoice, clientRef: billKey.current,
+          priceList: list2 ? 2 : 1,
+          extraDiscount: Math.min(95, Math.max(0, Number(extra) || 0)),
           productList: lines.map((l) => ({
             ...l, price: basisMrp(l, list2), discount: effDiscount(l, list2, extra),
           })),
@@ -308,74 +292,80 @@ export default function Pos() {
               </Stack>
             ))}
 
-            <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} sx={{ pt: 0.5 }}>
-              {/* Which price list this bill is on. Left of Clear all, where the
-                  biller is already looking when reviewing the basket. */}
-              <Stack direction="row" alignItems="center" gap={0.5}>
-                <Switch
-                  size="small"
-                  checked={list2}
-                  onChange={(e) => setList2(e.target.checked)}
-                  inputProps={{ "aria-label": "use pricelist 2" }}
-                  sx={{ "& .Mui-checked": { color: "var(--primary-color)" },
-                        "& .Mui-checked + .MuiSwitch-track": { backgroundColor: "var(--primary-color)" } }}
-                />
-                <Stack>
-                  <Typography fontSize={12} fontWeight={800}
-                    color={list2 ? "var(--primary-color)" : "var(--text-color)"}>
-                    {list2 ? "Pricelist 2" : "Pricelist 1"}
-                  </Typography>
-                  {lines.length > 0 && (
-                    <Typography fontSize={10.5} color="var(--text-color-secondary)">
-                      other list: {inr(otherTotal)}
-                    </Typography>
-                  )}
-                </Stack>
-              </Stack>
-
-              {confirmClear ? (
-                <Stack direction="row" gap={1} alignItems="center">
-                  <Typography fontSize={12} color="var(--text-color-secondary)">Clear all items?</Typography>
-                  <Button size="small" onClick={() => setConfirmClear(false)}
-                    sx={{ textTransform: "none", fontWeight: 700, fontSize: 12, color: "var(--text-color-secondary)" }}>
-                    Keep
-                  </Button>
-                  <Button size="small" onClick={() => { reset(); setConfirmClear(false); }}
-                    sx={{ textTransform: "none", fontWeight: 800, fontSize: 12, px: 1.5,
-                          color: "#fff", backgroundColor: "var(--danger)",
-                          "&:hover": { backgroundColor: "#c92a2a" } }}>
-                    Clear
-                  </Button>
-                </Stack>
-              ) : (
-                <Button size="small" onClick={() => setConfirmClear(true)}
-                  startIcon={<DeleteOutlineRoundedIcon sx={{ fontSize: 15 }} />}
-                  sx={{ textTransform: "none", fontWeight: 700, fontSize: 12,
-                        color: "var(--text-color-trinary)",
-                        "&:hover": { color: "var(--danger)", backgroundColor: "var(--danger-soft)" } }}>
-                  Clear all
-                </Button>
-              )}
-            </Stack>
-
-            {/* Sits under the products, where the bill is totted up. Pricelist 2
-                carries no product discount, so this is where that bill's
-                concession is given. */}
-            <TextField
-              size="small"
-              label="ExtraDiscount %"
-              value={extra}
-              onChange={(e) => setExtra(e.target.value.replace(/[^0-9.]/g, "").slice(0, 5))}
-              inputProps={{ inputMode: "decimal", "aria-label": "extra discount percent" }}
-              helperText={
-                Number(extra) > 0
-                  ? `${Number(extra)}% off every line${list2 ? "" : ", on top of the product discount"}`
-                  : "Optional — a concession for this bill only"
-              }
-              sx={fld}
-            />
           </Stack>
         )}
+
+        {/* The price list and any concession sit OUTSIDE the "is the bill
+            empty" branch. They used to live beside the line items, so on a
+            phone - where the bill panel is a sheet you only open once - the
+            biller could not choose Pricelist 2 until after ringing the first
+            item up, which is precisely when it is too late to matter. */}
+          <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1} sx={{ pt: 0.5 }}>
+            {/* Which price list this bill is on. Left of Clear all, where the
+                biller is already looking when reviewing the basket. */}
+            <Stack direction="row" alignItems="center" gap={0.5}>
+              <Switch
+                size="small"
+                checked={list2}
+                onChange={(e) => setList2(e.target.checked)}
+                inputProps={{ "aria-label": "use pricelist 2" }}
+                sx={{ "& .Mui-checked": { color: "var(--primary-color)" },
+                      "& .Mui-checked + .MuiSwitch-track": { backgroundColor: "var(--primary-color)" } }}
+              />
+              <Stack>
+                <Typography fontSize={12} fontWeight={800}
+                  color={list2 ? "var(--primary-color)" : "var(--text-color)"}>
+                  {list2 ? "Pricelist 2" : "Pricelist 1"}
+                </Typography>
+                {lines.length > 0 && (
+                  <Typography fontSize={10.5} color="var(--text-color-secondary)">
+                    other list: {inr(otherTotal)}
+                  </Typography>
+                )}
+              </Stack>
+            </Stack>
+
+            {lines.length === 0 ? <Box /> : confirmClear ? (
+              <Stack direction="row" gap={1} alignItems="center">
+                <Typography fontSize={12} color="var(--text-color-secondary)">Clear all items?</Typography>
+                <Button size="small" onClick={() => setConfirmClear(false)}
+                  sx={{ textTransform: "none", fontWeight: 700, fontSize: 12, color: "var(--text-color-secondary)" }}>
+                  Keep
+                </Button>
+                <Button size="small" onClick={() => { reset(); setConfirmClear(false); }}
+                  sx={{ textTransform: "none", fontWeight: 800, fontSize: 12, px: 1.5,
+                        color: "#fff", backgroundColor: "var(--danger)",
+                        "&:hover": { backgroundColor: "#c92a2a" } }}>
+                  Clear
+                </Button>
+              </Stack>
+            ) : (
+              <Button size="small" onClick={() => setConfirmClear(true)}
+                startIcon={<DeleteOutlineRoundedIcon sx={{ fontSize: 15 }} />}
+                sx={{ textTransform: "none", fontWeight: 700, fontSize: 12,
+                      color: "var(--text-color-trinary)",
+                      "&:hover": { color: "var(--danger)", backgroundColor: "var(--danger-soft)" } }}>
+                Clear all
+              </Button>
+            )}
+          </Stack>
+
+          {/* Sits under the products, where the bill is totted up. Pricelist 2
+              carries no product discount, so this is where that bill's
+              concession is given. */}
+          <TextField
+            size="small"
+            label="ExtraDiscount %"
+            value={extra}
+            onChange={(e) => setExtra(e.target.value.replace(/[^0-9.]/g, "").slice(0, 5))}
+            inputProps={{ inputMode: "decimal", "aria-label": "extra discount percent" }}
+            helperText={
+              Number(extra) > 0
+                ? `${Number(extra)}% off every line${list2 ? "" : ", on top of the product discount"}`
+                : "Optional — a concession for this bill only"
+            }
+            sx={fld}
+          />
 
         <Divider />
 
@@ -547,7 +537,10 @@ export default function Pos() {
       {lastOrder && (
         <Stack direction="row" alignItems="center" gap={1}
           sx={{ position: "fixed", left: 0, right: 0, zIndex: 1150,
-                bottom: !wide && lines.length > 0 ? 64 : 0,
+                // Clears the bill bar, which itself clears the admin nav.
+                bottom: wide
+                  ? 0
+                  : { xs: `calc(${BAR_H}px + env(safe-area-inset-bottom) + 64px)`, md: 64 },
                 mx: { xs: 1.5, lg: 3 }, mb: 1.5,
                 p: 1.25, borderRadius: "var(--radius)",
                 backgroundColor: "var(--success-soft)", border: "1px solid #b6e7c9",
@@ -567,16 +560,29 @@ export default function Pos() {
       )}
 
       {/* Mobile: a standing summary so the running total is always visible
-          without scrolling past the whole product grid. */}
-      {!wide && lines.length > 0 && (
+          without scrolling past the whole product grid.
+
+          Shown even with nothing on the bill. This is the only way into the
+          bill panel on a phone, and the panel holds the customer fields, the
+          note, ExtraDiscount and the Pricelist 1/2 switch - all of which the
+          biller may want to set BEFORE ringing the first item up. Hiding the
+          bar until a line existed made the price list unreachable at exactly
+          the moment it needed choosing. The grid already reserves space for
+          this bar (pb on the container), so it occupies room either way. */}
+      {!wide && (
         <Stack
           direction="row" alignItems="center" justifyContent="space-between"
           onClick={() => setSheetOpen(true)}
           sx={{
             display: "flex",
-            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 1200,
+            // The admin's own bottom nav is fixed at bottom:0 with the same
+            // z-index on phones, and was drawing straight over this bar - the
+            // bill was reachable in the DOM and invisible on the screen. Stack
+            // above it, and drop back to the floor at md where the nav is gone.
+            position: "fixed", left: 0, right: 0, zIndex: 1201,
+            bottom: { xs: `calc(${BAR_H}px + env(safe-area-inset-bottom))`, md: 0 },
             px: 2, py: 1.25, cursor: "pointer",
-            backgroundColor: "var(--primary-color)",
+            backgroundColor: lines.length ? "var(--primary-color)" : "var(--text-color)",
             boxShadow: "0 -4px 20px rgba(0,0,0,.18)",
           }}
         >
@@ -588,11 +594,15 @@ export default function Pos() {
             <Stack>
               <Typography fontSize={15} fontWeight={800} color="#fff">{inr(total)}</Typography>
               <Typography fontSize={10.5} color="#ffe0d3" fontWeight={600}>
-                {lines.length} {lines.length === 1 ? "line" : "lines"} · {units} units
+                {lines.length
+                  ? `${lines.length} ${lines.length === 1 ? "line" : "lines"} · ${units} units`
+                  : `No items yet · Pricelist ${list2 ? 2 : 1}`}
               </Typography>
             </Stack>
           </Stack>
-          <Typography fontSize={13.5} fontWeight={800} color="#fff">Review bill →</Typography>
+          <Typography fontSize={13.5} fontWeight={800} color="#fff">
+            {lines.length ? "Review bill →" : "Open bill →"}
+          </Typography>
         </Stack>
       )}
 

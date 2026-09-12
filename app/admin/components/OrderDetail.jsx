@@ -12,8 +12,10 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import PackingList from "./PackingList";
 import SubstitutePicker from "./SubstitutePicker";
 import AddItemPicker from "./AddItemPicker";
+import { basisMrp, effDiscount, orderBasis, basisLabel, inferBasis } from "@/util/pricing";
 import OrderActions from "./OrderActions";
 import StatusChip from "./StatusChip";
+import { useAdmin } from "../AdminContext";
 import { useState, useEffect, useMemo } from "react";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
@@ -35,6 +37,47 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
   // changes what the customer is being charged for - so they never show at once.
   const [editing, setEditing] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+
+  /**
+   * Which price list this bill was written on.
+   *
+   * Recorded on the order since counter billing started storing it. Orders
+   * written before that carry neither field and cannot be reverse-engineered -
+   * the stored lines are already flattened to one MRP and one effective
+   * discount - so the biller picks the list, and `assumed` holds that choice
+   * for as long as the panel is open.
+   */
+  const [assumed, setAssumed] = useState(null);
+
+  /**
+   * Pricing against mrp2 needs the admin catalogue - /api/products?all=1. The
+   * orders screen has no reason to hold it otherwise, so it is fetched the
+   * first time editing starts or a picker opens, whichever comes first.
+   */
+  const { catalogue, catLoading, loadCatalogue } = useAdmin();
+  useEffect(() => {
+    if ((editing || addOpen || swapFor) && !catalogue) loadCatalogue();
+  }, [editing, addOpen, swapFor, catalogue, loadCatalogue]);
+  const adminProducts = useMemo(() => catalogue?.products || [], [catalogue]);
+
+  /**
+   * Which price list this bill was written on.
+   *
+   * Recorded on the order since counter billing started storing it. For older
+   * bills it is inferred from the MRPs on their own lines, and the biller can
+   * override that guess - `assumed` holds the override for as long as the
+   * panel is open, and null means "no override, use what was worked out".
+   */
+  const recorded = orderBasis(order);
+  const guess = useMemo(
+    () => (recorded.recorded ? null : inferBasis(order, adminProducts)),
+    [recorded.recorded, order, adminProducts]
+  );
+  const basis = recorded.recorded
+    ? recorded
+    : assumed != null
+      ? { recorded: false, list2: assumed === 2, extra: guess?.list2 === (assumed === 2) ? guess.extra : 0 }
+      : guess || { recorded: false, list2: false, extra: 0 };
 
   /**
    * Which lines the packer has ticked off, held here rather than in the order.
@@ -182,6 +225,45 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
               This order has already been dispatched.
             </Typography>
           )}
+
+          {/* The rates this bill was written on. Shown whenever the bill is
+              open for editing, because anything added has to be charged on the
+              same list as everything already on it. */}
+          {editing && (
+            basis.recorded ? (
+              <Chip
+                size="small"
+                label={basisLabel(basis)}
+                sx={{ height: 22, fontSize: 11, fontWeight: 800,
+                      backgroundColor: "var(--surface-muted)", color: "var(--text-color-secondary)" }}
+              />
+            ) : (
+              /* Billed before the list was recorded. It is worked out from the
+                 MRPs on the bill's own lines where that is possible, shown as a
+                 guess rather than a fact, and always overridable - the guess is
+                 wrong if a product was repriced after the bill was written. */
+              <Stack direction="row" alignItems="center" gap={0.75} flexWrap="wrap">
+                <Typography fontSize={11.5} fontWeight={700} color="var(--warning)">
+                  {catLoading
+                    ? "Checking which pricelist this bill used…"
+                    : guess
+                      ? `${basisLabel(basis)} — charge additions on:`
+                      : "Pricelist not recorded — charge additions on:"}
+                </Typography>
+                {[1, 2].map((n) => (
+                  <Chip
+                    key={n}
+                    size="small"
+                    label={`Pricelist ${n}`}
+                    onClick={() => setAssumed(n)}
+                    sx={{ height: 22, fontSize: 11, fontWeight: 800, cursor: "pointer",
+                          backgroundColor: (basis.list2 ? 2 : 1) === n ? "var(--primary-color)" : "var(--surface-muted)",
+                          color: (basis.list2 ? 2 : 1) === n ? "#fff" : "var(--text-color-secondary)" }}
+                  />
+                ))}
+              </Stack>
+            )
+          )}
         </Stack>
 
         <PackingList
@@ -201,11 +283,18 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
           open={addOpen}
           order={order}
           busy={busy}
+          basis={basis}
+          products={adminProducts}
+          loading={catLoading}
           onClose={() => setAddOpen(false)}
           onAdd={(p, qty) => {
+            // Sent on the bill's own list, not the catalogue's website rate, so
+            // the new line matches every line already on the order.
             onPatch({ addItem: { id: p.id, name: p.name, category: p.category,
-                                 image: p.image?.[0] || null, price: p.price,
-                                 discount: p.discount, count: qty } });
+                                 image: p.image?.[0] || null,
+                                 price: basisMrp(p, basis.list2),
+                                 discount: effDiscount(p, basis.list2, basis.extra),
+                                 count: qty } });
             setAddOpen(false);
           }}
         />
@@ -213,6 +302,8 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
         <SubstitutePicker
           open={Boolean(swapFor)}
           item={swapFor}
+          basis={basis}
+          products={adminProducts}
           onClose={() => setSwapFor(null)}
           onChoose={(sub) => { onPatch({ itemId: swapFor.id, substitute: sub }); setSwapFor(null); }}
         />

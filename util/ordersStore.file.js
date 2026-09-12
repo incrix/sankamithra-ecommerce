@@ -120,7 +120,7 @@ export async function getOrder(id) {
   return (await readAll()).find((o) => o.id === id) || null;
 }
 
-export async function createOrder({ billingDetails, productList, emailSent, source = "online", note = "" }) {
+export async function createOrder({ billingDetails, productList, emailSent, source = "online", note = "", priceList = 1, extraDiscount = 0 }) {
   return serialise(async () => {
     const orders = await readAll();
 
@@ -146,6 +146,9 @@ export async function createOrder({ billingDetails, productList, emailSent, sour
       updatedAt: new Date().toISOString(),
       status: "new",
       source: source === "pos" ? "pos" : "online",
+      // See the DB store: records which price list the bill was written on.
+      priceList: priceList === 2 ? 2 : 1,
+      extraDiscount: Math.min(95, Math.max(0, Number(extraDiscount) || 0)),
       emailSent: Boolean(emailSent),
       customer: {
         name: billingDetails?.name || "",

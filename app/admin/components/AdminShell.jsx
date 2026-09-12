@@ -39,7 +39,9 @@ export const NAV = [
 ];
 
 const TABS = ["/admin", "/admin/pos", "/admin/orders", "/admin/products"];
-const BAR_H = 62;
+/** Height of the mobile bottom nav. Exported so anything that floats above it
+ *  (the counter's bill bar) stacks against the same number instead of a copy. */
+export const BAR_H = 62;
 
 export default function AdminShell({ children }) {
   const { authed, toast, setToast, loadOrders, loadCatalogue, catalogue, logout } = useAdmin();

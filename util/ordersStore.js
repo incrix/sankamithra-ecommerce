@@ -91,8 +91,8 @@ export async function getOrder(id) {
  * the same key is only ever written once, and a repeat returns the order that
  * already exists rather than a second bill with a second reference number.
  */
-export async function createOrder({ billingDetails, productList, emailSent, source = "online", note = "", clientRef = "" }) {
-  if (!useDb()) return fileStore.createOrder({ billingDetails, productList, emailSent, source, note });
+export async function createOrder({ billingDetails, productList, emailSent, source = "online", note = "", clientRef = "", priceList = 1, extraDiscount = 0 }) {
+  if (!useDb()) return fileStore.createOrder({ billingDetails, productList, emailSent, source, note, priceList, extraDiscount });
 
   const key = String(clientRef || "").slice(0, 80);
   if (key) {
@@ -125,6 +125,10 @@ export async function createOrder({ billingDetails, productList, emailSent, sour
     // "online" = built by the customer at checkout, "pos" = billed at the
     // counter by staff. Both run the same packing and dispatch pipeline.
     source: source === "pos" ? "pos" : "online",
+    // Which price list this bill was written on, so a line added to it later is
+    // priced the same way the rest of it was. See util/pricing.js.
+    priceList: priceList === 2 ? 2 : 1,
+    extraDiscount: Math.min(95, Math.max(0, Number(extraDiscount) || 0)),
     emailSent: Boolean(emailSent),
     customer: {
       name: billingDetails?.name || "",
