@@ -245,7 +245,7 @@ export default function Pos() {
    * items collapsed to nothing — the sheet looked like it only held a button.
    */
   const billPanel = (
-    <Stack sx={{ width: "100%", height: "100%", minHeight: 0 }}>
+    <Stack sx={{ width: "100%", height: wide ? "100%" : "auto", minHeight: 0, flex: wide ? 1 : "0 1 auto" }}>
       {/* Only the dismiss control lives up here. "Clear" used to sit beside it,
           which put a destructive action one thumb-width from a harmless one -
           a mis-tap wiped the whole bill. It now lives at the foot of the item
@@ -397,7 +397,7 @@ export default function Pos() {
           <Stack>
             <Typography fontSize={14} fontWeight={800} color="var(--text-color)">Total</Typography>
             <Typography fontSize={11} color="var(--text-color-secondary)">
-              {lines.length} {lines.length === 1 ? "line" : "lines"} · {units} units
+              {lines.length} {lines.length === 1 ? "line" : "lines"} · {units} {units === 1 ? "unit" : "units"}
             </Typography>
           </Stack>
           <Typography fontSize={22} fontWeight={800} color="var(--text-color)">{inr(total)}</Typography>
@@ -569,7 +569,7 @@ export default function Pos() {
           bar until a line existed made the price list unreachable at exactly
           the moment it needed choosing. The grid already reserves space for
           this bar (pb on the container), so it occupies room either way. */}
-      {!wide && (
+      {!wide && !sheetOpen && (
         <Stack
           direction="row" alignItems="center" justifyContent="space-between"
           onClick={() => setSheetOpen(true)}
@@ -595,7 +595,7 @@ export default function Pos() {
               <Typography fontSize={15} fontWeight={800} color="#fff">{inr(total)}</Typography>
               <Typography fontSize={10.5} color="#ffe0d3" fontWeight={600}>
                 {lines.length
-                  ? `${lines.length} ${lines.length === 1 ? "line" : "lines"} · ${units} units`
+                  ? `${lines.length} ${lines.length === 1 ? "line" : "lines"} · ${units} ${units === 1 ? "unit" : "units"}`
                   : `No items yet · Pricelist ${list2 ? 2 : 1}`}
               </Typography>
             </Stack>
@@ -610,7 +610,11 @@ export default function Pos() {
         anchor="bottom"
         open={!wide && sheetOpen}
         onClose={() => setSheetOpen(false)}
-        PaperProps={{ sx: { borderTopLeftRadius: 18, borderTopRightRadius: 18, height: "90vh", display: "flex", flexDirection: "column" } }}
+        // maxHeight, not height: a two-line bill used to open a sheet three
+        // quarters empty with the action stranded at the bottom of it. dvh so
+        // the browser's own chrome does not push the footer off-screen.
+        PaperProps={{ sx: { borderTopLeftRadius: 18, borderTopRightRadius: 18,
+                            maxHeight: "92dvh", display: "flex", flexDirection: "column" } }}
       >
         <Box sx={{ width: 38, height: 4, borderRadius: 99, backgroundColor: "#ddd", mx: "auto", mt: 1.25, flexShrink: 0 }} />
         {!wide && sheetOpen && billPanel}
