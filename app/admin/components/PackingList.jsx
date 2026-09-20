@@ -1,6 +1,9 @@
 "use client";
-import { Stack, Typography, Box, Checkbox, LinearProgress, Chip, Button, Tooltip, IconButton } from "@mui/material";
+import { useState, useMemo } from "react";
+import { Stack, Typography, Box, Checkbox, LinearProgress, Chip, Button, Tooltip, IconButton, InputBase } from "@mui/material";
 import DoneAllRoundedIcon from "@mui/icons-material/DoneAllRounded";
+import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import QtyStepper from "@/app/components/commerce/QtyStepper";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
@@ -17,6 +20,11 @@ const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
  * a phone in one hand. A line can be ticked, marked out of stock, or replaced
  * with another product; a line the packer can't fill never blocks the order
  * from being completed.
+ *
+ * Long bills run to dozens of lines, so there is a search that narrows the
+ * rows to the item being looked for. It only hides rows - the progress bar,
+ * the counts and "Tick all" keep working on the whole bill, because what is
+ * typed in a search box should never change what gets ticked.
  */
 export default function PackingList({ items, onToggle, onTickAll, onUnavailable, onSubstitute, onCount, onRemove, editing, busy, locked }) {
   // A line is settled once it's packed, or once the packer has recorded that
@@ -28,6 +36,23 @@ export default function PackingList({ items, onToggle, onTickAll, onUnavailable,
   const tickable = items.filter((i) => !(i.unavailable && !i.substitute));
   const allTicked = tickable.length > 0 && tickable.every((i) => i.packed);
 
+  // The box stays closed until asked for: most bills are short enough to read.
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState("");
+
+  const shown = useMemo(() => {
+    const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) return items;
+    // Every word has to land somewhere, so "green rocket" finds the one line
+    // rather than everything green plus everything rocket.
+    return items.filter((it) => {
+      const hay = `${it.name} ${it.category} ${it.substitute?.name || ""}`.toLowerCase();
+      return words.every((w) => hay.includes(w));
+    });
+  }, [items, query]);
+
+  const filtered = shown.length !== items.length;
+
   return (
     <Stack gap={1.5}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" gap={1}>
@@ -36,6 +61,25 @@ export default function PackingList({ items, onToggle, onTickAll, onUnavailable,
           <Typography fontSize={12} fontWeight={700} color="var(--text-color-secondary)">
             {settled}/{items.length} done{short ? ` · ${short} short` : ""}
           </Typography>
+          <Tooltip title="Search this bill">
+            <IconButton
+              size="small"
+              onClick={() => {
+                // Closing clears the query - leaving rows hidden behind a shut
+                // box is how a packer misses a line.
+                if (searching) setQuery("");
+                setSearching(!searching);
+              }}
+              aria-label={searching ? "close search" : "search this bill"}
+              sx={{
+                p: 0.5, borderRadius: "var(--radius-sm)",
+                color: searching || query ? "var(--primary-color)" : "var(--text-color-trinary)",
+                backgroundColor: searching || query ? "var(--primary-soft)" : "transparent",
+              }}
+            >
+              {searching ? <CloseRoundedIcon sx={{ fontSize: 18 }} /> : <SearchRoundedIcon sx={{ fontSize: 18 }} />}
+            </IconButton>
+          </Tooltip>
           {onTickAll && !locked && (
             <Button
               size="small"
@@ -54,6 +98,32 @@ export default function PackingList({ items, onToggle, onTickAll, onUnavailable,
         </Stack>
       </Stack>
 
+      {searching && (
+        <Stack direction="row" alignItems="center" gap={1}
+          sx={{ px: 1.25, py: 0.5, borderRadius: "var(--radius)", border: "1px solid var(--border)" }}>
+          <SearchRoundedIcon sx={{ fontSize: 17, color: "var(--text-color-trinary)" }} />
+          <InputBase
+            autoFocus
+            placeholder="Search in bill…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Escape") { setQuery(""); setSearching(false); } }}
+            inputProps={{ "aria-label": "search in bill" }}
+            sx={{ flex: 1, fontSize: 13.5 }}
+          />
+          {query && (
+            <Typography fontSize={11.5} fontWeight={700} color="var(--text-color-secondary)" sx={{ flexShrink: 0 }}>
+              {shown.length} of {items.length}
+            </Typography>
+          )}
+          {query && (
+            <IconButton size="small" onClick={() => setQuery("")} aria-label="clear search" sx={{ p: 0.25 }}>
+              <CloseRoundedIcon sx={{ fontSize: 15, color: "var(--text-color-trinary)" }} />
+            </IconButton>
+          )}
+        </Stack>
+      )}
+
       <LinearProgress
         variant="determinate"
         value={pct}
@@ -67,7 +137,12 @@ export default function PackingList({ items, onToggle, onTickAll, onUnavailable,
       />
 
       <Stack gap={0.75}>
-        {items.map((it) => {
+        {shown.length === 0 && (
+          <Typography fontSize={12.5} fontWeight={600} color="var(--text-color-secondary)" textAlign="center" py={3}>
+            No line on this bill matches “{query.trim()}”.
+          </Typography>
+        )}
+        {shown.map((it) => {
           const dropped = it.unavailable && !it.substitute;
           const swapped = Boolean(it.substitute);
 
@@ -189,6 +264,12 @@ export default function PackingList({ items, onToggle, onTickAll, onUnavailable,
           );
         })}
       </Stack>
+
+      {filtered && shown.length > 0 && (
+        <Typography fontSize={11.5} fontWeight={700} color="var(--text-color-secondary)" textAlign="center">
+          {items.length - shown.length} more {items.length - shown.length === 1 ? "line is" : "lines are"} hidden by the search
+        </Typography>
+      )}
     </Stack>
   );
 }

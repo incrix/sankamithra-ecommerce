@@ -4,11 +4,11 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import PrintRoundedIcon from "@mui/icons-material/PrintRounded";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import CustomerBlock from "./CustomerBlock";
 import PackingList from "./PackingList";
 import SubstitutePicker from "./SubstitutePicker";
 import AddItemPicker from "./AddItemPicker";
@@ -195,21 +195,11 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
 
       <Stack sx={{ flex: 1, overflowY: "auto", minHeight: 0, p: 2, gap: 2.5 }}>
         {/* Customer + one-tap contact: the owner confirms every order by phone */}
-        <Stack gap={1}>
-          <Typography fontSize={14} fontWeight={800} color="var(--text-color)">Customer</Typography>
-          <Stack gap={0.25}>
-            <Typography fontSize={13.5} fontWeight={800} color="var(--text-color)">{c.name}</Typography>
-            <Typography fontSize={12.5} color="var(--text-color-secondary)">{c.address}</Typography>
-            <Typography fontSize={12.5} color="var(--text-color-secondary)">{c.city}, {c.state} — {c.zip}</Typography>
-            <Stack direction="row" alignItems="center" gap={0.5} mt={0.5}>
-              <Typography fontSize={12.5} color="var(--text-color-secondary)">{c.email}</Typography>
-              <IconButton size="small" aria-label="copy email" onClick={() => navigator.clipboard?.writeText(c.email)}>
-                <ContentCopyRoundedIcon sx={{ fontSize: 13 }} />
-              </IconButton>
-            </Stack>
-          </Stack>
-
-        </Stack>
+        <CustomerBlock
+          customer={c}
+          busy={busy}
+          onSave={(fields) => onPatch({ customer: fields })}
+        />
 
         <OrderActions order={order} onToast={onToast} />
 

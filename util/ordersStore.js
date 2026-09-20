@@ -3,6 +3,7 @@ import { TABLE, getItem, putItem, putIfAbsent, putIfRev, scanAll, bumpCounter, i
 import * as fileStore from "./ordersStore.file";
 import { getCatalogue } from "@/util/productsStore";
 import { basisMrp, effDiscount, unitOf } from "@/util/pricing";
+import { applyCustomerEdit } from "@/util/orderCustomer";
 
 /**
  * Order storage.
@@ -227,6 +228,16 @@ async function applyOnce(id, patch) {
 
   if (typeof patch.note === "string") next.note = patch.note;
   if (typeof patch.emailSent === "boolean") next.emailSent = patch.emailSent;
+
+  /** Corrections to the customer block - see util/orderCustomer.js. */
+  if (patch.customer) {
+    const edit = applyCustomerEdit(prev.customer, patch.customer);
+    if (edit) {
+      next.customer = edit.customer;
+      next.history = [...(next.history || prev.history || []),
+        ...edit.events.map((event) => ({ at: next.updatedAt, event }))];
+    }
+  }
 
   /**
    * Adding and removing whole lines, which the packing patches above cannot do.

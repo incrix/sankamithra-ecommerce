@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { basisMrp, effDiscount } from "@/util/pricing";
+import { applyCustomerEdit } from "@/util/orderCustomer";
 
 /**
  * File-backed order store — the local-development fallback.
@@ -201,6 +202,16 @@ export async function updateOrder(id, patch) {
 
     if (typeof patch.note === "string") next.note = patch.note;
     if (typeof patch.emailSent === "boolean") next.emailSent = patch.emailSent;
+
+    /** Corrections to the customer block - see util/orderCustomer.js. */
+    if (patch.customer) {
+      const edit = applyCustomerEdit(prev.customer, patch.customer);
+      if (edit) {
+        next.customer = edit.customer;
+        next.history = [...(next.history || prev.history || []),
+          ...edit.events.map((event) => ({ at: next.updatedAt, event }))];
+      }
+    }
 
     /**
      * Line and pricing edits, mirroring ordersStore.js.
