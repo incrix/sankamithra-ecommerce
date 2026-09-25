@@ -14,11 +14,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { assetUrl } from "@/util/config";
 import QtyStepper from "@/app/components/commerce/QtyStepper";
-import { basisMrp, effDiscount, unitOf } from "@/util/pricing";
+import { basisMrp, effDiscount, unitOf, lineOf, paise, sumAmounts, inr } from "@/util/pricing";
 import { useAdmin } from "../AdminContext";
 import { BAR_H } from "./AdminShell";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const PAGE = 40;
 
 /** Unique per bill attempt; crypto.randomUUID is absent on older Safari. */
@@ -133,13 +132,14 @@ export default function Pos() {
   const adjust = (id, delta) =>
     setLines((prev) => prev.map((l) => (l.id === id ? { ...l, count: l.count + delta } : l)).filter((l) => l.count > 0));
 
+  // Exact to the paisa, never rounded to the rupee, so this matches the
+  // proforma and the packing screen. See util/pricing.
   const net = (l) => unitOf(l, list2, extra);
-  const total = lines.reduce((a, l) => a + Math.round(net(l) * l.count), 0);
-  const mrp = lines.reduce((a, l) => a + Math.round(basisMrp(l, list2) * l.count), 0);
+  const line = (l) => lineOf(l, list2, extra, l.count);
+  const total = sumAmounts(lines, line);
+  const mrp = sumAmounts(lines, (l) => basisMrp(l, list2) * l.count);
   // The same basket on the other list, so the biller can see both at once.
-  const otherTotal = lines.reduce(
-    (a, l) => a + Math.round(unitOf(l, !list2, extra) * l.count), 0
-  );
+  const otherTotal = sumAmounts(lines, (l) => lineOf(l, !list2, extra, l.count));
   const units = lines.reduce((a, l) => a + l.count, 0);
 
   const reset = () => { billKey.current = newKey(); setConfirmClear(false); setLines([]); setList2(false); setExtra(""); setCustomer({ name: "", phone: "", email: "", address: "", city: "", state: "Tamil Nadu", zip: "" }); setNote(""); };
@@ -221,7 +221,7 @@ export default function Pos() {
         <div class="rule"></div>
         <table>
           ${bill.lines.map((l) => `<tr><td>${l.name}<div class="muted">${l.count} x ${inr(net(l))}</div></td>
-            <td class="r">${inr(Math.round(net(l) * l.count))}</td></tr>`).join("")}
+            <td class="r">${inr(line(l))}</td></tr>`).join("")}
         </table>
         <div class="rule"></div>
         <table>
@@ -283,7 +283,7 @@ export default function Pos() {
                 </Stack>
                 <QtyStepper size="sm" value={l.count} onChange={(q) => setQty(l.id, q)} onAdjust={(d) => adjust(l.id, d)} />
                 <Typography fontSize={13} fontWeight={800} color="var(--text-color)" sx={{ minWidth: 58, textAlign: "right" }}>
-                  {inr(Math.round(net(l) * l.count))}
+                  {inr(line(l))}
                 </Typography>
                 <IconButton size="small" onClick={() => setQty(l.id, 0)} aria-label={`remove ${l.name}`}
                   sx={{ color: "var(--text-color-trinary)", "&:hover": { color: "var(--danger)" } }}>
@@ -385,7 +385,7 @@ export default function Pos() {
         {mrp > total && (
           <Stack direction="row" justifyContent="space-between">
             <Typography fontSize={12} fontWeight={700} color="var(--success)">Discount</Typography>
-            <Typography fontSize={12} fontWeight={800} color="var(--success)">− {inr(mrp - total)}</Typography>
+            <Typography fontSize={12} fontWeight={800} color="var(--success)">− {inr(paise(mrp - total))}</Typography>
           </Stack>
         )}
       </Stack>

@@ -6,6 +6,7 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import { BUSINESS } from "@/util/site";
 import { assetUrl } from "@/util/config";
+import { inr } from "@/util/pricing";
 
 /**
  * The dealer catalogue.
@@ -16,7 +17,6 @@ import { assetUrl } from "@/util/config";
  * what a case holds, and how many cases are left - lead every card.
  */
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const WA = `https://wa.me/${BUSINESS.whatsapp}?text=${encodeURIComponent(
   "Hello Sankamithra, I would like to place a wholesale order:"
 )}`;

@@ -13,13 +13,12 @@ import PackingList from "./PackingList";
 import SubstitutePicker from "./SubstitutePicker";
 import AddItemPicker from "./AddItemPicker";
 import BillingBasis from "./BillingBasis";
-import { basisMrp, effDiscount, orderBasis, inferBasis } from "@/util/pricing";
+import { basisMrp, effDiscount, orderBasis, inferBasis, inr } from "@/util/pricing";
 import OrderActions from "./OrderActions";
 import StatusChip from "./StatusChip";
 import { useAdmin } from "../AdminContext";
 import { useState, useEffect, useMemo } from "react";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const digits = (s) => String(s || "").replace(/\D/g, "");
 
 /** The next single action for each state - one obvious button, no menus. */

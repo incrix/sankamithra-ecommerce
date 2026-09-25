@@ -8,6 +8,7 @@ import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
+import { inr, netPrice } from "@/util/pricing";
 
 /**
  * Both price lists, one row per product.
@@ -23,8 +24,7 @@ import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
  * enough fields to make a single render visibly stutter.
  */
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
-const net1 = (mrp, d) => Math.round(Number(mrp || 0) - (Number(mrp || 0) * Number(d || 0)) / 100);
+const net1 = (mrp, d) => netPrice(mrp, d);
 const PAGE = 60;
 
 const FILTERS = [

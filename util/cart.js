@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
+import { netPrice, lineAmount, sumAmounts, paise } from "@/util/pricing";
 
 /**
  * Cart engine.
@@ -31,25 +32,20 @@ const writeCart = (cart) => {
   window.dispatchEvent(new CustomEvent(EVENT, { detail: cart }));
 };
 
-/** Unit price after discount, rounded for display. */
-export const unitPrice = (item) =>
-  Math.round(item.price - (item.price * (item.discount || 0)) / 100);
+/** Unit price after discount, exact to the paisa. */
+export const unitPrice = (item) => netPrice(item.price, item.discount);
 
 /**
- * Line subtotal. Deliberately mirrors the formula in /checkout
- * (round the line, not the unit) so the ₹3000 gate shown here can never
- * disagree with the one enforced at checkout.
+ * Line subtotal. The same helper /checkout, the order store and the proforma
+ * use, so the ₹3000 gate and every total agree to the paisa.
  */
-export const lineTotal = (item) =>
-  Math.round(
-    (item.price - (item.price * (item.discount || 0)) / 100) * (item.count || 0)
-  );
+export const lineTotal = (item) => lineAmount(item.price, item.discount, item.count);
 
-export const cartTotal = (cart) => cart.reduce((a, i) => a + lineTotal(i), 0);
+export const cartTotal = (cart) => sumAmounts(cart, lineTotal);
 
 /** What they'd have paid without the Diwali discount - drives "you saved". */
 export const cartMrp = (cart) =>
-  cart.reduce((a, i) => a + Math.round(i.price * (i.count || 0)), 0);
+  sumAmounts(cart, (i) => i.price * (i.count || 0));
 
 export function useCart() {
   const [cart, setCart] = useState([]);
@@ -123,9 +119,9 @@ export function useCart() {
     clear,
     total,
     mrp,
-    saved: mrp - total,
+    saved: paise(mrp - total),
     itemCount: cart.reduce((a, i) => a + (i.count || 0), 0),
-    shortBy: Math.max(0, MIN_ORDER - total),
+    shortBy: paise(Math.max(0, MIN_ORDER - total)),
     meetsMinimum: total > MIN_ORDER,
     inCart: (id) => cart.find((x) => x.id === id),
   };

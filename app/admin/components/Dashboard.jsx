@@ -10,8 +10,8 @@ import PriceListCard from "./PriceListCard";
 import SalesBreakdown from "./SalesBreakdown";
 import BannerCard from "./BannerCard";
 import { summary, dailySeries, topProducts } from "@/util/analytics";
+import { inr } from "@/util/pricing";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 /** Pipeline stages read as a progression, so a single hue stepped light -> dark. */
 const STAGES = [

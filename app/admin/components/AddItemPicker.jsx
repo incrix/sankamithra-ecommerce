@@ -6,10 +6,9 @@ import {
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { assetUrl } from "@/util/config";
-import { unitOf, basisLabel } from "@/util/pricing";
+import { unitOf, basisLabel, inr, paise } from "@/util/pricing";
 import QtyStepper from "@/app/components/commerce/QtyStepper";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 /**
  * Adds a product to an order that already exists.
@@ -128,7 +127,7 @@ export default function AddItemPicker({ open, order, onClose, onAdd, busy, produ
             </Stack>
             <QtyStepper size="sm" value={qty} onChange={setQty} onAdjust={(d) => setQty((q) => Math.max(1, q + d))} />
             <Typography fontSize={14} fontWeight={800} color="var(--primary-color)" sx={{ minWidth: 70, textAlign: "right" }}>
-              + {inr(priceOf(picked) * qty)}
+              + {inr(paise(priceOf(picked) * qty))}
             </Typography>
           </Stack>
         )}

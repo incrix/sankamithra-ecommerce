@@ -3,6 +3,7 @@ import { Stack, Typography, Box, Button } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { assetUrl } from "@/util/config";
 import { unitPrice } from "@/util/cart";
+import { inr } from "@/util/pricing";
 
 /**
  * "Almost there" suggestions.
@@ -107,7 +108,7 @@ export default function GapFillers({ products, cart, shortBy, onAdd }) {
                 "& .MuiButton-startIcon": { mr: 0.25 },
               }}
             >
-              ₹{unitPrice(p)}
+              {inr(unitPrice(p))}
             </Button>
           </Stack>
         ))}

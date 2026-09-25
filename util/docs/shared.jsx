@@ -2,6 +2,7 @@
 import { Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import Logo from "@/public/images/logo.png";
 import { BUSINESS } from "@/util/site";
+import { amount, paise } from "@/util/pricing";
 
 /**
  * Pieces shared by the packing list and the delivery challan, so the two
@@ -33,7 +34,7 @@ export const s = StyleSheet.create({
   footer: { position: "absolute", bottom: 20, left: 28, right: 28, fontSize: 7, color: MUTED, textAlign: "center" },
 });
 
-export const inr = (n) => `Rs. ${Number(n || 0).toLocaleString("en-IN")}`;
+export const inr = (n) => `Rs. ${amount(n)}`;
 
 export const when = (iso) =>
   new Date(iso).toLocaleString("en-IN", {
@@ -86,7 +87,7 @@ export function packedLines(order) {
         replaces: i.name,
         count: i.substitute.count,
         unitPrice: i.substitute.unitPrice,
-        total: Math.round((i.substitute.unitPrice || 0) * (i.substitute.count || 0)),
+        total: paise((i.substitute.unitPrice || 0) * (i.substitute.count || 0)),
         state: "replaced",
       };
     }

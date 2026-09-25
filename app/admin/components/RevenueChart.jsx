@@ -1,8 +1,8 @@
 "use client";
 import { Stack, Typography, Box } from "@mui/material";
 import { useState, useRef } from "react";
+import { inr } from "@/util/pricing";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 /**
  * Revenue over the last N days.

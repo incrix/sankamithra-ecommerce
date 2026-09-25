@@ -14,6 +14,7 @@ import WholesalePhoto from "./WholesalePhoto";
 import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
 import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import { inr } from "@/util/pricing";
 
 /**
  * The 2026 dealer price list.
@@ -24,7 +25,6 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
  * zero takes an item off the dealer list, blank leaves it on and untracked.
  */
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const PAGE = 60;
 const FILTERS = [
   { key: "all", label: "All" },

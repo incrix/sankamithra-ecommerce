@@ -2,6 +2,7 @@
 import { Stack, Typography, LinearProgress, Box } from "@mui/material";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { MIN_ORDER } from "@/util/cart";
+import { amount } from "@/util/pricing";
 
 /**
  * The ₹3000 minimum, reframed.
@@ -50,12 +51,12 @@ export default function MinimumMeter({ total, shortBy, meetsMinimum }) {
         <Typography fontSize={13} fontWeight={800} color="var(--text-color)">
           Add{" "}
           <Box component="span" sx={{ color: "var(--primary-color)" }}>
-            ₹{shortBy.toLocaleString("en-IN")}
+            ₹{amount(shortBy)}
           </Box>{" "}
           more to check out
         </Typography>
         <Typography fontSize={11} fontWeight={700} color="var(--text-color-secondary)">
-          ₹{total.toLocaleString("en-IN")} / ₹{MIN_ORDER.toLocaleString("en-IN")}
+          ₹{amount(total)} / ₹{MIN_ORDER.toLocaleString("en-IN")}
         </Typography>
       </Stack>
 

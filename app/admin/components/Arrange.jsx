@@ -11,6 +11,7 @@ import { Stack, Box, Typography, Button, Chip, CircularProgress, Divider } from 
 import SaveRoundedIcon from "@mui/icons-material/SaveRounded";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import SortableRow from "./SortableRow";
+import { inr, netPrice } from "@/util/pricing";
 
 /**
  * The order the shop appears in.
@@ -21,8 +22,7 @@ import SortableRow from "./SortableRow";
  * rocket never pushes it past a sparkler in the all-products view.
  */
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
-const net = (p) => Math.round(p.price - (p.price * (p.discount || 0)) / 100);
+const net = (p) => netPrice(p.price, p.discount);
 
 export default function Arrange({ catalogue, loading, onReload, onToast }) {
   const products = useMemo(() => catalogue?.products || [], [catalogue]);

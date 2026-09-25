@@ -4,6 +4,7 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { assetUrl } from "@/util/config";
 import QtyStepper from "./QtyStepper";
 import { unitPrice, lineTotal } from "@/util/cart";
+import { inr } from "@/util/pricing";
 
 /**
  * One cart row. Unlike the old table (name + numbers only, 700px min-width and
@@ -79,10 +80,10 @@ export default function CartLine({ item, onQty, onAdjust, onRemove }) {
 
           <Stack alignItems="flex-end">
             <Typography fontSize={14} fontWeight={800} color="var(--text-color)">
-              ₹{lineTotal(item).toLocaleString("en-IN")}
+              {inr(lineTotal(item))}
             </Typography>
             <Typography fontSize={10.5} color="var(--text-color-secondary)" fontWeight={600}>
-              ₹{unitPrice(item)} each
+              {inr(unitPrice(item))} each
             </Typography>
           </Stack>
         </Stack>

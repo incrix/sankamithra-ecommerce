@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
-import { basisMrp, effDiscount } from "@/util/pricing";
+import { basisMrp, effDiscount, netPrice, lineAmount, paise, sumAmounts } from "@/util/pricing";
 import { applyCustomerEdit } from "@/util/orderCustomer";
 
 /**
@@ -61,9 +61,9 @@ async function writeAll(orders) {
   await fs.rename(tmp, FILE);
 }
 
-const unit = (i) => Math.round(i.price - (i.price * (i.discount || 0)) / 100);
+const unit = (i) => netPrice(i.price, i.discount);
 const lineTotal = (i) =>
-  Math.round((i.price - (i.price * (i.discount || 0)) / 100) * (i.count || 0));
+  lineAmount(i.price, i.discount, i.count);
 
 const REF_PREFIX = "STW-";
 
@@ -83,6 +83,11 @@ const nextRef = (orders) => {
 };
 
 
+/** An existing line re-totalled at a new count. Lines stored before the MRP was
+ *  recorded fall back to their unit price. */
+const lineFor = (it, count) =>
+  it.mrp != null ? lineAmount(it.mrp, it.discount, count) : paise((it.unitPrice || 0) * count);
+
 /**
  * What a line is actually worth once the packer has been through it.
  *
@@ -92,7 +97,7 @@ const nextRef = (orders) => {
  */
 export const effectiveLineTotal = (item) => {
   if (item.substitute) {
-    return Math.round((item.substitute.unitPrice || 0) * (item.substitute.count || 0));
+    return paise((item.substitute.unitPrice || 0) * (item.substitute.count || 0));
   }
   if (item.unavailable) return 0;
   return item.total || 0;
@@ -103,13 +108,13 @@ function recomputeTotals(order) {
   const items = order.items || [];
   return {
     ...order,
-    total: items.reduce((a, i) => a + effectiveLineTotal(i), 0),
+    total: sumAmounts(items, effectiveLineTotal),
     itemCount: items.reduce(
       (a, i) => a + (i.substitute ? i.substitute.count : i.unavailable ? 0 : i.count),
       0
     ),
     // What the customer originally agreed to, kept so the shop can see the delta.
-    originalTotal: order.originalTotal ?? items.reduce((a, i) => a + (i.total || 0), 0),
+    originalTotal: order.originalTotal ?? sumAmounts(items, (i) => i.total),
   };
 }
 
@@ -164,7 +169,7 @@ export async function createOrder({ billingDetails, productList, emailSent, sour
       items,
       itemCount: items.reduce((a, i) => a + i.count, 0),
       total: items.reduce((a, i) => a + i.total, 0),
-      mrp: items.reduce((a, i) => a + Math.round(i.mrp * i.count), 0),
+      mrp: sumAmounts(items, (i) => i.mrp * i.count),
       note: note || "",
       history: [{ at: new Date().toISOString(), event: source === "pos" ? "Billed at the counter" : "Order received" }],
     };
@@ -227,20 +232,20 @@ export async function updateOrder(id, patch) {
       const count = Math.max(1, Math.round(Number(a.count) || 1));
       const mrp = Math.max(0, Number(a.price) || 0);
       const discount = Math.min(95, Math.max(0, Number(a.discount) || 0));
-      const unitPrice = Math.round(mrp - (mrp * discount) / 100);
+      const unitPrice = netPrice(mrp, discount);
 
       const items = [...(next.items || prev.items)];
       const at = items.findIndex((i) => i.id === addId);
       if (at >= 0) {
         const was = items[at].count;
         const now = was + count;
-        items[at] = { ...items[at], count: now, total: Math.round(items[at].unitPrice * now), unavailable: false };
+        items[at] = { ...items[at], count: now, total: lineFor(items[at], now), unavailable: false };
         next.history = [...(next.history || []), { at: next.updatedAt, event: `${items[at].name} quantity ${was} -> ${now}` }];
       } else {
         items.push({
           id: addId, name: String(a.name || "").trim(), category: a.category || "",
           image: a.image || null, unitPrice, mrp, discount, count,
-          total: Math.round(unitPrice * count),
+          total: lineAmount(mrp, discount, count),
           packed: false, unavailable: false, substitute: null,
         });
         next.history = [...(next.history || []), { at: next.updatedAt, event: `Added ${a.name} x${count}` }];
@@ -268,8 +273,8 @@ export async function updateOrder(id, patch) {
         if (!product) { missing.push(line.name); return line; }
         const mrp = basisMrp(product, list2);
         const discount = effDiscount(product, list2, extra);
-        const unitPrice = Math.round(mrp - (mrp * discount) / 100);
-        return { ...line, mrp, discount, unitPrice, total: Math.round(unitPrice * (line.count || 0)) };
+        const unitPrice = netPrice(mrp, discount);
+        return { ...line, mrp, discount, unitPrice, total: lineAmount(mrp, discount, line.count) };
       });
 
       next.priceList = list2 ? 2 : 1;
@@ -331,7 +336,7 @@ export async function updateOrder(id, patch) {
           return {
             ...it,
             count: n,
-            total: Math.round(it.unitPrice * n),
+            total: lineFor(it, n),
             unavailable: n === 0,
           };
         }

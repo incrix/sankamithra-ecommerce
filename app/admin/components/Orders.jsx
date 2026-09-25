@@ -9,6 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { useAdmin } from "../AdminContext";
 import OrderRow from "./OrderRow";
 import OrderDetail from "./OrderDetail";
+import { inr } from "@/util/pricing";
 
 const BATCH = 40;
 
@@ -302,7 +303,7 @@ export default function Orders() {
                             py: 0.75, borderBottom: "1px solid var(--border)" }}>
                       <Typography fontSize={12.5} fontWeight={800} color="var(--text-color)">{g.label}</Typography>
                       <Typography fontSize={11.5} fontWeight={700} color="var(--text-color-secondary)">
-                        {g.orders.length} {g.orders.length === 1 ? "order" : "orders"} · ₹{g.total.toLocaleString("en-IN")}
+                        {g.orders.length} {g.orders.length === 1 ? "order" : "orders"} · {inr(g.total)}
                       </Typography>
                     </Stack>
                     {g.orders.map((o) => (

@@ -2,8 +2,8 @@
 import { Stack, Typography, Box, LinearProgress, Tooltip, Chip } from "@mui/material";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import StatusChip from "./StatusChip";
+import { inr } from "@/util/pricing";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 const ago = (iso) => {
   const m = Math.floor((Date.now() - new Date(iso)) / 60000);

@@ -19,7 +19,8 @@ export function proformaLines(order) {
           name: `${i.substitute.name} (replaces ${i.name})`,
           price: i.substitute.mrp || i.substitute.unitPrice,
           discount: i.substitute.mrp
-            ? Math.round((1 - i.substitute.unitPrice / i.substitute.mrp) * 100)
+            // Unrounded, so the printed line matches the replacement's price.
+            ? (1 - i.substitute.unitPrice / i.substitute.mrp) * 100
             : 0,
           count: i.substitute.count,
         };

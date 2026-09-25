@@ -1,3 +1,5 @@
+import { paise } from "@/util/pricing";
+
 /**
  * Dashboard analytics, derived from the order list the panel already loads.
  *
@@ -62,7 +64,7 @@ export function topProducts(orders, limit = 6) {
   orders.filter(isLive).forEach((o) => {
     (o.items || []).forEach((i) => {
       const line = i.substitute
-        ? { name: i.substitute.name, units: i.substitute.count, value: Math.round(i.substitute.unitPrice * i.substitute.count) }
+        ? { name: i.substitute.name, units: i.substitute.count, value: paise(i.substitute.unitPrice * i.substitute.count) }
         : i.unavailable
         ? null
         : { name: i.name, units: i.count, value: i.total || 0 };

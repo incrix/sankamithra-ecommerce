@@ -7,6 +7,7 @@
  */
 
 import { assetUrl } from "@/util/config";
+import { netPrice } from "@/util/pricing";
 
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "https://thunder.sankamithra.com"
@@ -81,7 +82,7 @@ export const categorySlug = (c) =>
   String(c).toLowerCase().replace(/['']/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
 
 /** Discounted unit price, matching the cart, checkout and invoice. */
-export const priceOf = (p) => Math.round(p.price - (p.price * (p.discount || 0)) / 100);
+export const priceOf = (p) => netPrice(p.price, p.discount);
 
 /**
  * Absolute image URL for structured data. Search engines need a fully-qualified

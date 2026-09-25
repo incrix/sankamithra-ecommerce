@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
+import { amount } from "@/util/pricing";
 
-const inr = (n) => `Rs. ${Number(n || 0).toLocaleString("en-IN")}`;
+const inr = (n) => `Rs. ${amount(n)}`;
 
 /** The From header: a readable name in front of the authenticated mailbox. */
 const FROM = (label) =>

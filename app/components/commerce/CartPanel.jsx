@@ -6,6 +6,7 @@ import Link from "next/link";
 import MinimumMeter from "./MinimumMeter";
 import GapFillers from "./GapFillers";
 import CartLine from "./CartLine";
+import { amount } from "@/util/pricing";
 
 /**
  * The always-visible cart. On desktop it's a sticky rail beside the grid; on
@@ -108,7 +109,7 @@ export default function CartPanel({
                 fontWeight={600}
                 sx={{ textDecoration: "line-through" }}
               >
-                ₹{mrp.toLocaleString("en-IN")}
+                ₹{amount(mrp)}
               </Typography>
             </Stack>
 
@@ -118,7 +119,7 @@ export default function CartPanel({
                 Discount
               </Typography>
               <Typography fontSize={12.5} color="#1d9b53" fontWeight={800}>
-                − ₹{saved.toLocaleString("en-IN")}
+                − ₹{amount(saved)}
               </Typography>
             </Stack>
 
@@ -129,7 +130,7 @@ export default function CartPanel({
                 Total
               </Typography>
               <Typography fontSize={19} fontWeight={800} color="var(--text-color)">
-                ₹{total.toLocaleString("en-IN")}
+                ₹{amount(total)}
               </Typography>
             </Stack>
           </Stack>
@@ -151,7 +152,7 @@ export default function CartPanel({
               "&.Mui-disabled": { backgroundColor: "#ffd0bd", color: "#fff" },
             }}
           >
-            {meetsMinimum ? "Proceed to Checkout" : `₹${shortBy.toLocaleString("en-IN")} to go`}
+            {meetsMinimum ? "Proceed to Checkout" : `₹${amount(shortBy)} to go`}
           </Button>
 
           <Button
@@ -168,7 +169,7 @@ export default function CartPanel({
           </Button>
 
           <Typography fontSize={11} color="var(--text-color-secondary)" textAlign="center">
-            You saved ₹{saved.toLocaleString("en-IN")} on this order 🎉
+            You saved ₹{amount(saved)} on this order 🎉
           </Typography>
         </>
       )}

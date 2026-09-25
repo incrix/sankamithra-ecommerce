@@ -2,6 +2,7 @@
 import { Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import Rupee from "@/public/images/rupee.png";
 import RenderItems from "./RenderItems";
+import { lineAmount, sumAmounts } from "@/util/pricing";
 import RenderCustomerDetails from "./RenderCustomerDetails";
 import RenderInvoiceHeader from "./RenderInvoiceHeader";
 import RenderInvoiceFooter from "./RenderInvoiceFooter";
@@ -120,17 +121,10 @@ export default function PageRender({ billingDetails, productList }) {
                 src={Rupee.src}
                 style={{ width: 8, objectFit: "contain" }}
               />
-              {/* Round each line before summing, exactly as /checkout and the
-                  cart do - otherwise the invoice total drifts from the figure
-                  the customer agreed to, and prints raw floats like
-                  6148.799999999999. */}
-              {productList
-                .reduce(
-                  (a, { price, discount, count }) =>
-                    a + Math.round((price - (price * discount) / 100) * count),
-                  0
-                )
-                .toLocaleString("en-IN")}
+              {/* Exact to the paisa, the same figure the counter bill, the
+                  packing screen and the order total use - see util/pricing. */}
+              {sumAmounts(productList, ({ price, discount, count }) => lineAmount(price, discount, count))
+                .toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </Text>
           </View>
         </View>

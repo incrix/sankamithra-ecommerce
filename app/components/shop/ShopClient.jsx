@@ -11,6 +11,7 @@ import { useProducts } from "@/context/ProductContext";
 import { useCart } from "@/util/cart";
 import ProductCard from "@/app/components/commerce/ProductCard";
 import CartPanel from "@/app/components/commerce/CartPanel";
+import { netPrice, amount } from "@/util/pricing";
 
 /**
  * Shop - catalogue and cart on one screen.
@@ -62,7 +63,7 @@ export default function ShopClient() {
     return [["All", productList.length], ...ordered];
   }, [productList]);
 
-  const net = (p) => Math.round(p.price - (p.price * (p.discount || 0)) / 100);
+  const net = (p) => netPrice(p.price, p.discount);
 
   const shown = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -285,11 +286,11 @@ export default function ShopClient() {
             </Badge>
             <Stack>
               <Typography fontSize={15} fontWeight={800} color="#fff">
-                ₹{c.total.toLocaleString("en-IN")}
+                ₹{amount(c.total)}
               </Typography>
               {!c.meetsMinimum && (
                 <Typography fontSize={10.5} color="#ffe0d3" fontWeight={600}>
-                  ₹{c.shortBy.toLocaleString("en-IN")} to checkout
+                  ₹{amount(c.shortBy)} to checkout
                 </Typography>
               )}
             </Stack>
