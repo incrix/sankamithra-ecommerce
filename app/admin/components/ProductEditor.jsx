@@ -256,6 +256,15 @@ export default function ProductEditor({ open, product, products = [], categories
                   onChange={(_, p) => addContent(p)}
                   renderInput={(params) => <TextField {...params} label="Add an item to the box" sx={{ ...fld, backgroundColor: "#fff" }} />}
                 />
+                <FormControlLabel
+                  control={
+                    <Switch checked={form.hideCount === true}
+                      onChange={(e) => setForm((f) => ({ ...f, hideCount: e.target.checked }))}
+                      sx={{ "& .Mui-checked": { color: "var(--primary-color)" },
+                            "& .Mui-checked + .MuiSwitch-track": { backgroundColor: "var(--primary-color)" } }} />
+                  }
+                  label={<Typography fontSize={13} fontWeight={700}>Hide counts in the shop — list the items by name only</Typography>}
+                />
                 <Typography fontSize={11.5} color="var(--text-color-secondary)">
                   Price the pack with MRP and discount as usual — e.g. MRP ₹15,000 at 80% off sells at ₹3,000. Set the Pricelist 2 MRP to the pack price so the counter bills it the same.
                 </Typography>

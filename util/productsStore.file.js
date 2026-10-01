@@ -90,6 +90,7 @@ function normalise(p, id) {
     shortDescription: String(p.shortDescription || "").trim(),
     description: String(p.description || "").trim(),
     contents: normaliseContents(p.contents), // combo packs only
+    ...(p.hideCount === true ? { hideCount: true } : {}), // see productsStore.js
     active: p.active !== false, // hidden products stay in the data but leave the shop
   };
 }

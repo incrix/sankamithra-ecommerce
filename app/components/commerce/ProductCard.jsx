@@ -7,7 +7,7 @@ import { productSlug } from "@/util/site";
 import QtyStepper from "./QtyStepper";
 import ComboArt from "./ComboArt";
 import { unitPrice } from "@/util/cart";
-import { isCombo, comboUnits } from "@/util/combo";
+import { isCombo, comboUnits, showsCount } from "@/util/combo";
 import { inr } from "@/util/pricing";
 
 /**
@@ -78,7 +78,7 @@ export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
       </Box>
 
       <Typography fontSize={10.5} fontWeight={700} color={combo ? "var(--primary-color)" : "var(--text-color-trinary)"}>
-        {combo ? `🎁 Package · ${comboUnits(product)} pieces` : product.category}
+        {combo ? `🎁 Package${showsCount(product) ? ` · ${comboUnits(product)} pieces` : ""}` : product.category}
       </Typography>
 
       <Typography

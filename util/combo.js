@@ -34,6 +34,14 @@ export function normaliseContents(list) {
 
 export const isCombo = (p) => Array.isArray(p?.contents) && p.contents.length > 0;
 
+/**
+ * Whether the shop may say how much is in the box.
+ *
+ * Some packs are sold on what is in them rather than how much, so the shop
+ * window lists their contents by name only. Packing still sees every count.
+ */
+export const showsCount = (p) => isCombo(p) && p.hideCount !== true;
+
 /** Pieces in the box, counting every packet. */
 export const comboUnits = (p) => (p?.contents || []).reduce((n, c) => n + (c.count || 0), 0);
 

@@ -1,6 +1,6 @@
 "use client";
 import { Stack, Typography, Box } from "@mui/material";
-import { comboUnits } from "@/util/combo";
+import { comboUnits, showsCount } from "@/util/combo";
 import { unitPrice } from "@/util/cart";
 import { inr } from "@/util/pricing";
 
@@ -36,7 +36,7 @@ export default function ComboArt({ product, compact = false, sx }) {
   return (
     <Stack
       role="img"
-      aria-label={`${product.name}: ${pieces} crackers in one box`}
+      aria-label={showsCount(product) ? `${product.name}: ${pieces} crackers in one box` : `${product.name}: combo pack`}
       alignItems="center" justifyContent="center" gap={0.5}
       sx={{ ...base, textAlign: "center", p: 1.5 }}
     >
@@ -55,9 +55,11 @@ export default function ComboArt({ product, compact = false, sx }) {
         <Typography fontSize={{ xs: 22, md: 28 }} fontWeight={900} lineHeight={1.1}>
           {inr(unitPrice(product))}
         </Typography>
-        <Typography fontSize={{ xs: 10.5, md: 11.5 }} fontWeight={700} sx={{ opacity: 0.95 }}>
-          {pieces} pieces · {varieties} varieties
-        </Typography>
+        {showsCount(product) && (
+          <Typography fontSize={{ xs: 10.5, md: 11.5 }} fontWeight={700} sx={{ opacity: 0.95 }}>
+            {pieces} pieces · {varieties} varieties
+          </Typography>
+        )}
       </Stack>
     </Stack>
   );

@@ -14,7 +14,7 @@ import { assetUrl } from "@/util/config";
 import QtyStepper from "@/app/components/commerce/QtyStepper";
 import ProductCard from "@/app/components/commerce/ProductCard";
 import ComboArt from "@/app/components/commerce/ComboArt";
-import { isCombo, comboUnits, separatePrice } from "@/util/combo";
+import { isCombo, comboUnits, separatePrice, showsCount } from "@/util/combo";
 import { productSlug } from "@/util/site";
 import { inr } from "@/util/pricing";
 
@@ -70,6 +70,7 @@ export default function ProductClient({ initialProduct }) {
   const out = false;
   const line = c.inCart(product.id);
   const combo = isCombo(product);
+  const counted = showsCount(product);
   // Only once the live list is in: the server-rendered product alone cannot
   // price the contents, and a figure that jumps after load is worse than none.
   const separately = combo && productList.length ? separatePrice(product, productList) : null;
@@ -166,10 +167,12 @@ export default function ProductClient({ initialProduct }) {
 
             {combo && (
               <Stack direction="row" gap={1} flexWrap="wrap">
-                <Chip label={`🎁 ${comboUnits(product)} pieces in one box`} size="small"
+                <Chip label={counted ? `🎁 ${comboUnits(product)} pieces in one box` : "🎁 Combo pack"} size="small"
                   sx={{ fontWeight: 800, fontSize: 12, backgroundColor: "var(--primary-soft)", color: "var(--primary-color)" }} />
-                <Chip label={`${product.contents.length} varieties`} size="small"
-                  sx={{ fontWeight: 800, fontSize: 12, backgroundColor: "var(--surface-muted)", color: "var(--text-color-secondary)" }} />
+                {counted && (
+                  <Chip label={`${product.contents.length} varieties`} size="small"
+                    sx={{ fontWeight: 800, fontSize: 12, backgroundColor: "var(--surface-muted)", color: "var(--text-color-secondary)" }} />
+                )}
                 {separately > price && (
                   <Chip label={`${inr(separately)} if bought separately`} size="small"
                     sx={{ fontWeight: 800, fontSize: 12, backgroundColor: "var(--success-soft)", color: "var(--success-ink)" }} />
@@ -221,9 +224,11 @@ export default function ProductClient({ initialProduct }) {
           <Stack gap={1.5} sx={{ p: { xs: 2, md: 3 }, border: "1px solid var(--primary-border)", borderRadius: "var(--radius-lg)", backgroundColor: "var(--primary-softer)" }}>
             <Stack direction="row" justifyContent="space-between" alignItems="baseline" gap={2} flexWrap="wrap">
               <Typography component="h2" fontSize={{ xs: 18, md: 22 }} color="var(--text-color)">What&apos;s inside</Typography>
-              <Typography fontSize={13} fontWeight={700} color="var(--text-color-secondary)">
-                {comboUnits(product)} pieces · {product.contents.length} varieties
-              </Typography>
+              {counted && (
+                <Typography fontSize={13} fontWeight={700} color="var(--text-color-secondary)">
+                  {comboUnits(product)} pieces · {product.contents.length} varieties
+                </Typography>
+              )}
             </Stack>
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" }, gap: 1 }}>
               {product.contents.map((item) => {
@@ -239,7 +244,9 @@ export default function ProductClient({ initialProduct }) {
                       <Typography fontSize={13} fontWeight={700} color="var(--text-color)" noWrap>{p?.name || item.name}</Typography>
                       {p && <Typography fontSize={11} color="var(--text-color-trinary)" noWrap>{p.category}</Typography>}
                     </Stack>
-                    <Typography fontSize={13.5} fontWeight={800} color="var(--primary-color)" flexShrink={0}>× {item.count}</Typography>
+                    {counted && (
+                      <Typography fontSize={13.5} fontWeight={800} color="var(--primary-color)" flexShrink={0}>× {item.count}</Typography>
+                    )}
                   </Stack>
                 );
               })}

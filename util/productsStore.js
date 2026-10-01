@@ -77,6 +77,9 @@ function normalise(p, id) {
     description: String(p.description || "").trim(),
     // Set only on combo packs: what goes in the box. See util/combo.js.
     contents: normaliseContents(p.contents),
+    // Combo packs sold on their selection, not their size: the shop names
+    // what is inside but never how many.
+    ...(p.hideCount === true ? { hideCount: true } : {}),
     active: p.active !== false,
   };
 }
