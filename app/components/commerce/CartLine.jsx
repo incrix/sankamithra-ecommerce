@@ -4,6 +4,8 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import { assetUrl } from "@/util/config";
 import QtyStepper from "./QtyStepper";
 import { unitPrice, lineTotal } from "@/util/cart";
+import { isCombo } from "@/util/combo";
+import ComboArt from "./ComboArt";
 
 /**
  * One cart row. Unlike the old table (name + numbers only, 700px min-width and
@@ -24,19 +26,23 @@ export default function CartLine({ item, onQty, onAdjust, onRemove }) {
         "&:hover": { borderColor: "#ffd9c9", boxShadow: "0 2px 10px rgba(0,0,0,.05)" },
       }}
     >
-      <Box
-        component="img"
-        src={assetUrl(item.image?.[0])}
-        alt=""
-        sx={{
-          width: 60,
-          height: 60,
-          borderRadius: "8px",
-          objectFit: "cover",
-          flexShrink: 0,
-          backgroundColor: "#f6f6f6",
-        }}
-      />
+      {isCombo(item) && !item.image?.[0] ? (
+        <ComboArt compact product={item} sx={{ width: 60, height: 60, borderRadius: "8px", flexShrink: 0 }} />
+      ) : (
+        <Box
+          component="img"
+          src={assetUrl(item.image?.[0])}
+          alt=""
+          sx={{
+            width: 60,
+            height: 60,
+            borderRadius: "8px",
+            objectFit: "cover",
+            flexShrink: 0,
+            backgroundColor: "#f6f6f6",
+          }}
+        />
+      )}
 
       <Stack flex={1} gap={0.75} minWidth={0}>
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>

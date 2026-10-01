@@ -231,8 +231,8 @@ export default function ShopClient() {
                 sx={{
                   display: "grid",
                   gridTemplateColumns: {
-                    xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)",
-                    md: "repeat(3, 1fr)", lg: "repeat(4, 1fr)",
+                    xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 1fr))",
+                    md: "repeat(3, minmax(0, 1fr))", lg: "repeat(4, minmax(0, 1fr))",
                   },
                   gap: 1.5,
                   pb: { xs: 12, md: 4 }, // room for the mobile cart bar

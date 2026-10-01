@@ -3,6 +3,7 @@ import path from "path";
 import crypto from "crypto";
 import { basisMrp, effDiscount } from "@/util/pricing";
 import { applyCustomerEdit } from "@/util/orderCustomer";
+import { isCombo, normaliseContents } from "@/util/combo";
 
 /**
  * File-backed order store — the local-development fallback.
@@ -135,6 +136,7 @@ export async function createOrder({ billingDetails, productList, emailSent, sour
       mrp: p.price,
       discount: p.discount || 0,
       count: p.count || 0,
+      ...(isCombo(p) ? { contents: normaliseContents(p.contents) } : {}), // see ordersStore.js
       total: lineTotal(p),
       packed: false,      // per-item packing checklist
       unavailable: false, // packer found the shelf empty
@@ -242,6 +244,7 @@ export async function updateOrder(id, patch) {
           image: a.image || null, unitPrice, mrp, discount, count,
           total: Math.round(unitPrice * count),
           packed: false, unavailable: false, substitute: null,
+          ...(isCombo(a) ? { contents: normaliseContents(a.contents) } : {}),
         });
         next.history = [...(next.history || []), { at: next.updatedAt, event: `Added ${a.name} x${count}` }];
       }

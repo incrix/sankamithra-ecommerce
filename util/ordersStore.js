@@ -4,6 +4,7 @@ import * as fileStore from "./ordersStore.file";
 import { getCatalogue } from "@/util/productsStore";
 import { basisMrp, effDiscount, unitOf } from "@/util/pricing";
 import { applyCustomerEdit } from "@/util/orderCustomer";
+import { isCombo, normaliseContents } from "@/util/combo";
 
 /**
  * Order storage.
@@ -126,6 +127,9 @@ export async function createOrder({ billingDetails, productList, emailSent, sour
     mrp: p.price,
     discount: p.discount || 0,
     count: p.count || 0,
+    // A combo's contents as they were when it was sold, so the packing list
+    // still says what goes in the box after the pack itself is changed.
+    ...(isCombo(p) ? { contents: normaliseContents(p.contents) } : {}),
     total: lineTotal(p),
     packed: false,
     unavailable: false,
@@ -316,6 +320,7 @@ async function applyOnce(id, patch) {
         packed: false,
         unavailable: false,
         substitute: null,
+        ...(isCombo(a) ? { contents: normaliseContents(a.contents) } : {}),
       });
       next.history = [...(next.history || []),
         { at: next.updatedAt, event: `Added ${a.name} x${count}` }];

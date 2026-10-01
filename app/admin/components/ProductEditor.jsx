@@ -1,7 +1,7 @@
 "use client";
 import {
   Dialog, DialogTitle, DialogContent, DialogActions, Stack, Box, Typography,
-  TextField, MenuItem, Button, IconButton, CircularProgress, Switch, FormControlLabel, Chip,
+  TextField, MenuItem, Button, IconButton, CircularProgress, Switch, FormControlLabel, Chip, Autocomplete,
 } from "@mui/material";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
@@ -9,11 +9,13 @@ import AddPhotoAlternateRoundedIcon from "@mui/icons-material/AddPhotoAlternateR
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
 import { useEffect, useRef, useState } from "react";
 import { assetUrl } from "@/util/config";
+import { COMBO_CATEGORY, isCombo, comboUnits, separatePrice } from "@/util/combo";
+import QtyStepper from "@/app/components/commerce/QtyStepper";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const BLANK = {
   name: "", category: "", price: "", discount: "", countInStock: "",
-  sku: "", shortDescription: "", description: "", image: [], active: true, mrp2: "",
+  sku: "", shortDescription: "", description: "", image: [], active: true, mrp2: "", contents: [],
 };
 
 /**
@@ -23,7 +25,7 @@ const BLANK = {
  * but what the customer actually pays is the rounded net - showing it here
  * stops surprises after publishing.
  */
-export default function ProductEditor({ open, product, categories, onClose, onSaved, onToast }) {
+export default function ProductEditor({ open, product, products = [], categories, onClose, onSaved, onToast }) {
   const [form, setForm] = useState(BLANK);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -39,6 +41,21 @@ export default function ProductEditor({ open, product, categories, onClose, onSa
   const price = Number(form.price) || 0;
   const discount = Number(form.discount) || 0;
   const net = Math.round(price - (price * discount) / 100);
+
+  // A combo is edited like any product plus the list of what goes in the box.
+  // Shown for anything already holding contents too, so moving a pack to
+  // another category cannot hide - and silently keep - its contents.
+  const comboMode = form.category === COMBO_CATEGORY || isCombo(form);
+  const contents = form.contents || [];
+  const separately = separatePrice(form, products);
+  const setContents = (next) => setForm((f) => ({ ...f, contents: next.filter((c) => c.count > 0) }));
+  const addContent = (p) => {
+    if (!p) return;
+    const at = contents.findIndex((c) => c.id === p.id);
+    setContents(at > -1
+      ? contents.map((c, i) => (i === at ? { ...c, count: c.count + 1 } : c))
+      : [...contents, { id: p.id, name: p.name, count: 1 }]);
+  };
 
   const upload = async (files) => {
     const list = [...files].slice(0, 6);
@@ -75,6 +92,7 @@ export default function ProductEditor({ open, product, categories, onClose, onSa
   const save = async () => {
     if (!String(form.name).trim()) { onToast("A product name is required", "error"); return; }
     if (!String(form.category).trim()) { onToast("Pick a category", "error"); return; }
+    if (form.category === COMBO_CATEGORY && !contents.length) { onToast("Add what goes in the combo box", "error"); return; }
     setSaving(true);
     try {
       const res = await fetch(isNew ? "/api/products" : `/api/products/${product.id}`, {
@@ -199,6 +217,50 @@ export default function ProductEditor({ open, product, categories, onClose, onSa
               }
               label={<Typography fontSize={13.5} fontWeight={700}>Visible in the shop</Typography>}
             />
+
+            {comboMode && (
+              <Stack gap={1} sx={{ gridColumn: { sm: "span 2" }, p: 1.5, borderRadius: "var(--radius)", border: "1px solid var(--primary-border)", backgroundColor: "var(--primary-softer)" }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="baseline" gap={1} flexWrap="wrap">
+                  <Typography fontSize={13} fontWeight={800} color="var(--text-color)">What goes in the box</Typography>
+                  <Typography fontSize={12} fontWeight={700} color="var(--text-color-secondary)">
+                    {comboUnits(form)} pieces · {contents.length} varieties
+                    {separately != null && contents.length ? ` · ${inr(separately)} bought separately` : ""}
+                  </Typography>
+                </Stack>
+
+                {contents.map((c) => (
+                  <Stack key={c.id} direction="row" alignItems="center" gap={1}
+                    sx={{ px: 1, py: 0.5, borderRadius: "var(--radius-sm)", backgroundColor: "#fff", border: "1px solid var(--border)" }}>
+                    <Typography flex={1} minWidth={0} fontSize={13} fontWeight={700} noWrap>
+                      {products.find((p) => p.id === c.id)?.name || c.name}
+                    </Typography>
+                    <QtyStepper size="sm" value={c.count}
+                      onChange={(q) => setContents(contents.map((x) => (x.id === c.id ? { ...x, count: Math.max(0, q) } : x)))}
+                      onAdjust={(d) => setContents(contents.map((x) => (x.id === c.id ? { ...x, count: Math.max(0, x.count + d) } : x)))} />
+                    <IconButton size="small" aria-label={`remove ${c.name}`}
+                      onClick={() => setContents(contents.filter((x) => x.id !== c.id))}
+                      sx={{ color: "var(--text-color-trinary)", "&:hover": { color: "var(--danger)" } }}>
+                      <DeleteOutlineRoundedIcon sx={{ fontSize: 17 }} />
+                    </IconButton>
+                  </Stack>
+                ))}
+
+                <Autocomplete
+                  size="small"
+                  options={products.filter((p) => !isCombo(p) && p.id !== product?.id)}
+                  getOptionLabel={(p) => p.name}
+                  groupBy={(p) => p.category}
+                  value={null}
+                  blurOnSelect
+                  clearOnBlur
+                  onChange={(_, p) => addContent(p)}
+                  renderInput={(params) => <TextField {...params} label="Add an item to the box" sx={{ ...fld, backgroundColor: "#fff" }} />}
+                />
+                <Typography fontSize={11.5} color="var(--text-color-secondary)">
+                  Price the pack with MRP and discount as usual — e.g. MRP ₹15,000 at 80% off sells at ₹3,000. Set the Pricelist 2 MRP to the pack price so the counter bills it the same.
+                </Typography>
+              </Stack>
+            )}
 
             <Box sx={{ gridColumn: { sm: "span 2" } }}>
               <TextField fullWidth size="small" multiline rows={2} label="Short description (shown on the product page)"

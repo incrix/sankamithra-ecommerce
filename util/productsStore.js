@@ -1,6 +1,7 @@
 import { TABLE, getItem, putItem, deleteItem, scanAll, isEmpty, batchWrite, isDbConfigured } from "@/util/db/dynamo";
 import { PRODUCT_SEED_URL, absoluteAssetUrl } from "@/util/config";
 import * as fileStore from "./productsStore.file";
+import { normaliseContents, isCombo } from "@/util/combo";
 
 /**
  * Catalogue storage.
@@ -74,6 +75,8 @@ function normalise(p, id) {
     sku: String(p.sku ?? "").trim(),
     shortDescription: String(p.shortDescription || "").trim(),
     description: String(p.description || "").trim(),
+    // Set only on combo packs: what goes in the box. See util/combo.js.
+    contents: normaliseContents(p.contents),
     active: p.active !== false,
   };
 }
@@ -193,8 +196,11 @@ export async function applyBulkDiscount({ discount, category, ids }) {
   const pct = Math.min(95, Math.max(0, Number(discount) || 0));
   const wanted = Array.isArray(ids) && ids.length ? new Set(ids.map(Number)) : null;
 
+  // A shop-wide sale leaves combo packs alone: their discount is what makes
+  // the box come to its advertised round price, not a sale rate. Picking
+  // them by id or by their own category still reaches them.
   const affected = (await scanAll(TABLE.products)).filter((p) =>
-    wanted ? wanted.has(Number(p.id)) : category ? p.category === category : true
+    wanted ? wanted.has(Number(p.id)) : category ? p.category === category : !isCombo(p)
   );
   // Skip rows already at this discount - a sale re-applied over the same
   // selection would otherwise rewrite the whole catalogue for nothing.

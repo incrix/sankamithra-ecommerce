@@ -46,7 +46,7 @@ export default function PackingList({ items, onToggle, onTickAll, onUnavailable,
     // Every word has to land somewhere, so "green rocket" finds the one line
     // rather than everything green plus everything rocket.
     return items.filter((it) => {
-      const hay = `${it.name} ${it.category} ${it.substitute?.name || ""}`.toLowerCase();
+      const hay = `${it.name} ${it.category} ${it.substitute?.name || ""} ${(it.contents || []).map((c) => c.name).join(" ")}`.toLowerCase();
       return words.every((w) => hay.includes(w));
     });
   }, [items, query]);
@@ -229,6 +229,24 @@ export default function PackingList({ items, onToggle, onTickAll, onUnavailable,
                   </Stack>
                   <Chip label={`× ${it.substitute.count}`}
                     sx={{ fontWeight: 800, fontSize: 12, height: 26, backgroundColor: "var(--warning-soft)", color: "var(--warning)" }} />
+                </Stack>
+              )}
+
+              {/* Combo pack: the packer fills each box from this list */}
+              {!dropped && !swapped && it.contents?.length > 0 && (
+                <Stack gap={0.5} sx={{ ml: editing ? 0 : 4.5, p: 1, borderRadius: "var(--radius-sm)", backgroundColor: "var(--surface-muted)" }}>
+                  <Typography fontSize={11} fontWeight={800} color="var(--text-color-secondary)">
+                    Each box holds {it.contents.reduce((n, c) => n + c.count, 0)} pieces
+                    {it.count > 1 ? ` · pack ${it.count} boxes` : ""}
+                  </Typography>
+                  <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, columnGap: 2, rowGap: 0.25 }}>
+                    {it.contents.map((c) => (
+                      <Stack key={c.id} direction="row" justifyContent="space-between" gap={1}>
+                        <Typography fontSize={11.5} color="var(--text-color)" noWrap>{c.name}</Typography>
+                        <Typography fontSize={11.5} fontWeight={800} color="var(--text-color)" flexShrink={0}>× {c.count}</Typography>
+                      </Stack>
+                    ))}
+                  </Box>
                 </Stack>
               )}
 

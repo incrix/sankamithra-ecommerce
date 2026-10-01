@@ -5,7 +5,9 @@ import Link from "next/link";
 import { assetUrl } from "@/util/config";
 import { productSlug } from "@/util/site";
 import QtyStepper from "./QtyStepper";
+import ComboArt from "./ComboArt";
 import { unitPrice } from "@/util/cart";
+import { isCombo, comboUnits } from "@/util/combo";
 
 /**
  * Product tile.
@@ -22,15 +24,17 @@ export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
   // by tomorrow is worth far more than a dead end on the page.
   const out = false;
   const added = Boolean(line);
+  const combo = isCombo(product);
 
   return (
     <Stack
       gap={1}
       sx={{
         p: 1.25,
+        minWidth: 0, // lets the one-line contents preview truncate instead of widening the column
         borderRadius: "14px",
-        border: added ? "1.5px solid var(--primary-color)" : "1px solid #ececec",
-        backgroundColor: "#fff",
+        border: added ? "1.5px solid var(--primary-color)" : combo ? "1px solid var(--primary-border)" : "1px solid #ececec",
+        backgroundColor: combo ? "var(--primary-softer)" : "#fff",
         position: "relative",
         transition: "transform .15s, box-shadow .15s, border-color .15s",
         "&:hover": { transform: "translateY(-2px)", boxShadow: "0 8px 22px rgba(0,0,0,.08)" },
@@ -56,20 +60,24 @@ export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
         href={`/product/${productSlug(product)}`}
         sx={{ display: "block" }}
       >
-        <Box
-          component="img"
-          src={assetUrl(product.image?.[0])}
-          alt={`${product.name} - ${product.category} crackers from Sankamithra, Sivakasi`}
-          loading="lazy"
-          sx={{
-            width: "100%", aspectRatio: "1 / 1", objectFit: "cover",
-            borderRadius: "10px", backgroundColor: "#f6f6f6", display: "block",
-          }}
-        />
+        {combo && !product.image?.[0] ? (
+          <ComboArt product={product} sx={{ width: "100%", aspectRatio: "1 / 1", borderRadius: "10px" }} />
+        ) : (
+          <Box
+            component="img"
+            src={assetUrl(product.image?.[0])}
+            alt={`${product.name} - ${product.category} crackers from Sankamithra, Sivakasi`}
+            loading="lazy"
+            sx={{
+              width: "100%", aspectRatio: "1 / 1", objectFit: "cover",
+              borderRadius: "10px", backgroundColor: "#f6f6f6", display: "block",
+            }}
+          />
+        )}
       </Box>
 
-      <Typography fontSize={10.5} fontWeight={700} color="var(--text-color-trinary)">
-        {product.category}
+      <Typography fontSize={10.5} fontWeight={700} color={combo ? "var(--primary-color)" : "var(--text-color-trinary)"}>
+        {combo ? `🎁 Package · ${comboUnits(product)} pieces` : product.category}
       </Typography>
 
       <Typography
@@ -87,6 +95,13 @@ export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
       >
         {product.name}
       </Typography>
+
+      {combo && (
+        <Typography fontSize={11} color="var(--text-color-secondary)" noWrap title={product.contents.map((c) => c.name).join(", ")}>
+          {product.contents.slice(0, 4).map((c) => c.name).join(", ")}
+          {product.contents.length > 4 ? ` +${product.contents.length - 4} more` : ""}
+        </Typography>
+      )}
 
       <Stack direction="row" alignItems="baseline" gap={0.75}>
         <Typography fontSize={16} fontWeight={800} color="var(--primary-color)">

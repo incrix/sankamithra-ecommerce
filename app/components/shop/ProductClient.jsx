@@ -13,6 +13,9 @@ import { useCart, unitPrice } from "@/util/cart";
 import { assetUrl } from "@/util/config";
 import QtyStepper from "@/app/components/commerce/QtyStepper";
 import ProductCard from "@/app/components/commerce/ProductCard";
+import ComboArt from "@/app/components/commerce/ComboArt";
+import { isCombo, comboUnits, separatePrice } from "@/util/combo";
+import { productSlug } from "@/util/site";
 
 /**
  * Product detail.
@@ -65,6 +68,11 @@ export default function ProductClient({ initialProduct }) {
   // order by phone anyway, which is where availability actually gets settled.
   const out = false;
   const line = c.inCart(product.id);
+  const combo = isCombo(product);
+  // Only once the live list is in: the server-rendered product alone cannot
+  // price the contents, and a figure that jumps after load is worse than none.
+  const separately = combo && productList.length ? separatePrice(product, productList) : null;
+  const byId = new Map(productList.map((p) => [p.id, p]));
 
   const add = () => {
     if (out) { setToast({ msg: "Sorry, this item is out of stock.", severity: "error" }); return; }
@@ -101,6 +109,9 @@ export default function ProductClient({ initialProduct }) {
               "& .carousel .thumb.selected": { borderColor: "var(--primary-color)" },
             }}
           >
+            {combo && !product.image?.[0] ? (
+              <ComboArt product={product} sx={{ width: "100%", aspectRatio: "1 / 1" }} />
+            ) : (
             <Carousel
               showStatus={false}
               showArrows={product.image.length > 1}
@@ -119,6 +130,7 @@ export default function ProductClient({ initialProduct }) {
                 </Box>
               ))}
             </Carousel>
+            )}
           </Box>
 
           {/* Details */}
@@ -150,6 +162,19 @@ export default function ProductClient({ initialProduct }) {
                 </Typography>
               )}
             </Stack>
+
+            {combo && (
+              <Stack direction="row" gap={1} flexWrap="wrap">
+                <Chip label={`🎁 ${comboUnits(product)} pieces in one box`} size="small"
+                  sx={{ fontWeight: 800, fontSize: 12, backgroundColor: "var(--primary-soft)", color: "var(--primary-color)" }} />
+                <Chip label={`${product.contents.length} varieties`} size="small"
+                  sx={{ fontWeight: 800, fontSize: 12, backgroundColor: "var(--surface-muted)", color: "var(--text-color-secondary)" }} />
+                {separately > price && (
+                  <Chip label={`₹${separately.toLocaleString("en-IN")} if bought separately`} size="small"
+                    sx={{ fontWeight: 800, fontSize: 12, backgroundColor: "var(--success-soft)", color: "var(--success-ink)" }} />
+                )}
+              </Stack>
+            )}
 
             {product.shortDescription && (
               <Typography fontSize={14} color="var(--text-color-secondary)" lineHeight={1.8}>
@@ -191,6 +216,36 @@ export default function ProductClient({ initialProduct }) {
           </Stack>
         </Stack>
 
+        {combo && (
+          <Stack gap={1.5} sx={{ p: { xs: 2, md: 3 }, border: "1px solid var(--primary-border)", borderRadius: "var(--radius-lg)", backgroundColor: "var(--primary-softer)" }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="baseline" gap={2} flexWrap="wrap">
+              <Typography component="h2" fontSize={{ xs: 18, md: 22 }} color="var(--text-color)">What&apos;s inside</Typography>
+              <Typography fontSize={13} fontWeight={700} color="var(--text-color-secondary)">
+                {comboUnits(product)} pieces · {product.contents.length} varieties
+              </Typography>
+            </Stack>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))", lg: "repeat(3, minmax(0, 1fr))" }, gap: 1 }}>
+              {product.contents.map((item) => {
+                const p = byId.get(item.id);
+                return (
+                  <Stack key={item.id} direction="row" alignItems="center" gap={1.25}
+                    component={p ? Link : "div"} href={p ? `/product/${productSlug(p)}` : undefined}
+                    sx={{ p: 0.75, borderRadius: "var(--radius)", backgroundColor: "#fff", border: "1px solid var(--border)",
+                          textDecoration: "none", ...(p && { "&:hover": { borderColor: "var(--primary-border)" } }) }}>
+                    <Box component="img" src={assetUrl(p?.image?.[0])} alt="" loading="lazy"
+                      sx={{ width: 40, height: 40, borderRadius: "var(--radius-sm)", objectFit: "cover", flexShrink: 0, backgroundColor: "#f6f6f6" }} />
+                    <Stack flex={1} minWidth={0}>
+                      <Typography fontSize={13} fontWeight={700} color="var(--text-color)" noWrap>{p?.name || item.name}</Typography>
+                      {p && <Typography fontSize={11} color="var(--text-color-trinary)" noWrap>{p.category}</Typography>}
+                    </Stack>
+                    <Typography fontSize={13.5} fontWeight={800} color="var(--primary-color)" flexShrink={0}>× {item.count}</Typography>
+                  </Stack>
+                );
+              })}
+            </Box>
+          </Stack>
+        )}
+
         {product.description && (
           <Stack gap={1.5} sx={{ p: { xs: 2.5, md: 4 }, border: "1px solid var(--border)", borderRadius: "var(--radius-lg)", backgroundColor: "var(--surface)" }}>
             <Typography component="h2" fontSize={{ xs: 18, md: 22 }} color="var(--text-color)">Description</Typography>
@@ -205,7 +260,7 @@ export default function ProductClient({ initialProduct }) {
             <Typography component="h2" fontSize={{ xs: 19, md: 23 }} color="var(--text-color)">
               More in {product.category}
             </Typography>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)", lg: "repeat(4, 1fr)" }, gap: { xs: 1.5, md: 2 } }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 1fr))", lg: "repeat(4, minmax(0, 1fr))" }, gap: { xs: 1.5, md: 2 } }}>
               {related.map((p) => (
                 <ProductCard key={p.id} product={p} line={c.inCart(p.id)} onAdd={(x) => c.add(x, 1)} onQty={c.setQty} onAdjust={c.adjust} />
               ))}

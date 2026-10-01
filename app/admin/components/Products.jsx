@@ -14,6 +14,7 @@ import GridViewRoundedIcon from "@mui/icons-material/GridViewRounded";
 import { useEffect, useMemo, useState } from "react";
 import { assetUrl } from "@/util/config";
 import ProductEditor from "./ProductEditor";
+import { isCombo, comboUnits } from "@/util/combo";
 
 const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const net = (p) => Math.round(p.price - (p.price * (p.discount || 0)) / 100);
@@ -271,7 +272,7 @@ export default function Products({ catalogue, loading, onReload, onToast }) {
                     )}
                   </Stack>
                   <Typography fontSize={11.5} color="var(--text-color-secondary)" fontWeight={600}>
-                    {p.category}{p.sku ? ` · SKU ${p.sku}` : ""} · {p.countInStock} in stock
+                    {p.category}{isCombo(p) ? ` · 🎁 ${comboUnits(p)} pieces` : ""}{p.sku ? ` · SKU ${p.sku}` : ""} · {p.countInStock} in stock
                   </Typography>
                 </Stack>
 
@@ -318,6 +319,7 @@ export default function Products({ catalogue, loading, onReload, onToast }) {
       <ProductEditor
         open={open}
         product={editing}
+        products={products}
         categories={categories}
         onClose={() => setOpen(false)}
         // Filter down to whatever was just saved: a new product is otherwise

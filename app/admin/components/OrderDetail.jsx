@@ -281,7 +281,8 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
                                  image: p.image?.[0] || null,
                                  price: basisMrp(p, basis.list2),
                                  discount: effDiscount(p, basis.list2, basis.extra),
-                                 count: qty } });
+                                 count: qty,
+                                 ...(p.contents?.length ? { contents: p.contents } : {}) } });
             setAddOpen(false);
           }}
         />

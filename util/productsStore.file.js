@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { PRODUCT_SEED_URL, absoluteAssetUrl } from "@/util/config";
+import { normaliseContents, isCombo } from "@/util/combo";
 
 /**
  * File-backed product catalogue.
@@ -88,6 +89,7 @@ function normalise(p, id) {
     sku: String(p.sku ?? "").trim(),
     shortDescription: String(p.shortDescription || "").trim(),
     description: String(p.description || "").trim(),
+    contents: normaliseContents(p.contents), // combo packs only
     active: p.active !== false, // hidden products stay in the data but leave the shop
   };
 }
@@ -200,7 +202,7 @@ export async function applyBulkDiscount({ discount, category, ids }) {
       const hit =
         Array.isArray(ids) && ids.length ? ids.map(String).includes(String(p.id))
         : category ? p.category === category
-        : true;
+        : !isCombo(p); // see productsStore.js
       if (hit) { p.discount = pct; changed++; }
     });
     data.updatedAt = new Date().toISOString();

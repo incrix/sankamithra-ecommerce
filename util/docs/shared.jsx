@@ -93,6 +93,6 @@ export function packedLines(order) {
     if (i.unavailable) {
       return { name: i.name, count: 0, unitPrice: i.unitPrice, total: 0, state: "dropped" };
     }
-    return { name: i.name, count: i.count, unitPrice: i.unitPrice, total: i.total, state: "ok" };
+    return { name: i.name, count: i.count, unitPrice: i.unitPrice, total: i.total, state: "ok", contents: i.contents || [] };
   });
 }

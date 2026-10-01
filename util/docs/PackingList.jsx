@@ -73,6 +73,13 @@ export default function PackingListDoc({ order }) {
                       out of stock — do not pack
                     </Text>
                   )}
+                  {/* A combo is one line on the bill but a whole box on the
+                      shelf: spell out what goes into each one. */}
+                  {!out && l.contents?.length > 0 && (
+                    <Text style={{ fontSize: 7.5, color: MUTED, marginTop: 2, lineHeight: 1.5 }}>
+                      Each box: {l.contents.map((c) => `${c.name} × ${c.count}`).join(", ")}
+                    </Text>
+                  )}
                 </View>
                 <Text style={{ width: 60, textAlign: "center", fontSize: 13, fontFamily: "Lato Bold", color: out ? MUTED : INK }}>
                   {out ? "—" : l.count}
