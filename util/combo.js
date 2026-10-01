@@ -7,9 +7,10 @@
  * price it exactly like anything else, and only the shop window and the packing
  * list need to know it is a box of other things.
  *
- * No imports, deliberately: the stores normalise through this on the server,
- * and util/cart is a client module.
+ * Imports only util/pricing, deliberately: the stores normalise through this on
+ * the server, and util/cart is a client module.
  */
+import { lineAmount, sumAmounts } from "@/util/pricing";
 
 export const COMBO_CATEGORY = "Combo";
 
@@ -45,11 +46,7 @@ export const comboUnits = (p) => (p?.contents || []).reduce((n, c) => n + (c.cou
  */
 export function separatePrice(p, products) {
   const byId = new Map((products || []).map((x) => [x.id, x]));
-  let sum = 0;
-  for (const c of p?.contents || []) {
-    const item = byId.get(c.id);
-    if (!item) return null;
-    sum += Math.round(item.price - (item.price * (item.discount || 0)) / 100) * c.count;
-  }
-  return sum;
+  const lines = (p?.contents || []).map((c) => ({ item: byId.get(c.id), count: c.count }));
+  if (lines.some((l) => !l.item)) return null;
+  return sumAmounts(lines, (l) => lineAmount(l.item.price, l.item.discount, l.count));
 }

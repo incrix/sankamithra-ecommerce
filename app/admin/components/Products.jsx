@@ -15,9 +15,9 @@ import { useEffect, useMemo, useState } from "react";
 import { assetUrl } from "@/util/config";
 import ProductEditor from "./ProductEditor";
 import { isCombo, comboUnits } from "@/util/combo";
+import { inr, netPrice } from "@/util/pricing";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
-const net = (p) => Math.round(p.price - (p.price * (p.discount || 0)) / 100);
+const net = (p) => netPrice(p.price, p.discount);
 const BATCH = 40;
 
 /** Catalogue management: search, edit, add, hide and remove products. */

@@ -1,5 +1,6 @@
 "use client";
 import { Text, View, StyleSheet } from "@react-pdf/renderer";
+import { netPrice, lineAmount } from "@/util/pricing";
 
 // Define styles for the table
 const styles = StyleSheet.create({
@@ -83,13 +84,10 @@ export default function RenderItems({ productList }) {
         // De-structure properties for easier access
         const { name: title, price, count, discount } = product;
 
-        // --- NEW LOGIC ---
-        // 1. Calculate the price of a single item AFTER the discount
-        const priceAfterDiscount = price * (1 - discount / 100);
-
-        // 2. Calculate the total for the row (price after discount * quantity)
-        const totalAmount = priceAfterDiscount * count;
-        // --- END OF NEW LOGIC ---
+        // The same helpers the counter bill and order totals use, so every
+        // screen agrees with this row to the paisa.
+        const priceAfterDiscount = netPrice(price, discount);
+        const totalAmount = lineAmount(price, discount, count);
 
         return (
           <View key={index} style={styles.tableRow} wrap={false}>
@@ -112,7 +110,7 @@ export default function RenderItems({ productList }) {
             {/* Discount Column (Updated) */}
             <View style={styles.discount}>
               <Text>
-                {`${priceAfterDiscount.toFixed(2)} (${discount}%)`}
+                {`${priceAfterDiscount.toFixed(2)} (${Number(Number(discount).toFixed(2))}%)`}
               </Text>
             </View>
             {/* Total Column (Updated) */}

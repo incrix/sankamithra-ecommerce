@@ -7,10 +7,9 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import SearchRoundedIcon from "@mui/icons-material/SearchRounded";
 import { useCallback, useMemo, useState } from "react";
 import { assetUrl } from "@/util/config";
-import { basisMrp, unitOf } from "@/util/pricing";
+import { basisMrp, unitOf, inr, paise } from "@/util/pricing";
 import QtyStepper from "@/app/components/commerce/QtyStepper";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 /**
  * Pick a replacement for a line the packer can't fill.
@@ -35,7 +34,7 @@ export default function SubstitutePicker({ open, item, onClose, onChoose, produc
   const [picked, setPicked] = useState(null);
   const [qty, setQty] = useState(item?.count || 1);
 
-  const targetValue = (item?.unitPrice || 0) * (item?.count || 0);
+  const targetValue = paise((item?.unitPrice || 0) * (item?.count || 0));
 
   const options = useMemo(() => {
     if (!item) return [];
@@ -56,7 +55,7 @@ export default function SubstitutePicker({ open, item, onClose, onChoose, produc
 
   if (!item) return null;
 
-  const newValue = picked ? priceOf(picked) * qty : 0;
+  const newValue = picked ? paise(priceOf(picked) * qty) : 0;
   const diff = newValue - targetValue;
 
   const choose = () => {

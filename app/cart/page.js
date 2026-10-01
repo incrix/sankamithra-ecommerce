@@ -10,6 +10,7 @@ import CartLine from "@/app/components/commerce/CartLine";
 import MinimumMeter from "@/app/components/commerce/MinimumMeter";
 import GapFillers from "@/app/components/commerce/GapFillers";
 import EmailSubscribe from "../components/emailSubscribe";
+import { amount } from "@/util/pricing";
 
 /**
  * Full-page cart.
@@ -131,13 +132,13 @@ export default function CartPage() {
               )}
 
               <Stack gap={0.75}>
-                <Row label={`Price (${c.itemCount} units)`} value={`₹${c.mrp.toLocaleString("en-IN")}`} strike />
-                <Row label="Discount" value={`− ₹${c.saved.toLocaleString("en-IN")}`} green />
+                <Row label={`Price (${c.itemCount} units)`} value={`₹${amount(c.mrp)}`} strike />
+                <Row label="Discount" value={`− ₹${amount(c.saved)}`} green />
                 <Divider sx={{ my: 0.5 }} />
                 <Stack direction="row" justifyContent="space-between" alignItems="baseline">
                   <Typography fontSize={15.5} fontWeight={800} color="var(--text-color)">Total</Typography>
                   <Typography fontSize={20} fontWeight={800} color="var(--text-color)">
-                    ₹{c.total.toLocaleString("en-IN")}
+                    ₹{amount(c.total)}
                   </Typography>
                 </Stack>
               </Stack>
@@ -149,11 +150,11 @@ export default function CartPage() {
                 endIcon={<ArrowForwardRoundedIcon />}
                 sx={cta}
               >
-                {c.meetsMinimum ? "Proceed to Checkout" : `₹${c.shortBy.toLocaleString("en-IN")} to go`}
+                {c.meetsMinimum ? "Proceed to Checkout" : `₹${amount(c.shortBy)} to go`}
               </Button>
 
               <Typography fontSize={11.5} textAlign="center" color="var(--success)" fontWeight={700}>
-                You saved ₹{c.saved.toLocaleString("en-IN")} on this order 🎉
+                You saved ₹{amount(c.saved)} on this order 🎉
               </Typography>
             </Stack>
           </Stack>

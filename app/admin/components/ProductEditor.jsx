@@ -11,8 +11,8 @@ import { useEffect, useRef, useState } from "react";
 import { assetUrl } from "@/util/config";
 import { COMBO_CATEGORY, isCombo, comboUnits, separatePrice } from "@/util/combo";
 import QtyStepper from "@/app/components/commerce/QtyStepper";
+import { inr, netPrice } from "@/util/pricing";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const BLANK = {
   name: "", category: "", price: "", discount: "", countInStock: "",
   sku: "", shortDescription: "", description: "", image: [], active: true, mrp2: "", contents: [],
@@ -40,7 +40,7 @@ export default function ProductEditor({ open, product, products = [], categories
 
   const price = Number(form.price) || 0;
   const discount = Number(form.discount) || 0;
-  const net = Math.round(price - (price * discount) / 100);
+  const net = netPrice(price, discount);
 
   // A combo is edited like any product plus the list of what goes in the box.
   // Shown for anything already holding contents too, so moving a pack to

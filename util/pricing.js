@@ -16,6 +16,37 @@
  * One definition, so those callers cannot drift again.
  */
 
+/**
+ * Money, kept exact to the paisa.
+ *
+ * Prices used to be rounded to whole rupees per unit, then multiplied out. The
+ * counter bill and packing screens showed that rounded figure while the
+ * proforma printed the exact one, so the same order read two different
+ * amounts. Everything now works in exact paise: `paise` only strips binary
+ * float noise (12.599999 -> 12.6); it never rounds to the rupee.
+ */
+export const paise = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
+/** Price of one unit after discount. */
+export const netPrice = (mrp, discount) =>
+  paise((Number(mrp) || 0) * (1 - (Number(discount) || 0) / 100));
+
+/** A line's amount: computed from the MRP, not from a rounded unit price. */
+export const lineAmount = (mrp, discount, count) =>
+  paise((Number(mrp) || 0) * (1 - (Number(discount) || 0) / 100) * (Number(count) || 0));
+
+/** Sum of amounts, without float drift. */
+export const sumAmounts = (list, fn) => paise(list.reduce((a, x) => a + (Number(fn(x)) || 0), 0));
+
+/** "1,234" or "1,234.50" - paise always as two digits, whole rupees as none. */
+export const amount = (n) => {
+  const v = paise(n);
+  return Number.isInteger(v)
+    ? v.toLocaleString("en-IN")
+    : v.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+export const inr = (n) => `₹${amount(n)}`;
+
 /** Which MRP the bill is written against. */
 export const basisMrp = (p, list2) => (list2 ? (p?.mrp2 ?? p?.price) : p?.price);
 
@@ -31,11 +62,12 @@ export const effDiscount = (p, list2, extra) => {
   return Math.round((1 - (1 - base / 100) * (1 - e / 100)) * 10000) / 100;
 };
 
-/** Unit price on the given list, rounded the same way the server rounds it. */
-export const unitOf = (p, list2, extra) => {
-  const m = basisMrp(p, list2);
-  return Math.round(m - (m * effDiscount(p, list2, extra)) / 100);
-};
+/** Unit price on the given list, exact - the same figure the proforma prints. */
+export const unitOf = (p, list2, extra) => netPrice(basisMrp(p, list2), effDiscount(p, list2, extra));
+
+/** A bill line's amount on the given list. */
+export const lineOf = (p, list2, extra, count) =>
+  lineAmount(basisMrp(p, list2), effDiscount(p, list2, extra), count);
 
 /**
  * The pricing basis an order was billed on.

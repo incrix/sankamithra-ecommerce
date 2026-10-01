@@ -8,6 +8,7 @@ import QtyStepper from "./QtyStepper";
 import ComboArt from "./ComboArt";
 import { unitPrice } from "@/util/cart";
 import { isCombo, comboUnits } from "@/util/combo";
+import { inr } from "@/util/pricing";
 
 /**
  * Product tile.
@@ -105,7 +106,7 @@ export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
 
       <Stack direction="row" alignItems="baseline" gap={0.75}>
         <Typography fontSize={16} fontWeight={800} color="var(--primary-color)">
-          ₹{price}
+          {inr(price)}
         </Typography>
         <Typography
           fontSize={11.5}
@@ -113,7 +114,7 @@ export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
           color="var(--text-color-trinary)"
           sx={{ textDecoration: "line-through" }}
         >
-          ₹{product.price}
+          {inr(product.price)}
         </Typography>
       </Stack>
 

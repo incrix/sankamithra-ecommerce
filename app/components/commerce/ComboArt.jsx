@@ -2,6 +2,7 @@
 import { Stack, Typography, Box } from "@mui/material";
 import { comboUnits } from "@/util/combo";
 import { unitPrice } from "@/util/cart";
+import { inr } from "@/util/pricing";
 
 /**
  * The cover for a combo pack that has no photo of its own.
@@ -52,7 +53,7 @@ export default function ComboArt({ product, compact = false, sx }) {
           COMBO PACK
         </Typography>
         <Typography fontSize={{ xs: 22, md: 28 }} fontWeight={900} lineHeight={1.1}>
-          ₹{unitPrice(product).toLocaleString("en-IN")}
+          {inr(unitPrice(product))}
         </Typography>
         <Typography fontSize={{ xs: 10.5, md: 11.5 }} fontWeight={700} sx={{ opacity: 0.95 }}>
           {pieces} pieces · {varieties} varieties

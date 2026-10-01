@@ -16,15 +16,14 @@ import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { pdf } from "@react-pdf/renderer";
 import Template1 from "@/util/invoice/Template1/Template";
 import { assetUrl } from "@/util/config";
+import { inr, netPrice, lineAmount, sumAmounts } from "@/util/pricing";
 
 const quicksand = Quicksand({ subsets: ["latin"] });
 
 const MIN_ORDER = 3000;
 
-const unit = (i) => Math.round(i.price - (i.price * (i.discount || 0)) / 100);
-const line = (i) =>
-  Math.round((i.price - (i.price * (i.discount || 0)) / 100) * (i.count || 0));
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
+const unit = (i) => netPrice(i.price, i.discount);
+const line = (i) => lineAmount(i.price, i.discount, i.count);
 
 /** One definition drives labels, validation and the responsive grid. */
 const FIELDS = [
@@ -339,8 +338,8 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
     setReady(true);
   }, []);
 
-  const total = cart.reduce((a, i) => a + line(i), 0);
-  const mrp = cart.reduce((a, i) => a + Math.round(i.price * (i.count || 0)), 0);
+  const total = sumAmounts(cart, line);
+  const mrp = sumAmounts(cart, (i) => i.price * (i.count || 0));
   const belowMin = total <= MIN_ORDER;
 
   const handlePlaceOrder = async () => {

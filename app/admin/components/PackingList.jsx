@@ -10,8 +10,8 @@ import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import RemoveShoppingCartRoundedIcon from "@mui/icons-material/RemoveShoppingCartRounded";
 import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
 import { assetUrl } from "@/util/config";
+import { inr } from "@/util/pricing";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 /**
  * The packing checklist - the screen the owner actually works from.

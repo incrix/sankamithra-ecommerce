@@ -5,6 +5,7 @@ import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import { panel } from "./RevenueChart";
 import { channelBreakdown, channelsSince, adjustmentImpact } from "@/util/analytics";
+import { inr } from "@/util/pricing";
 
 /**
  * Where the money came from.
@@ -15,7 +16,6 @@ import { channelBreakdown, channelsSince, adjustmentImpact } from "@/util/analyt
  * given away - on an 80%-off price list that gap is the whole margin story.
  */
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const RANGES = [
   { key: 1, label: "Today" },
   { key: 7, label: "7 days" },

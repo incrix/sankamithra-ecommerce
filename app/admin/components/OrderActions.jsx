@@ -9,8 +9,8 @@ import ExpandMoreRoundedIcon from "@mui/icons-material/ExpandMoreRounded";
 import { useState } from "react";
 import { buildProformaBlob } from "@/util/proforma";
 import { DOCS, saveBlob, printBlob } from "@/util/docs";
+import { inr } from "@/util/pricing";
 
-const inr = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 const digits = (s) => String(s || "").replace(/\D/g, "");
 
 /**

@@ -16,6 +16,7 @@ import ProductCard from "@/app/components/commerce/ProductCard";
 import ComboArt from "@/app/components/commerce/ComboArt";
 import { isCombo, comboUnits, separatePrice } from "@/util/combo";
 import { productSlug } from "@/util/site";
+import { inr } from "@/util/pricing";
 
 /**
  * Product detail.
@@ -151,14 +152,14 @@ export default function ProductClient({ initialProduct }) {
 
             <Stack direction="row" alignItems="baseline" gap={1.5} flexWrap="wrap">
               <Typography fontSize={{ xs: 28, md: 34 }} fontWeight={800} color="var(--primary-color)">
-                ₹{price}
+                {inr(price)}
               </Typography>
               <Typography fontSize={{ xs: 15, md: 17 }} color="var(--text-color-trinary)" sx={{ textDecoration: "line-through" }}>
-                ₹{product.price}
+                {inr(product.price)}
               </Typography>
               {product.discount > 0 && (
                 <Typography fontSize={13.5} fontWeight={800} color="var(--success)">
-                  You save ₹{product.price - price}
+                  You save {inr(product.price - price)}
                 </Typography>
               )}
             </Stack>
@@ -170,7 +171,7 @@ export default function ProductClient({ initialProduct }) {
                 <Chip label={`${product.contents.length} varieties`} size="small"
                   sx={{ fontWeight: 800, fontSize: 12, backgroundColor: "var(--surface-muted)", color: "var(--text-color-secondary)" }} />
                 {separately > price && (
-                  <Chip label={`₹${separately.toLocaleString("en-IN")} if bought separately`} size="small"
+                  <Chip label={`${inr(separately)} if bought separately`} size="small"
                     sx={{ fontWeight: 800, fontSize: 12, backgroundColor: "var(--success-soft)", color: "var(--success-ink)" }} />
                 )}
               </Stack>
