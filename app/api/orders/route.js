@@ -1,6 +1,8 @@
 import { listOrders, createOrder, orderStats, updateOrder } from "@/util/ordersStore";
 import { requireAdmin } from "@/util/admin/auth";
 import { sendOrderMails } from "@/util/sendMail";
+import { lineAmount, sumAmounts, inr } from "@/util/pricing";
+import { minimumFor, meetsMinimumFor, MIN_ORDER_TN } from "@/util/minimumOrder";
 
 export const dynamic = "force-dynamic";
 // Saving the order plus two emails; the default 10s can be tight on a slow
@@ -42,6 +44,20 @@ export async function POST(request) {
 
     if (!billingDetails?.name || !Array.isArray(productList) || !productList.length) {
       return Response.json({ error: "Invalid order payload" }, { status: 400 });
+    }
+
+    // The website minimum, checked here as well as at checkout so it holds no
+    // matter what the browser sends. Counter bills are exempt - see Pos.jsx.
+    if (!isPos) {
+      const total = sumAmounts(productList, (p) => lineAmount(p.price, p.discount, p.count));
+      if (!meetsMinimumFor(total, billingDetails.state)) {
+        const min = minimumFor(billingDetails.state);
+        return Response.json({
+          error: min > MIN_ORDER_TN
+            ? `Orders delivered outside Tamil Nadu must be above ${inr(min)}.`
+            : `Order total must be above ${inr(min)}.`,
+        }, { status: 400 });
+      }
     }
 
     // The pricing basis is only meaningful for a counter bill, and only staff

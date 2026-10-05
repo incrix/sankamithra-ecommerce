@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { netPrice, lineAmount, sumAmounts, paise } from "@/util/pricing";
+import { MIN_ORDER_TN } from "@/util/minimumOrder";
 
 /**
  * Cart engine.
@@ -13,7 +14,8 @@ import { netPrice, lineAmount, sumAmounts, paise } from "@/util/pricing";
  * mobile bar all stay in sync without prop-drilling or a page reload.
  */
 
-export const MIN_ORDER = 3000;
+// Within Tamil Nadu; checkout raises it for other states. See util/minimumOrder.js.
+export const MIN_ORDER = MIN_ORDER_TN;
 const KEY = "cart";
 const EVENT = "cart:updated";
 

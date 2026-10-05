@@ -18,10 +18,10 @@ import Template1 from "@/util/invoice/Template1/Template";
 import { assetUrl } from "@/util/config";
 import { inr, netPrice, lineAmount, sumAmounts } from "@/util/pricing";
 import { paymentOptions } from "@/util/paymentDetails";
+import { minimumFor, isTamilNadu, MIN_ORDER_TN, MIN_ORDER_OUTSIDE_TN } from "@/util/minimumOrder";
 
 const quicksand = Quicksand({ subsets: ["latin"] });
 
-const MIN_ORDER = 3000;
 
 const unit = (i) => netPrice(i.price, i.discount);
 const line = (i) => lineAmount(i.price, i.discount, i.count);
@@ -263,7 +263,9 @@ function BillingDetails({ billingDetails, onChange, errors, touched, setTouched,
           multiline={f.multiline}
           rows={f.rows}
           error={Boolean(bad)}
-          helperText={bad || " "}
+          helperText={bad || (f.name === "state" && billingDetails.state?.trim() && !isTamilNadu(billingDetails.state)
+            ? `Outside Tamil Nadu: minimum order is ${inr(MIN_ORDER_OUTSIDE_TN)}`
+            : " ")}
           inputProps={{ inputMode: f.inputMode, maxLength: f.maxLength }}
           sx={{
             "& .MuiOutlinedInput-root": {
@@ -341,11 +343,17 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
 
   const total = sumAmounts(cart, line);
   const mrp = sumAmounts(cart, (i) => i.price * (i.count || 0));
-  const belowMin = total <= MIN_ORDER;
+  // Follows the delivery state as it is typed: outside Tamil Nadu the parcel
+  // crosses state lines and the minimum is higher. See util/minimumOrder.js.
+  const minOrder = minimumFor(billingDetails.state);
+  const outsideTn = minOrder > MIN_ORDER_TN;
+  const belowMin = total <= minOrder;
 
   const handlePlaceOrder = async () => {
     if (belowMin) {
-      toast(`Order total must be above ${inr(MIN_ORDER)} to place an order.`);
+      toast(outsideTn
+        ? `Orders delivered outside Tamil Nadu must be above ${inr(minOrder)}.`
+        : `Order total must be above ${inr(minOrder)} to place an order.`);
       return;
     }
     setLoading(true);
@@ -502,7 +510,8 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
               <Stack direction="row" gap={1} alignItems="center" sx={{ backgroundColor: "#fff4f4", border: "1px solid #ffd4d4", borderRadius: "10px", px: 1.5, py: 1 }}>
                 <ErrorOutlineRoundedIcon sx={{ color: "#e03131", fontSize: 18 }} />
                 <Typography fontSize={12} fontWeight={700} color="#c92a2a">
-                  Add {inr(MIN_ORDER - total + 1)} more — minimum order is {inr(MIN_ORDER)}
+                  Add {inr(minOrder - total + 1)} more — minimum order
+                  {outsideTn ? ` for delivery outside Tamil Nadu (${billingDetails.state.trim()})` : ""} is {inr(minOrder)}
                 </Typography>
               </Stack>
             )}

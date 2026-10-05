@@ -55,11 +55,11 @@ const FAQS = [
   },
   {
     q: "How much do Sivakasi crackers cost at Sankamithra?",
-    a: "Prices run from around ₹12 for single items to a few thousand rupees for large gift boxes and aerial shots, at up to 80% off the printed list price. The full price list is on this page and downloadable as a PDF; the minimum order value is ₹3,000.",
+    a: "Prices run from around ₹12 for single items to a few thousand rupees for large gift boxes and aerial shots, at up to 80% off the printed list price. The full price list is on this page and downloadable as a PDF; the minimum order value is ₹3,000 within Tamil Nadu and ₹10,000 for delivery to other states.",
   },
   {
     q: "What is the minimum order value?",
-    a: "₹3,000 for online orders, which covers safe packing and licensed transport. The cart shows exactly how much more you need to add. There is no minimum if you buy at our Sivakasi counter.",
+    a: "₹3,000 for online orders delivered within Tamil Nadu, and ₹10,000 for delivery to other states, which covers safe packing and licensed transport. The cart shows exactly how much more you need to add. There is no minimum if you buy at our Sivakasi counter.",
   },
   {
     q: "What types of crackers can I buy?",

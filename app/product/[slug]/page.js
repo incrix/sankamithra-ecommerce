@@ -90,7 +90,7 @@ export default async function ProductPage({ params }) {
     },
     {
       q: `Is ${product.name} available online?`,
-      a: `Yes. Add ${product.name} to your cart and place your order — the minimum order value is ₹3,000 and we deliver across India, and we confirm every order by phone within 24 hours.`,
+      a: `Yes. Add ${product.name} to your cart and place your order — the minimum order value is ₹3,000 within Tamil Nadu (₹10,000 for other states) and we deliver across India, and we confirm every order by phone within 24 hours.`,
     },
   ];
 
