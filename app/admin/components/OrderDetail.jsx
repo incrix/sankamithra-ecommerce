@@ -9,6 +9,8 @@ import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import CustomerBlock from "./CustomerBlock";
+import PaymentBox from "./PaymentBox";
+import DispatchDialog from "./DispatchDialog";
 import PackingList from "./PackingList";
 import SubstitutePicker from "./SubstitutePicker";
 import AddItemPicker from "./AddItemPicker";
@@ -37,6 +39,7 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
   // changes what the customer is being charged for - so they never show at once.
   const [editing, setEditing] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [dispatchOpen, setDispatchOpen] = useState(false);
 
   /**
    * Which price list this bill was written on.
@@ -202,6 +205,15 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
 
         <OrderActions order={order} onToast={onToast} />
 
+        {/* Above the packing list: what is still to collect has to be known
+            while the parcel is being filled, not after it has left. */}
+        <PaymentBox
+          order={order}
+          busy={busy}
+          onAdd={(entry, notify) => onPatch({ addPayment: entry, ...(notify ? { notifyPaid: true } : {}) })}
+          onRemove={(id) => onPatch({ removePayment: id })}
+        />
+
         <Divider />
 
         <Stack direction="row" alignItems="center" gap={1} flexWrap="wrap">
@@ -286,6 +298,14 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
           }}
         />
 
+        <DispatchDialog
+          open={dispatchOpen}
+          order={order}
+          busy={busy}
+          onClose={() => setDispatchOpen(false)}
+          onConfirm={(dispatch) => { onPatch({ status: "dispatched", dispatch }); setDispatchOpen(false); }}
+        />
+
         <SubstitutePicker
           open={Boolean(swapFor)}
           item={swapFor}
@@ -346,6 +366,8 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
             disabled={busy || (order.status === "packing" && !allSettled)}
             onClick={() => {
               if (next?.to === "packed") { try { localStorage.removeItem(storeKey); } catch {} }
+              // Dispatch asks how it went first, so the email can say.
+              if (next?.to === "dispatched") { setDispatchOpen(true); return; }
               onPatch({ status: next?.to });
             }}
             sx={{

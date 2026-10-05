@@ -217,8 +217,14 @@ export default function OrderActions({ order, onToast }) {
           EMAIL {c.email ? c.email.toUpperCase() : "— NO ADDRESS"}
         </Typography>
         <Divider />
-        <MenuItem onClick={() => sendMail("confirm")} sx={mi}>Order confirmation</MenuItem>
+        {/* In the order a customer meets them. Each goes out automatically at
+            its step; these are for sending one again. */}
+        <MenuItem onClick={() => sendMail("received")} sx={mi}>Order received — how to pay</MenuItem>
+        <MenuItem onClick={() => sendMail("paid")} sx={mi}>Payment confirmed — item list</MenuItem>
+        <MenuItem onClick={() => sendMail("packed")} sx={mi}>Packed notice</MenuItem>
         <MenuItem onClick={() => sendMail("dispatch")} sx={mi}>Dispatch notice</MenuItem>
+        <Divider />
+        <MenuItem onClick={() => sendMail("confirm")} sx={mi}>Counter receipt</MenuItem>
         <MenuItem onClick={() => sendMail("invoice")} sx={mi}>Proforma only</MenuItem>
       </Menu>
     </Stack>

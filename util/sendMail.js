@@ -1,5 +1,8 @@
 import nodemailer from "nodemailer";
 import { amount } from "@/util/pricing";
+import { paymentState } from "@/util/orderPayments";
+import { paymentOptions } from "@/util/paymentDetails";
+import { getPaymentDetails } from "@/util/settingsStore";
 
 const inr = (n) => `Rs. ${amount(n)}`;
 
@@ -56,24 +59,82 @@ const SHELL = (title, body) => `
   </div>
 </main>`;
 
-const itemRows = (order) =>
-  (order.items || [])
+const cell = "padding:7px 0;border-bottom:1px solid #f0f0f0;vertical-align:top;";
+
+/**
+ * Every line on the order with its quantity, as the customer should read it.
+ *
+ * Quantity has its own column because "what am I getting, and how many" is
+ * the question these emails answer - buried in "3 × Rs. 40" it was easy to
+ * misread as a price.
+ */
+const itemTable = (order) => {
+  const rows = (order.items || [])
     .map((i) => {
       if (i.substitute) {
-        return `<tr><td style="padding:6px 0;border-bottom:1px solid #f0f0f0;"><s style="color:#999;">${i.name}</s><br><b>${i.substitute.name}</b> <span style="color:#b26a00;font-size:12px;">(replacement)</span></td><td align="right" style="padding:6px 0;border-bottom:1px solid #f0f0f0;">${i.substitute.count} &times; ${inr(i.substitute.unitPrice)}</td></tr>`;
+        return `<tr><td style="${cell}"><s style="color:#999;">${i.name}</s><br><b>${i.substitute.name}</b> <span style="color:#b26a00;font-size:12px;">(replacement)</span></td>`
+          + `<td align="center" style="${cell}"><b>${i.substitute.count}</b></td>`
+          + `<td align="right" style="${cell}">${inr((i.substitute.unitPrice || 0) * (i.substitute.count || 0))}</td></tr>`;
       }
       if (i.unavailable) {
-        return `<tr><td style="padding:6px 0;border-bottom:1px solid #f0f0f0;color:#999;"><s>${i.name}</s> <span style="font-size:12px;">(out of stock, not supplied)</span></td><td align="right" style="padding:6px 0;border-bottom:1px solid #f0f0f0;color:#999;">&mdash;</td></tr>`;
+        return `<tr><td style="${cell}color:#999;"><s>${i.name}</s> <span style="font-size:12px;">(out of stock, not supplied)</span></td>`
+          + `<td align="center" style="${cell}color:#999;">&mdash;</td><td align="right" style="${cell}color:#999;">&mdash;</td></tr>`;
       }
-      return `<tr><td style="padding:6px 0;border-bottom:1px solid #f0f0f0;">${i.name}</td><td align="right" style="padding:6px 0;border-bottom:1px solid #f0f0f0;">${i.count} &times; ${inr(i.unitPrice)}</td></tr>`;
+      return `<tr><td style="${cell}">${i.name}</td><td align="center" style="${cell}"><b>${i.count}</b></td>`
+        + `<td align="right" style="${cell}">${inr(i.total)}</td></tr>`;
     })
     .join("");
 
+  return `
+    <table style="width:100%;border-collapse:collapse;font-size:14px;margin:0 0 8px;">
+      <thead><tr>
+        <th align="left" style="padding:6px 0;border-bottom:2px solid #253d4e;font-size:12px;">Item</th>
+        <th align="center" style="padding:6px 0;border-bottom:2px solid #253d4e;font-size:12px;width:56px;">Qty</th>
+        <th align="right" style="padding:6px 0;border-bottom:2px solid #253d4e;font-size:12px;width:96px;">Amount</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <table style="width:100%;font-size:15px;margin:0 0 4px;">
+      <tr><td style="color:#7e7e7e;font-size:13px;">${order.itemCount ?? ""} ${order.itemCount === 1 ? "unit" : "units"}</td>
+          <td align="right"><b>Total ${inr(order.total)}</b></td></tr>
+    </table>`;
+};
+
+/** The ways to pay, laid out so the number can be copied straight off the email. */
+const paymentBlock = (details, order) => {
+  const options = paymentOptions(details);
+  const { balance } = paymentState(order);
+  const due = balance > 0 ? balance : order.total;
+
+  const cards = options
+    .map((o) => `
+      <div style="margin:0 0 10px;padding:12px 14px;border:1px solid #ffe2d5;border-radius:8px;background:#fff;">
+        <div style="font-weight:800;margin:0 0 6px;">${o.title}</div>
+        <table style="font-size:14px;border-collapse:collapse;">
+          ${o.rows.map(([k, v]) => `<tr><td style="padding:2px 14px 2px 0;color:#7e7e7e;">${k}</td><td style="padding:2px 0;font-weight:800;letter-spacing:.3px;">${v}</td></tr>`).join("")}
+        </table>
+      </div>`)
+    .join("");
+
+  return `
+    <div style="margin:0 0 16px;padding:16px;background:#fff7f3;border-radius:10px;">
+      <div style="font-size:13px;color:#7e7e7e;">Amount to pay</div>
+      <div style="font-size:24px;font-weight:800;color:#ff4800;margin:0 0 12px;">${inr(due)}</div>
+      ${cards || `<div style="font-size:14px;">Please call us on +91 94892 39970 for payment details.</div>`}
+      <div style="font-size:13px;line-height:1.6;">
+        Please mention <b>${order.ref}</b> with your payment${details.confirmTo
+          ? `, then send the payment screenshot on WhatsApp to <b>${details.confirmTo}</b> so we can confirm it` : ""}.
+        ${details.note ? `<br>${details.note}` : ""}
+      </div>
+    </div>`;
+};
+
 /**
- * Customer-facing mail sent from the admin panel.
+ * Customer-facing mail.
  *
- * `kind` selects the wording: a confirmation, a dispatch note, or a plain
- * invoice re-send. All three carry the current invoice PDF.
+ * `kind` selects the wording. The order's life reads: received (with how to
+ * pay) -> paid -> packed -> dispatched. "confirm" is the counter-bill receipt,
+ * where the customer has usually paid at the till already.
  */
 export async function sendCustomerMail({ order, invoice, kind = "invoice" }) {
   // No verify() here: sendMail surfaces an auth failure by itself, and a
@@ -81,50 +142,78 @@ export async function sendCustomerMail({ order, invoice, kind = "invoice" }) {
   const t = transport();
 
   const adjusted = order.originalTotal != null && order.originalTotal !== order.total;
+  const first = order.customer.name?.split(" ")[0] || "";
+  const pay = paymentState(order);
+  const d = order.dispatch || {};
 
   const COPY = {
+    received: {
+      subject: `Order ${order.ref} received — please pay ${inr(order.total)} to confirm`,
+      title: `Thanks ${first}, we've received your order`,
+      lead: `Your order <b>${order.ref}</b> for <b>${inr(order.total)}</b> has been received. Please check the attached proforma to verify the items in your order, then kindly pay using the details below and send us the confirmation — we start packing as soon as the payment reaches us.`,
+      payment: true,
+      items: false,
+    },
+    paid: {
+      subject: `Payment received — your Sankamithra order ${order.ref} is confirmed`,
+      title: "Payment received, your order is confirmed",
+      lead: `We've received <b>${inr(pay.paid)}</b> for order <b>${order.ref}</b>${pay.balance > 0 ? ` — <b>${inr(pay.balance)}</b> is still to be paid` : ""}. Thank you! Here is everything we're packing for you:`,
+      items: true,
+    },
     confirm: {
       subject: `Your Sankamithra order ${order.ref} is confirmed`,
-      title: `Thanks ${order.customer.name?.split(" ")[0] || ""}, your order is confirmed`,
+      title: `Thanks ${first}, your order is confirmed`,
       lead: `We have your order <b>${order.ref}</b> and it is being packed now.`,
+      items: true,
     },
     dispatch: {
       subject: `Your Sankamithra order ${order.ref} has been dispatched`,
       title: "Your order is on its way",
-      lead: `Order <b>${order.ref}</b> has left our shop and is on its way. We'll be in touch with delivery details.`,
+      lead: `Order <b>${order.ref}</b> has left our shop and is on its way to you.`,
+      items: true,
     },
     invoice: {
       subject: `Proforma for your Sankamithra order ${order.ref}`,
       title: "Here is your proforma",
       lead: `A copy of the proforma for order <b>${order.ref}</b> is attached.`,
+      items: true,
     },
     packing: {
       subject: `We're packing your Sankamithra order ${order.ref}`,
       title: "Your order is being packed",
       lead: `Good news — we've started packing order <b>${order.ref}</b>. We'll let you know the moment it is on its way.`,
+      items: true,
     },
     packed: {
       subject: `Your Sankamithra order ${order.ref} is packed and ready`,
       title: "Packed and ready to go",
-      lead: `Order <b>${order.ref}</b> is packed and waiting for dispatch. It will be on its way shortly.`,
+      lead: `Order <b>${order.ref}</b> is packed and waiting for dispatch. Here is what's in your parcel:`,
+      items: true,
     },
     cancelled: {
       subject: `Your Sankamithra order ${order.ref} has been cancelled`,
       title: "Your order has been cancelled",
       lead: `Order <b>${order.ref}</b> has been cancelled. If this wasn't expected, please call us on +91 94892 39970 and we'll sort it out.`,
+      items: true,
     },
   }[kind] || {};
 
+  const details = COPY.payment ? await getPaymentDetails() : null;
+
   const body = `
     <p style="margin:0 0 16px;">${COPY.lead}</p>
-    ${adjusted ? `<p style="margin:0 0 16px;padding:12px;background:#fff8e1;border-radius:8px;font-size:14px;color:#b26a00;">
+    ${details ? paymentBlock(details, order) : ""}
+    ${kind === "dispatch" && (d.transport || d.lr) ? `
+      <div style="margin:0 0 16px;padding:12px 14px;background:#e9f8ef;border-radius:8px;font-size:14px;">
+        ${d.transport ? `<div><span style="color:#7e7e7e;">Sent by</span> <b>${d.transport}</b></div>` : ""}
+        ${d.lr ? `<div><span style="color:#7e7e7e;">LR / tracking no.</span> <b>${d.lr}</b></div>` : ""}
+        ${d.note ? `<div style="margin-top:4px;">${d.note}</div>` : ""}
+      </div>` : ""}
+    ${adjusted && COPY.items ? `<p style="margin:0 0 16px;padding:12px;background:#fff8e1;border-radius:8px;font-size:14px;color:#b26a00;">
       Some items were out of stock and have been replaced or removed. Your total is now
       <b>${inr(order.total)}</b> (originally ${inr(order.originalTotal)}). The details are below.
     </p>` : ""}
-    <table style="width:100%;border-collapse:collapse;font-size:14px;margin:0 0 16px;">${itemRows(order)}</table>
-    <table style="width:100%;font-size:15px;">
-      <tr><td><b>Total</b></td><td align="right"><b>${inr(order.total)}</b></td></tr>
-    </table>
+    ${COPY.items ? itemTable(order) : ""}
     <p style="margin:20px 0 0;font-size:13px;color:#7e7e7e;">
       Delivering to: ${order.customer.address}, ${order.customer.city}, ${order.customer.state} - ${order.customer.zip}
     </p>`;
@@ -245,7 +334,10 @@ export async function sendOrderMails({ order, invoice }) {
     order.source === "pos" && !String(order.customer?.email || "").trim();
 
   const [customer, shop] = await Promise.allSettled([
-    skipCustomer ? Promise.resolve(null) : sendCustomerMail({ order, invoice, kind: "confirm" }),
+    // A website order is not paid yet: the customer's first email is how to
+    // pay. A counter bill is usually settled at the till, so it gets a receipt.
+    skipCustomer ? Promise.resolve(null)
+      : sendCustomerMail({ order, invoice, kind: order.source === "pos" ? "confirm" : "received" }),
     sendShopMail({ order, invoice }),
   ]);
 

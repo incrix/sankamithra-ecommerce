@@ -3,6 +3,7 @@ import { Stack, Typography, Box, LinearProgress, Tooltip, Chip } from "@mui/mate
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import StatusChip from "./StatusChip";
 import { inr } from "@/util/pricing";
+import { paymentChip } from "@/util/orderPayments";
 
 
 const ago = (iso) => {
@@ -14,6 +15,15 @@ const ago = (iso) => {
   return `${Math.floor(h / 24)}d ago`;
 };
 
+/** How a bill's payment state reads in the list - the same three colours the
+ *  open order uses, so the two can never disagree. */
+const PAY_TONE = {
+  unpaid: { backgroundColor: "#fff1ea", color: "#d2451e" },
+  part: { backgroundColor: "#fff8e1", color: "#b26a00" },
+  paid: { backgroundColor: "#e9f8ef", color: "#1d9b53" },
+  over: { backgroundColor: "#fff8e1", color: "#b26a00" },
+};
+
 /** Compact list row - scannable at a glance, packing progress inline. */
 export default function OrderRow({ order, selected, onClick }) {
   const done = order.items.filter((i) => i.packed).length;
@@ -21,6 +31,10 @@ export default function OrderRow({ order, selected, onClick }) {
 
   // Ageing: an order still waiting to be packed after two days is the thing
   // that gets lost when there are hundreds in the list.
+  // What the bill is owed, so a list of hundreds says at a glance which ones
+  // still have money outstanding without opening each.
+  const pay = paymentChip(order);
+
   const days = (Date.now() - new Date(order.createdAt)) / 864e5;
   const waiting = ["new", "packing"].includes(order.status);
   const stale = waiting && days >= 2;
@@ -74,6 +88,11 @@ export default function OrderRow({ order, selected, onClick }) {
         <Typography fontSize={14} fontWeight={800} color="var(--text-color)">
           {inr(order.total)}
         </Typography>
+        {pay.state !== "cancelled" && (
+          <Tooltip title={pay.state === "paid" ? "Settled in full" : `${inr(pay.paid)} received of ${inr(pay.total)}`}>
+            <Chip label={pay.text} size="small" sx={{ height: 18, fontSize: 9.5, fontWeight: 800, ...PAY_TONE[pay.state] }} />
+          </Tooltip>
+        )}
       </Stack>
 
       <Stack direction="row" alignItems="center" gap={1}>

@@ -3,6 +3,8 @@ import path from "path";
 import crypto from "crypto";
 import { basisMrp, effDiscount, netPrice, lineAmount, paise, sumAmounts } from "@/util/pricing";
 import { applyCustomerEdit } from "@/util/orderCustomer";
+import { applyPayment, removePayment } from "@/util/orderPayments";
+import { normaliseDispatch, dispatchEvent } from "@/util/orderDispatch";
 import { isCombo, normaliseContents } from "@/util/combo";
 
 /**
@@ -210,6 +212,14 @@ export async function updateOrder(id, patch) {
     if (typeof patch.note === "string") next.note = patch.note;
     if (typeof patch.emailSent === "boolean") next.emailSent = patch.emailSent;
 
+    if (patch.dispatch) { // see ordersStore.js
+      const d = normaliseDispatch(patch.dispatch);
+      if (d) {
+        next.dispatch = d;
+        next.history = [...(next.history || prev.history || []), { at: next.updatedAt, event: dispatchEvent(d) }];
+      }
+    }
+
     /** Corrections to the customer block - see util/orderCustomer.js. */
     if (patch.customer) {
       const edit = applyCustomerEdit(prev.customer, patch.customer);
@@ -219,6 +229,30 @@ export async function updateOrder(id, patch) {
           ...edit.events.map((event) => ({ at: next.updatedAt, event }))];
       }
     }
+
+      /**
+       * Money collected against the bill - see util/orderPayments.js.
+       *
+       * Recorded as receipts rather than a single "paid" figure, so a GPay advance
+       * and the deposit that follows it both survive as separate facts. What is
+       * still owed is worked out from them wherever it is shown, which keeps it
+       * right when a line is added to the order after the first payment.
+       */
+      if (patch.addPayment) {
+        const taken = applyPayment(next, patch.addPayment);
+        if (taken) {
+          next.payments = taken.payments;
+          next.history = [...(next.history || prev.history || []), { at: next.updatedAt, event: taken.event }];
+        }
+      }
+
+      if (patch.removePayment) {
+        const dropped = removePayment(next, patch.removePayment);
+        if (dropped) {
+          next.payments = dropped.payments;
+          next.history = [...(next.history || prev.history || []), { at: next.updatedAt, event: dropped.event }];
+        }
+      }
 
     /**
      * Line and pricing edits, mirroring ordersStore.js.

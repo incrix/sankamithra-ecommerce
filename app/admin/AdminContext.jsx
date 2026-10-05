@@ -77,7 +77,7 @@ export function AdminProvider({ children }) {
       // was substituted receives a document matching what actually ships —
       // built here because the PDF template only renders in the browser.
       let payload = body;
-      if (NOTIFYING.includes(body.status)) {
+      if (NOTIFYING.includes(body.status) || body.notifyPaid === true) {
         const order = orders.find((o) => o.id === id);
         if (order?.customer?.email) {
           try {
@@ -105,6 +105,10 @@ export function AdminProvider({ children }) {
         if (mail?.sent) notify(`${order.ref} → ${body.status} · customer emailed`);
         else if (mail && !mail.sent) notify(`${order.ref} → ${body.status}, but the email failed: ${mail.error}`, "error");
         else notify(`${order.ref} → ${body.status}`);
+      } else if (body.addPayment) {
+        if (mail?.sent) notify(`Payment saved · ${order.customer.name} emailed a confirmation`);
+        else if (mail && !mail.sent) notify(`Payment saved, but the confirmation email failed: ${mail.error}`, "error");
+        else notify("Payment saved");
       }
     } catch {
       notify("Update failed", "error");

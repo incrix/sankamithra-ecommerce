@@ -89,3 +89,18 @@ export async function getWholesaleSlug({ create = false } = {}) {
   await setSetting(WHOLESALE_KEY, { slug, createdAt: new Date().toISOString() });
   return slug;
 }
+
+export const PAYMENT_DETAILS_KEY = "paymentDetails";
+
+/**
+ * Where customers send their money, as the admin last saved it.
+ *
+ * Falls back to the built-in PhonePe number rather than nothing: an
+ * order-received email with no way to pay is worse than one with the shop's
+ * long-standing number on it.
+ */
+export async function getPaymentDetails() {
+  const { DEFAULT_PAYMENT_DETAILS, normalisePaymentDetails } = await import("@/util/paymentDetails");
+  const saved = await getSettingSafe(PAYMENT_DETAILS_KEY);
+  return normalisePaymentDetails(saved || DEFAULT_PAYMENT_DETAILS);
+}

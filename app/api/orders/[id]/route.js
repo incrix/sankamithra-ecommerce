@@ -51,5 +51,19 @@ export async function PATCH(request, { params }) {
     }
   }
 
+  // A payment recorded with "email the customer" ticked. Whether to send is
+  // the biller's call, made in the payment form: an advance that does not
+  // settle the bill usually should not tell the customer they are confirmed.
+  const paidNow = (order.payments || []).length > (before?.payments || []).length;
+  if (patch.addPayment && patch.notifyPaid === true && paidNow && order.customer?.email) {
+    try {
+      await sendCustomerMail({ order, kind: "paid", invoice: patch.invoice });
+      mail = { sent: true, kind: "paid" };
+    } catch (err) {
+      console.error(`payment mail for ${order.ref} failed:`, err.message);
+      mail = { sent: false, kind: "paid", error: err.message };
+    }
+  }
+
   return Response.json({ order, mail });
 }

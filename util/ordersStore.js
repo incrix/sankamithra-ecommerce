@@ -4,6 +4,8 @@ import * as fileStore from "./ordersStore.file";
 import { getCatalogue } from "@/util/productsStore";
 import { basisMrp, effDiscount, unitOf, netPrice, lineAmount, paise, sumAmounts } from "@/util/pricing";
 import { applyCustomerEdit } from "@/util/orderCustomer";
+import { applyPayment, removePayment } from "@/util/orderPayments";
+import { normaliseDispatch, dispatchEvent } from "@/util/orderDispatch";
 import { isCombo, normaliseContents } from "@/util/combo";
 
 /**
@@ -238,6 +240,15 @@ async function applyOnce(id, patch) {
   if (typeof patch.note === "string") next.note = patch.note;
   if (typeof patch.emailSent === "boolean") next.emailSent = patch.emailSent;
 
+  /** Transport and LR number, given when marking dispatched - see util/orderDispatch.js. */
+  if (patch.dispatch) {
+    const d = normaliseDispatch(patch.dispatch);
+    if (d) {
+      next.dispatch = d;
+      next.history = [...(next.history || prev.history || []), { at: next.updatedAt, event: dispatchEvent(d) }];
+    }
+  }
+
   /** Corrections to the customer block - see util/orderCustomer.js. */
   if (patch.customer) {
     const edit = applyCustomerEdit(prev.customer, patch.customer);
@@ -245,6 +256,30 @@ async function applyOnce(id, patch) {
       next.customer = edit.customer;
       next.history = [...(next.history || prev.history || []),
         ...edit.events.map((event) => ({ at: next.updatedAt, event }))];
+    }
+  }
+
+  /**
+   * Money collected against the bill - see util/orderPayments.js.
+   *
+   * Recorded as receipts rather than a single "paid" figure, so a GPay advance
+   * and the deposit that follows it both survive as separate facts. What is
+   * still owed is worked out from them wherever it is shown, which keeps it
+   * right when a line is added to the order after the first payment.
+   */
+  if (patch.addPayment) {
+    const taken = applyPayment(next, patch.addPayment);
+    if (taken) {
+      next.payments = taken.payments;
+      next.history = [...(next.history || prev.history || []), { at: next.updatedAt, event: taken.event }];
+    }
+  }
+
+  if (patch.removePayment) {
+    const dropped = removePayment(next, patch.removePayment);
+    if (dropped) {
+      next.payments = dropped.payments;
+      next.history = [...(next.history || prev.history || []), { at: next.updatedAt, event: dropped.event }];
     }
   }
 
