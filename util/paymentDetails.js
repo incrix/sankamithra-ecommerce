@@ -13,13 +13,20 @@
  */
 
 export const DEFAULT_PAYMENT_DETAILS = {
-  upi: { enabled: true, app: "PhonePe", number: "9489239970", upiId: "", payee: "Sankamithra Thunder World" },
+  // Several UPI accounts may be listed; the customer sees each one.
+  upi: {
+    enabled: true,
+    accounts: [{ app: "PhonePe", number: "9489239970", upiId: "", payee: "Sankamithra Thunder World" }],
+  },
   bank: { enabled: false, accountName: "", accountNumber: "", ifsc: "", bankName: "", branch: "" },
   // Where the customer sends proof of payment, and anything else the shop
   // wants said. Shown under the payment options.
   confirmTo: "9489239970",
   note: "",
 };
+
+export const MAX_UPI_ACCOUNTS = 5;
+export const EMPTY_UPI_ACCOUNT = { app: "", number: "", upiId: "", payee: "" };
 
 const text = (v, max = 80) => String(v ?? "").trim().slice(0, max);
 const digits = (v, max = 20) => String(v ?? "").replace(/\D/g, "").slice(0, max);
@@ -29,13 +36,19 @@ export function normalisePaymentDetails(input) {
   const d = DEFAULT_PAYMENT_DETAILS;
   const upi = input?.upi || {};
   const bank = input?.bank || {};
+  // Details saved before multiple accounts existed kept one account's fields
+  // directly on `upi`.
+  const raw = Array.isArray(upi.accounts) ? upi.accounts : input?.upi ? [upi] : d.upi.accounts;
+  const accounts = raw.slice(0, MAX_UPI_ACCOUNTS).map((a) => ({
+    app: text(a?.app, 30),
+    number: digits(a?.number, 12),
+    upiId: text(a?.upiId, 60).replace(/\s+/g, ""),
+    payee: text(a?.payee, 60),
+  }));
   return {
     upi: {
       enabled: upi.enabled !== false,
-      app: text(upi.app ?? d.upi.app, 30) || "UPI",
-      number: digits(upi.number ?? d.upi.number, 12),
-      upiId: text(upi.upiId, 60).replace(/\s+/g, ""),
-      payee: text(upi.payee ?? d.upi.payee, 60),
+      accounts: accounts.length ? accounts : [{ ...EMPTY_UPI_ACCOUNT }],
     },
     bank: {
       enabled: bank.enabled === true,
@@ -53,8 +66,14 @@ export function normalisePaymentDetails(input) {
 /** What is wrong with the details, or null. Only switched-on options must be complete. */
 export function paymentDetailsProblem(d) {
   if (!d.upi.enabled && !d.bank.enabled) return "Switch on at least one way to pay";
-  if (d.upi.enabled && !d.upi.number && !d.upi.upiId) return "Enter the UPI phone number or UPI ID";
-  if (d.upi.number && d.upi.number.length !== 10) return "The UPI phone number should be 10 digits";
+  if (d.upi.enabled) {
+    const many = d.upi.accounts.length > 1;
+    for (const [i, a] of d.upi.accounts.entries()) {
+      const which = many ? ` for UPI ${i + 1}` : "";
+      if (!a.number && !a.upiId) return `Enter the UPI phone number or UPI ID${which}`;
+      if (a.number && a.number.length !== 10) return `The UPI phone number${which} should be 10 digits`;
+    }
+  }
   if (d.bank.enabled) {
     if (!d.bank.accountName || !d.bank.accountNumber || !d.bank.ifsc) {
       return "Bank deposit needs the account name, account number and IFSC";
@@ -67,15 +86,18 @@ export function paymentDetailsProblem(d) {
 /** The payment options the customer should be shown, in display order. */
 export function paymentOptions(d) {
   const out = [];
-  if (d?.upi?.enabled && (d.upi.number || d.upi.upiId)) {
-    out.push({
-      key: "upi",
-      title: `${d.upi.app || "UPI"}${d.upi.app && !/upi/i.test(d.upi.app) ? " / UPI" : ""}`,
-      rows: [
-        d.upi.number && ["Number", d.upi.number],
-        d.upi.upiId && ["UPI ID", d.upi.upiId],
-        d.upi.payee && ["Name", d.upi.payee],
-      ].filter(Boolean),
+  if (d?.upi?.enabled) {
+    (d.upi.accounts || []).forEach((a, i) => {
+      if (!a.number && !a.upiId) return;
+      out.push({
+        key: `upi-${i}`,
+        title: `${a.app || "UPI"}${a.app && !/upi/i.test(a.app) ? " / UPI" : ""}`,
+        rows: [
+          a.number && ["Number", a.number],
+          a.upiId && ["UPI ID", a.upiId],
+          a.payee && ["Name", a.payee],
+        ].filter(Boolean),
+      });
     });
   }
   if (d?.bank?.enabled && d.bank.accountNumber) {
