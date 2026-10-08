@@ -97,7 +97,13 @@ export function AdminProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        // A refusal carries its reason, and sometimes the order as it now
+        // stands - "Ravi is already handling this" should show Ravi at once.
+        const data = await res.json().catch(() => ({}));
+        if (data.order) setOrders((prev) => prev.map((o) => (o.id === data.order.id ? data.order : o)));
+        throw new Error(data.error || "");
+      }
       const { order, mail } = await res.json();
       setOrders((prev) => prev.map((o) => (o.id === order.id ? order : o)));
       if (body.status) {
@@ -105,13 +111,22 @@ export function AdminProvider({ children }) {
         if (mail?.sent) notify(`${order.ref} → ${body.status} · customer emailed`);
         else if (mail && !mail.sent) notify(`${order.ref} → ${body.status}, but the email failed: ${mail.error}`, "error");
         else notify(`${order.ref} → ${body.status}`);
+      } else if (body.handler) {
+        const who = body.handler.name;
+        const said = {
+          take: `${order.ref} is yours, ${who}`,
+          confirm: `${order.ref} confirmed by ${who}`,
+          release: `${order.ref} released for anyone to take`,
+          unconfirm: `${order.ref} no longer marked confirmed`,
+        }[body.handler.action];
+        if (said) notify(said);
       } else if (body.addPayment) {
         if (mail?.sent) notify(`Payment saved · ${order.customer.name} emailed a confirmation`);
         else if (mail && !mail.sent) notify(`Payment saved, but the confirmation email failed: ${mail.error}`, "error");
         else notify("Payment saved");
       }
-    } catch {
-      notify("Update failed", "error");
+    } catch (err) {
+      notify(err?.message || "Update failed", "error");
     } finally {
       setBusy(false);
     }

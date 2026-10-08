@@ -17,6 +17,7 @@ import AddItemPicker from "./AddItemPicker";
 import BillingBasis from "./BillingBasis";
 import { basisMrp, effDiscount, orderBasis, inferBasis, inr } from "@/util/pricing";
 import OrderActions from "./OrderActions";
+import OrderHandler from "./OrderHandler";
 import StatusChip from "./StatusChip";
 import { useAdmin } from "../AdminContext";
 import { useState, useEffect, useMemo } from "react";
@@ -196,6 +197,9 @@ export default function OrderDetail({ order, onClose, onPatch, busy, onToast }) 
       </Stack>
 
       <Stack sx={{ flex: 1, overflowY: "auto", minHeight: 0, p: 2, gap: 2.5 }}>
+        {/* Before the phone buttons: check nobody else is already calling. */}
+        <OrderHandler order={order} busy={busy} onPatch={onPatch} />
+
         {/* Customer + one-tap contact: the owner confirms every order by phone */}
         <CustomerBlock
           customer={c}

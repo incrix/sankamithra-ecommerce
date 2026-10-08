@@ -2,6 +2,9 @@
 import { Stack, Typography, Box, LinearProgress, Tooltip, Chip } from "@mui/material";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
 import StatusChip from "./StatusChip";
+import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import { useMe, sameName } from "@/util/teamMember";
 import { inr } from "@/util/pricing";
 import { paymentChip } from "@/util/orderPayments";
 
@@ -26,6 +29,7 @@ const PAY_TONE = {
 
 /** Compact list row - scannable at a glance, packing progress inline. */
 export default function OrderRow({ order, selected, onClick }) {
+  const me = useMe();
   const done = order.items.filter((i) => i.packed).length;
   const pct = order.items.length ? (done / order.items.length) * 100 : 0;
 
@@ -62,6 +66,24 @@ export default function OrderRow({ order, selected, onClick }) {
           <Tooltip title="Billed at the counter">
             <Chip label="Counter" size="small"
               sx={{ height: 18, fontSize: 9, fontWeight: 800, backgroundColor: "#eaf1fb", color: "#1554ad" }} />
+          </Tooltip>
+        )}
+        {/* Who has it, so nobody opens an order just to find it is already being called. */}
+        {(order.confirmedBy || order.handledBy) && (
+          <Tooltip title={order.confirmedBy
+            ? `Confirmed by ${order.confirmedBy.name}`
+            : `${order.handledBy.name} is handling this`}>
+            <Chip
+              icon={order.confirmedBy
+                ? <CheckCircleRoundedIcon sx={{ fontSize: "12px !important", color: "inherit !important" }} />
+                : <PersonRoundedIcon sx={{ fontSize: "12px !important", color: "inherit !important" }} />}
+              label={sameName((order.confirmedBy || order.handledBy).name, me) ? "You" : (order.confirmedBy || order.handledBy).name}
+              size="small"
+              sx={{ height: 18, fontSize: 9.5, fontWeight: 800, maxWidth: 110,
+                    ...(order.confirmedBy
+                      ? { backgroundColor: "#e9f8ef", color: "#1d9b53" }
+                      : { backgroundColor: "#f1ecfb", color: "#6a3fc1" }) }}
+            />
           </Tooltip>
         )}
         {stale && (
