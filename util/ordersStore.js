@@ -6,7 +6,6 @@ import { basisMrp, effDiscount, unitOf, netPrice, lineAmount, paise, sumAmounts 
 import { applyCustomerEdit } from "@/util/orderCustomer";
 import { applyPayment, removePayment } from "@/util/orderPayments";
 import { normaliseDispatch, dispatchEvent } from "@/util/orderDispatch";
-import { applyHandler } from "@/util/orderHandler";
 import { isCombo, normaliseContents } from "@/util/combo";
 
 /**
@@ -241,13 +240,13 @@ async function applyOnce(id, patch) {
   if (typeof patch.note === "string") next.note = patch.note;
   if (typeof patch.emailSent === "boolean") next.emailSent = patch.emailSent;
 
-  /** Who is handling the order and who confirmed it - see util/orderHandler.js. */
-  if (patch.handler) {
-    const h = applyHandler(prev, patch.handler);
-    if (h) {
-      if ("handledBy" in h) next.handledBy = h.handledBy;
-      if ("confirmedBy" in h) next.confirmedBy = h.confirmedBy;
-      next.history = [...(next.history || prev.history || []), { at: next.updatedAt, event: h.event }];
+  /** Which admin is calling the customer about this order - picked from the dashboard's list. */
+  if (typeof patch.takenBy === "string") {
+    const who = patch.takenBy.replace(/\s+/g, " ").trim().slice(0, 40);
+    if (who !== (prev.takenBy || "")) {
+      next.takenBy = who;
+      next.history = [...(next.history || prev.history || []),
+        { at: next.updatedAt, event: who ? `Taken by ${who}` : `${prev.takenBy} no longer taking this` }];
     }
   }
 

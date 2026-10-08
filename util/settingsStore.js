@@ -104,3 +104,22 @@ export async function getPaymentDetails() {
   const saved = await getSettingSafe(PAYMENT_DETAILS_KEY);
   return normalisePaymentDetails(saved || DEFAULT_PAYMENT_DETAILS);
 }
+
+export const ADMINS_KEY = "admins";
+
+/**
+ * The people who work the orders, as the dashboard lists them. Each order's
+ * "Taken by" dropdown offers these names, so two people do not both ring the
+ * same customer to confirm the same order.
+ */
+export const normaliseAdmins = (list) => {
+  const seen = new Set();
+  return (Array.isArray(list) ? list : [])
+    .map((n) => String(n ?? "").replace(/\s+/g, " ").trim().slice(0, 40))
+    .filter((n) => n && !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase()))
+    .slice(0, 30);
+};
+
+export async function getAdmins() {
+  return normaliseAdmins(await getSettingSafe(ADMINS_KEY));
+}

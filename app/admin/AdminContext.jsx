@@ -28,6 +28,8 @@ export function AdminProvider({ children }) {
   const [toast, setToast] = useState(null);
 
   const [catalogue, setCatalogue] = useState(null);
+  // Team names for each order's "Taken by" dropdown, kept on the dashboard.
+  const [admins, setAdmins] = useState([]);
   const [catLoading, setCatLoading] = useState(false);
 
   const notify = useCallback((msg, severity = "success") => setToast({ msg, severity }), []);
@@ -63,6 +65,14 @@ export function AdminProvider({ children }) {
 
   useEffect(() => { loadOrders(); }, [loadOrders]);
 
+  useEffect(() => {
+    if (!authed) return;
+    fetch("/api/admins", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.admins) setAdmins(d.admins); })
+      .catch(() => {});
+  }, [authed]);
+
   // Light polling so a counter screen stays current without a refresh.
   useEffect(() => {
     if (!authed) return;
@@ -97,13 +107,7 @@ export function AdminProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) {
-        // A refusal carries its reason, and sometimes the order as it now
-        // stands - "Ravi is already handling this" should show Ravi at once.
-        const data = await res.json().catch(() => ({}));
-        if (data.order) setOrders((prev) => prev.map((o) => (o.id === data.order.id ? data.order : o)));
-        throw new Error(data.error || "");
-      }
+      if (!res.ok) throw new Error();
       const { order, mail } = await res.json();
       setOrders((prev) => prev.map((o) => (o.id === order.id ? order : o)));
       if (body.status) {
@@ -111,22 +115,15 @@ export function AdminProvider({ children }) {
         if (mail?.sent) notify(`${order.ref} → ${body.status} · customer emailed`);
         else if (mail && !mail.sent) notify(`${order.ref} → ${body.status}, but the email failed: ${mail.error}`, "error");
         else notify(`${order.ref} → ${body.status}`);
-      } else if (body.handler) {
-        const who = body.handler.name;
-        const said = {
-          take: `${order.ref} is yours, ${who}`,
-          confirm: `${order.ref} confirmed by ${who}`,
-          release: `${order.ref} released for anyone to take`,
-          unconfirm: `${order.ref} no longer marked confirmed`,
-        }[body.handler.action];
-        if (said) notify(said);
+      } else if (typeof body.takenBy === "string") {
+        notify(body.takenBy ? `${order.ref} taken by ${body.takenBy}` : `${order.ref} is free to take`);
       } else if (body.addPayment) {
         if (mail?.sent) notify(`Payment saved · ${order.customer.name} emailed a confirmation`);
         else if (mail && !mail.sent) notify(`Payment saved, but the confirmation email failed: ${mail.error}`, "error");
         else notify("Payment saved");
       }
-    } catch (err) {
-      notify(err?.message || "Update failed", "error");
+    } catch {
+      notify("Update failed", "error");
     } finally {
       setBusy(false);
     }
@@ -141,7 +138,7 @@ export function AdminProvider({ children }) {
 
   const value = {
     authed, setAuthed, orders, stats, loading, busy, toast, setToast, notify,
-    catalogue, catLoading, loadOrders, loadCatalogue, patchOrder, logout,
+    catalogue, catLoading, loadOrders, loadCatalogue, patchOrder, logout, admins, setAdmins,
   };
 
   return <AdminContext.Provider value={value}>{children}</AdminContext.Provider>;

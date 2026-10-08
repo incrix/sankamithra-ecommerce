@@ -7,7 +7,6 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useAdmin } from "../AdminContext";
-import { useMe, sameName } from "@/util/teamMember";
 import OrderRow from "./OrderRow";
 import OrderDetail from "./OrderDetail";
 import { inr } from "@/util/pricing";
@@ -53,13 +52,6 @@ const SOURCES = [
   { key: "all", label: "All orders" },
   { key: "online", label: "Website" },
   { key: "pos", label: "Counter" },
-];
-
-/** Who has the order, so a teammate can pick up only what nobody is calling yet. */
-const OWNERS = [
-  { key: "all", label: "Anyone" },
-  { key: "free", label: "Not taken" },
-  { key: "mine", label: "Mine" },
 ];
 
 const SORTS = {
@@ -108,8 +100,6 @@ export default function Orders() {
   const [sort, setSort] = useState("newest");
   const [range, setRange] = useState("all");
   const [source, setSource] = useState("all");
-  const [owner, setOwner] = useState("all");
-  const me = useMe();
   const [visible, setVisible] = useState(BATCH);
   const [selectedId, setSelectedId] = useState(null);
 
@@ -134,19 +124,16 @@ export default function Orders() {
         if (from && new Date(o.createdAt) < from) return false;
         // Orders predating the POS feature have no source; treat them as website.
         if (source !== "all" && (o.source || "online") !== source) return false;
-        if (owner === "free" && o.handledBy) return false;
-        if (owner === "mine" && !sameName(o.handledBy?.name, me)) return false;
         if (!q) return true;
         return (
           o.ref.toLowerCase().includes(q) ||
           o.customer.name.toLowerCase().includes(q) ||
           o.customer.phone.includes(q) ||
-          o.customer.city.toLowerCase().includes(q) ||
-          (o.handledBy?.name || "").toLowerCase().includes(q)
+          o.customer.city.toLowerCase().includes(q)
         );
       })
       .sort(SORTS[sort]?.fn || SORTS.newest.fn);
-  }, [orders, tab, query, sort, range, source, owner, me]);
+  }, [orders, tab, query, sort, range, source]);
 
   const shown = useMemo(() => filtered.slice(0, visible), [filtered, visible]);
 
@@ -157,7 +144,7 @@ export default function Orders() {
     [shown, sort]
   );
 
-  useEffect(() => { setVisible(BATCH); }, [tab, query, sort, range, source, owner]);
+  useEffect(() => { setVisible(BATCH); }, [tab, query, sort, range, source]);
 
   const onListScroll = (e) => {
     const el = e.currentTarget;
@@ -180,7 +167,7 @@ export default function Orders() {
           <InputBase
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search ref, name, phone, city, staff..."
+            placeholder="Search ref, name, phone, city..."
             sx={{ flex: 1, fontSize: 14, fontWeight: 600 }}
           />
           {query && <CloseRoundedIcon onClick={() => setQuery("")} sx={{ fontSize: 18, cursor: "pointer", color: "var(--text-color-trinary)" }} />}
@@ -214,24 +201,6 @@ export default function Orders() {
                   borderColor: source === sc.key ? "var(--primary-color)" : "var(--border)",
                   backgroundColor: source === sc.key ? "var(--primary-soft)" : "#fff",
                   color: source === sc.key ? "var(--primary-color)" : "var(--text-color-secondary)",
-                }}
-              />
-            ))}
-          </Stack>
-
-          <Stack direction="row" gap={0.75} alignItems="center" flexWrap="wrap">
-            <Typography fontSize={11.5} fontWeight={800} color="var(--text-color-trinary)">TAKEN BY</Typography>
-            {OWNERS.map((ow) => (
-              <Chip
-                key={ow.key}
-                label={ow.label}
-                size="small"
-                onClick={() => setOwner(ow.key)}
-                sx={{
-                  fontWeight: 700, fontSize: 11.5, height: 24, border: "1px solid",
-                  borderColor: owner === ow.key ? "var(--primary-color)" : "var(--border)",
-                  backgroundColor: owner === ow.key ? "var(--primary-soft)" : "#fff",
-                  color: owner === ow.key ? "var(--primary-color)" : "var(--text-color-secondary)",
                 }}
               />
             ))}
