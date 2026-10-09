@@ -1,7 +1,7 @@
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import {
   DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, DeleteCommand,
-  ScanCommand, BatchWriteCommand,
+  ScanCommand, BatchWriteCommand, TransactWriteCommand,
 } from "@aws-sdk/lib-dynamodb";
 
 /**
@@ -250,6 +250,92 @@ export async function bumpCounter(name, by = 1) {
   }));
   return Number(res.Attributes?.seq ?? by);
 }
+
+/* ------------------------------------------------------------------ *
+ * Stock
+ * ------------------------------------------------------------------ */
+
+/**
+ * Takes units out of stock for a new order: every line or none of them.
+ *
+ * One transaction, each update conditional on the shelf holding enough, so
+ * two customers racing for the last box cannot both get it - the service
+ * refuses the second. Returns the lines that were short as { id, left },
+ * empty when everything was taken.
+ *
+ * `need` is a Map of product id -> units.
+ */
+export async function takeStock(need) {
+  const wanted = [...need].filter(([, n]) => n > 0);
+  const taken = new Map();
+
+  // A transaction holds at most 100 writes. A bigger order goes in chunks, and
+  // a chunk that fails hands back everything the earlier chunks took.
+  for (let i = 0; i < wanted.length; i += 100) {
+    const chunk = wanted.slice(i, i + 100);
+    for (let attempt = 0; ; attempt++) {
+      try {
+        await client().send(new TransactWriteCommand({
+          TransactItems: chunk.map(([id, n]) => ({
+            Update: {
+              TableName: TABLE.products,
+              Key: { id },
+              UpdateExpression: "SET countInStock = countInStock - :n",
+              ConditionExpression: "attribute_exists(id) AND countInStock >= :n",
+              ExpressionAttributeValues: { ":n": n },
+            },
+          })),
+        }));
+        chunk.forEach(([id, n]) => taken.set(id, n));
+        break;
+      } catch (err) {
+        const reasons = err?.name === "TransactionCanceledException" ? err.CancellationReasons || [] : null;
+        const short = reasons
+          ? chunk.filter((_, j) => reasons[j]?.Code === "ConditionalCheckFailed").map(([id]) => id)
+          : [];
+
+        // Cancelled for another reason - someone else writing the same product
+        // at that instant. Nothing was taken, so trying again is safe.
+        if (reasons && !short.length && attempt < 3) {
+          await new Promise((r) => setTimeout(r, 60 * (attempt + 1)));
+          continue;
+        }
+
+        await putBackStock(taken);
+        if (!reasons) throw err;
+
+        const ids = short.length ? short : chunk.map(([id]) => id);
+        return Promise.all(ids.map(async (id) => {
+          const row = await getItem(TABLE.products, id).catch(() => null);
+          return { id, left: Math.max(0, Number(row?.countInStock) || 0) };
+        }));
+      }
+    }
+  }
+  return [];
+}
+
+/**
+ * Moves stock without checking it - giving units back, or taking more for an
+ * edit the shop has already agreed with the customer. `change` is a Map of
+ * product id -> units to add (negative to take). A product deleted since is
+ * skipped rather than recreated as a bare stock row.
+ */
+export async function moveStock(change) {
+  await Promise.all([...change].filter(([, d]) => d).map(([id, d]) =>
+    client().send(new UpdateCommand({
+      TableName: TABLE.products,
+      Key: { id },
+      UpdateExpression: "ADD countInStock :d",
+      ConditionExpression: "attribute_exists(id)",
+      ExpressionAttributeValues: { ":d": d },
+    })).catch((err) => {
+      if (err?.name !== "ConditionalCheckFailedException") throw err;
+    })
+  ));
+}
+
+const putBackStock = (taken) => moveStock(taken);
 
 /* ------------------------------------------------------------------ *
  * Internals

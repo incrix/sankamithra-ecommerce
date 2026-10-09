@@ -74,10 +74,9 @@ export default async function ProductPage({ params }) {
       url,
       priceCurrency: "INR",
       price,
-      // Always InStock: the shop takes the order regardless and confirms by
-      // phone. Declaring OutOfStock would drop the product out of Google's
-      // shopping results for something that can, in fact, still be bought.
-      availability: "https://schema.org/InStock",
+      // Matches the page: a product at zero stock cannot be ordered, and
+      // Google penalises markup that disagrees with what the page shows.
+      availability: product.countInStock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       seller: { "@id": `${SITE_URL}/#organization` },
       priceValidUntil: `${new Date().getFullYear() + 1}-03-31`,
     },

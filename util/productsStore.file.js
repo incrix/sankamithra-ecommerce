@@ -211,3 +211,29 @@ export async function applyBulkDiscount({ discount, category, ids }) {
     return changed;
   });
 }
+
+/** Local stand-ins for the stock calls in productsStore.js. */
+export async function takeStock(need) {
+  return serialise(async () => {
+    const data = await readAll();
+    const byId = new Map(data.products.map((p) => [Number(p.id), p]));
+    const short = [...need]
+      .filter(([id, n]) => n > 0 && !((byId.get(Number(id))?.countInStock ?? 0) >= n))
+      .map(([id]) => ({ id, left: Math.max(0, byId.get(Number(id))?.countInStock ?? 0) }));
+    if (short.length) return short;
+    for (const [id, n] of need) byId.get(Number(id)).countInStock -= n;
+    await writeAll(data);
+    return [];
+  });
+}
+
+export async function moveStock(change) {
+  return serialise(async () => {
+    const data = await readAll();
+    for (const [id, d] of change) {
+      const p = data.products.find((x) => Number(x.id) === Number(id));
+      if (p) p.countInStock = (Number(p.countInStock) || 0) + d;
+    }
+    await writeAll(data);
+  });
+}

@@ -65,9 +65,8 @@ export default function ProductClient({ initialProduct }) {
   }
 
   const price = unitPrice(product);
-  // See ProductCard: stock never stops an order. The shop confirms every
-  // order by phone anyway, which is where availability actually gets settled.
-  const out = false;
+  // See ProductCard: a product at zero stock cannot be ordered.
+  const out = product.countInStock <= 0;
   const line = c.inCart(product.id);
   const combo = isCombo(product);
   const counted = showsCount(product);
@@ -192,10 +191,11 @@ export default function ProductClient({ initialProduct }) {
               <QtyStepper value={qty} onChange={(q) => setQty(Math.max(1, q))} onAdjust={(d) => setQty((v) => Math.max(1, v + d))} />
               <Button
                 onClick={add}
+                disabled={out}
                 startIcon={<AddShoppingCartRoundedIcon />}
                 sx={{ ...primaryBtn, flex: { xs: "1 1 100%", sm: "0 0 auto" } }}
               >
-                Add to cart
+                {out ? "Out of stock" : "Add to cart"}
               </Button>
             </Stack>
 
@@ -213,7 +213,7 @@ export default function ProductClient({ initialProduct }) {
             )}
 
             <Stack direction="row" gap={3} flexWrap="wrap" mt={0.5}>
-              <Meta label="Availability" value="Available to order" />
+              <Meta label="Availability" value={out ? "Out of stock" : "In stock"} />
               <Meta label="SKU" value={product.sku} />
               <Meta label="Brand" value={product.brand} />
             </Stack>

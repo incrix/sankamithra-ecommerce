@@ -383,6 +383,12 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
           body: JSON.stringify({ billingDetails, productList: cart, invoice: base64 }),
         });
         const j = await saved.json().catch(() => ({}));
+        // Short on stock: nothing was ordered. Say which lines and keep the
+        // cart, rather than falling through to "we couldn't record it" below.
+        if (saved.status === 409 && j.outOfStock) {
+          toast(`${j.error}. Please lower the quantity and try again.`);
+          return;
+        }
         if (saved.ok) {
           ref = j.ref;
           mail = j.mail || mail;

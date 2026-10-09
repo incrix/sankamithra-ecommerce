@@ -20,10 +20,9 @@ import { inr } from "@/util/pricing";
  */
 export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
   const price = unitPrice(product);
-  // Stock is tracked for the shop's own benefit but never blocks a customer:
-  // the counter can source almost anything, and an order the shop can fulfil
-  // by tomorrow is worth far more than a dead end on the page.
-  const out = false;
+  // Orders take stock as they are placed, so a product at zero cannot be
+  // ordered - the server refuses it - and the card says so up front.
+  const out = product.countInStock <= 0;
   const added = Boolean(line);
   const combo = isCombo(product);
 
@@ -37,6 +36,7 @@ export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
         border: added ? "1.5px solid var(--primary-color)" : combo ? "1px solid var(--primary-border)" : "1px solid #ececec",
         backgroundColor: combo ? "var(--primary-softer)" : "#fff",
         position: "relative",
+        opacity: out ? 0.55 : 1,
         transition: "transform .15s, box-shadow .15s, border-color .15s",
         "&:hover": { transform: "translateY(-2px)", boxShadow: "0 8px 22px rgba(0,0,0,.08)" },
       }}
@@ -118,7 +118,11 @@ export default function ProductCard({ product, line, onAdd, onQty, onAdjust }) {
         </Typography>
       </Stack>
 
-      {added ? (
+      {out ? (
+        <Typography fontSize={12} fontWeight={800} color="var(--danger)" py={0.75}>
+          Out of stock
+        </Typography>
+      ) : added ? (
         // In-place editing - no need to open the cart to change quantity
         <Stack direction="row" alignItems="center" justifyContent="space-between" gap={0.5}>
           <QtyStepper

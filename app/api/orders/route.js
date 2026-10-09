@@ -93,6 +93,11 @@ export async function POST(request) {
 
     return Response.json({ ok: true, ref: order.ref, id: order.id, mail });
   } catch (err) {
+    // Not a fault: the shelf is short. Say which lines, so the customer (or
+    // the counter) can lower the quantity and try again.
+    if (err?.code === "OUT_OF_STOCK") {
+      return Response.json({ error: err.message, outOfStock: err.short }, { status: 409 });
+    }
     console.error("order create failed:", err);
     return Response.json({ error: "Could not save order" }, { status: 500 });
   }

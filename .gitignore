@@ -44,3 +44,6 @@ next-env.d.ts
 
 # product images uploaded through the admin
 /public/uploads
+
+# Data backups written by scripts/
+_backup-*.json
