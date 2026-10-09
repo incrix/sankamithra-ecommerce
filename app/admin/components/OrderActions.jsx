@@ -10,6 +10,7 @@ import { useState } from "react";
 import { buildProformaBlob } from "@/util/proforma";
 import { DOCS, saveBlob, printBlob } from "@/util/docs";
 import { inr } from "@/util/pricing";
+import { BUSINESS, SITE_DOMAIN } from "@/util/site";
 
 const digits = (s) => String(s || "").replace(/\D/g, "");
 
@@ -39,21 +40,25 @@ export default function OrderActions({ order, onToast }) {
     })
     .join("\n");
 
+  // Signed by whoever took the order, with the official site and office line,
+  // so the customer can tell this message apart from someone posing as us.
+  const sign = `\n\n— ${order.takenBy || "Team Sankamithra"}, Sankamithra Thunder World\nOffice: ${BUSINESS.orderOffice.phone} · ${SITE_DOMAIN}`;
+
   const WA_TEMPLATES = [
     {
       key: "confirm",
       label: "Confirm the order",
-      text: `Hello ${c.name}, this is Sankamithra Thunder World.\n\nWe've received your order ${order.ref} for ${inr(order.total)}. Please confirm and we'll start packing.\n\n${lines}\n\nThank you!`,
+      text: `Hello ${c.name}, this is Sankamithra Thunder World.\n\nWe've received your order ${order.ref} for ${inr(order.total)}. Please confirm and we'll start packing.\n\n${lines}\n\nThank you!${sign}`,
     },
     {
       key: "substitution",
       label: "Explain a replacement",
-      text: `Hello ${c.name}, about your order ${order.ref}.\n\nSome items were out of stock, so we've adjusted your order:\n\n${lines}\n\nYour new total is ${inr(order.total)}${adjusted ? ` (was ${inr(order.originalTotal)})` : ""}. Is that okay?`,
+      text: `Hello ${c.name}, about your order ${order.ref}.\n\nSome items were out of stock, so we've adjusted your order:\n\n${lines}\n\nYour new total is ${inr(order.total)}${adjusted ? ` (was ${inr(order.originalTotal)})` : ""}. Is that okay?${sign}`,
     },
     {
       key: "dispatch",
       label: "Say it's dispatched",
-      text: `Hello ${c.name}, your Sankamithra order ${order.ref} (${inr(order.total)}) has been dispatched. We'll share delivery details shortly.\n\nThank you for shopping with us!`,
+      text: `Hello ${c.name}, your Sankamithra order ${order.ref} (${inr(order.total)}) has been dispatched. We'll share delivery details shortly.\n\nThank you for shopping with us!${sign}`,
     },
   ];
 

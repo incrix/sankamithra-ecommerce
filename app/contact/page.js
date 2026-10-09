@@ -17,7 +17,8 @@ export const metadata = {
 };
 
 const FAQS = [
-  { q: "What is the Sankamithra Thunder World contact number?", a: "Call or WhatsApp +91 94892 39970. You can also reach us on +91 75488 20326, +91 99620 66648 or +91 84892 92901, or email sankamithrathunderworld@gmail.com." },
+  { q: "What is the Sankamithra Thunder World contact number?", a: "Call or WhatsApp +91 94892 39970. You can also reach us on +91 75488 20326, +91 99620 66648 or +91 84892 92901, or email sankamithrathunderworld@gmail.com. Our order office at Kanmaisurangudi calls customers from +91 99406 67228 to confirm orders." },
+  { q: "Is thunder.sankamithra.com the official Sankamithra website?", a: "Yes, it is our only official website. Beware of fake sites using the Sankamithra name. We call customers only from +91 99406 67228 or the numbers on this page, and we only ask for payment to the accounts in the order email we send you." },
   { q: "Where is the Sankamithra crackers shop in Sivakasi?", a: "Our office and shop are at 3/1427/G6, Opposite PRC Bus Depot, Sattur Road, Sivakasi 626123, Tamil Nadu." },
   { q: "What are your opening hours?", a: "We are open Monday to Saturday, 9am to 7pm. Orders placed online are confirmed by phone or WhatsApp within 24 hours." },
   { q: "How do I track my order?", a: "Every order gets a reference like STW-0001 when you place it. Quote that on the phone or on WhatsApp and we will tell you exactly where it is." },

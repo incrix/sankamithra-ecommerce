@@ -1,7 +1,7 @@
 "use client";
 import { Text, View, Image, StyleSheet } from "@react-pdf/renderer";
 import Logo from "@/public/images/logo.png";
-import { BUSINESS } from "@/util/site";
+import { BUSINESS, SITE_DOMAIN } from "@/util/site";
 import { amount, paise } from "@/util/pricing";
 
 /**
@@ -55,6 +55,9 @@ export function DocHeader({ title, subtitle }) {
             </Text>
             <Text style={s.small}>
               {BUSINESS.phone[0]} · {BUSINESS.email}
+            </Text>
+            <Text style={s.small}>
+              {BUSINESS.orderOffice.label}: {BUSINESS.orderOffice.phone} · {SITE_DOMAIN}
             </Text>
           </View>
         </View>

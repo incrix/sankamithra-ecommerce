@@ -3,6 +3,7 @@ import { amount } from "@/util/pricing";
 import { paymentState } from "@/util/orderPayments";
 import { paymentOptions } from "@/util/paymentDetails";
 import { getPaymentDetails } from "@/util/settingsStore";
+import { BUSINESS, SITE_URL, SITE_DOMAIN, OFFICIAL_NOTICE } from "@/util/site";
 
 const inr = (n) => `Rs. ${amount(n)}`;
 
@@ -42,6 +43,26 @@ function transport() {
   return t;
 }
 
+const OFFICE = BUSINESS.orderOffice;
+
+const esc = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+/**
+ * The sign-off on a customer email: the admin who took the order by name, so
+ * the customer knows who they spoke to and who to ask for when they ring back.
+ */
+const signature = (order) => `
+  <p style="margin:24px 0 0;font-size:14px;line-height:1.6;">
+    Regards,<br>
+    <b>${order?.takenBy ? esc(order.takenBy) : "Team Sankamithra"}</b><br>
+    Sankamithra Thunder World, Sivakasi<br>
+    <span style="color:#7e7e7e;font-size:13px;">${OFFICE.label}: <a href="tel:${OFFICE.tel}" style="color:#ff4800;font-weight:bold;text-decoration:none;">${OFFICE.phone}</a></span>
+  </p>`;
+
+/**
+ * Every email carries the official address and the number we call from, so a
+ * customer can check that a site, call or payment request is really from us.
+ */
 const SHELL = (title, body) => `
 <main style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#253d4e;background:#f7f8f9;padding:24px 0;">
   <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;border:1px solid #ededed;">
@@ -54,7 +75,11 @@ const SHELL = (title, body) => `
       ${body}
     </div>
     <div style="padding:16px 24px;border-top:1px solid #ededed;color:#7e7e7e;font-size:12px;">
-      Questions? Call +91 94892 39970 or reply to this email.
+      Questions? Call our ${OFFICE.label.toLowerCase()} on <b>${OFFICE.phone}</b> or reply to this email.
+      <div style="margin-top:10px;padding:10px 12px;background:#fff7f3;border-radius:8px;color:#253d4e;">
+        <b>Official website: <a href="${SITE_URL}" style="color:#ff4800;">${SITE_DOMAIN}</a></b><br>
+        ${OFFICIAL_NOTICE}
+      </div>
     </div>
   </div>
 </main>`;
@@ -120,7 +145,7 @@ const paymentBlock = (details, order) => {
     <div style="margin:0 0 16px;padding:16px;background:#fff7f3;border-radius:10px;">
       <div style="font-size:13px;color:#7e7e7e;">Amount to pay</div>
       <div style="font-size:24px;font-weight:800;color:#ff4800;margin:0 0 12px;">${inr(due)}</div>
-      ${cards || `<div style="font-size:14px;">Please call us on +91 94892 39970 for payment details.</div>`}
+      ${cards || `<div style="font-size:14px;">Please call us on ${OFFICE.phone} for payment details.</div>`}
       <div style="font-size:13px;line-height:1.6;">
         Please mention <b>${order.ref}</b> with your payment${details.confirmTo
           ? `, then send the payment screenshot on WhatsApp to <b>${details.confirmTo}</b> so we can confirm it` : ""}.
@@ -150,7 +175,7 @@ export async function sendCustomerMail({ order, invoice, kind = "invoice" }) {
     received: {
       subject: `Order ${order.ref} received — please pay ${inr(order.total)} to confirm`,
       title: `Thanks ${first}, we've received your order`,
-      lead: `Your order <b>${order.ref}</b> for <b>${inr(order.total)}</b> has been received. Please check the attached proforma to verify the items in your order, then kindly pay using the details below and send us the confirmation — we start packing as soon as the payment reaches us.`,
+      lead: `Your order <b>${order.ref}</b> for <b>${inr(order.total)}</b> has been received. Please check the attached proforma to verify the items in your order, then kindly pay using the details below and send us the confirmation — we start packing as soon as the payment reaches us.<br><br>We'll call you from our order office on <b>${OFFICE.phone}</b> to confirm your order.`,
       payment: true,
       items: false,
     },
@@ -193,7 +218,7 @@ export async function sendCustomerMail({ order, invoice, kind = "invoice" }) {
     cancelled: {
       subject: `Your Sankamithra order ${order.ref} has been cancelled`,
       title: "Your order has been cancelled",
-      lead: `Order <b>${order.ref}</b> has been cancelled. If this wasn't expected, please call us on +91 94892 39970 and we'll sort it out.`,
+      lead: `Order <b>${order.ref}</b> has been cancelled. If this wasn't expected, please call us on ${OFFICE.phone} and we'll sort it out.`,
       items: true,
     },
   }[kind] || {};
@@ -216,7 +241,8 @@ export async function sendCustomerMail({ order, invoice, kind = "invoice" }) {
     ${COPY.items ? itemTable(order) : ""}
     <p style="margin:20px 0 0;font-size:13px;color:#7e7e7e;">
       Delivering to: ${order.customer.address}, ${order.customer.city}, ${order.customer.state} - ${order.customer.zip}
-    </p>`;
+    </p>
+    ${signature(order)}`;
 
   const info = {
     from: FROM(),

@@ -17,6 +17,7 @@ import QtyStepper from "@/app/components/commerce/QtyStepper";
 import { basisMrp, effDiscount, unitOf, lineOf, paise, sumAmounts, inr } from "@/util/pricing";
 import { useAdmin } from "../AdminContext";
 import { BAR_H } from "./AdminShell";
+import { BUSINESS, SITE_DOMAIN } from "@/util/site";
 
 const PAGE = 40;
 
@@ -213,7 +214,7 @@ export default function Pos() {
         .tot { font-weight:bold; font-size:13px; }
       </style></head><body>
         <h2>SANKAMITHRA THUNDER WORLD</h2>
-        <div class="c muted">Fireworks &amp; Crackers · Sivakasi<br>+91 94892 39970</div>
+        <div class="c muted">Fireworks &amp; Crackers · Sivakasi<br>+91 94892 39970 · Office ${BUSINESS.orderOffice.phone}<br>${SITE_DOMAIN}</div>
         <div class="rule"></div>
         <div>Bill: <b>${bill.ref}</b></div>
         <div class="muted">${bill.at.toLocaleString("en-IN")}</div>
@@ -229,7 +230,7 @@ export default function Pos() {
           <tr class="tot"><td>TOTAL</td><td class="r">${inr(bill.total)}</td></tr>
         </table>
         <div class="rule"></div>
-        <div class="c muted">Proforma — not a tax invoice.<br>Thank you, and celebrate safely!</div>
+        <div class="c muted">Proforma — not a tax invoice.<br>Official website: ${SITE_DOMAIN} only.<br>Thank you, and celebrate safely!</div>
       </body></html>`);
     w.document.close();
     w.focus();

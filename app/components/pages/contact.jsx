@@ -5,6 +5,8 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import MailOutlineRoundedIcon from "@mui/icons-material/MailOutlineRounded";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
 import ScheduleRoundedIcon from "@mui/icons-material/ScheduleRounded";
+import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
+import { SITE_DOMAIN, OFFICIAL_NOTICE } from "@/util/site";
 
 /**
  * Contact page. Same addresses and numbers as before, restructured into two
@@ -22,9 +24,10 @@ const LOCATIONS = [
     phones: ["+91 94892 39970", "+91 75488 20326"],
   },
   {
-    label: "Sattur branch",
+    label: "Order office, Kanmaisurangudi",
     lines: ["9/241", "Kanmaisurangudi Village", "Sattur - 626203"],
-    phones: ["+91 99620 66648", "+91 84892 92901"],
+    // The office line staff call customers from to confirm orders - listed first.
+    phones: ["+91 99406 67228", "+91 99620 66648", "+91 84892 92901"],
   },
 ];
 
@@ -105,6 +108,18 @@ export default function ContactContent() {
             <b>Open Mon–Sat, 9am – 7pm.</b>{" "}
             <Box component="span" sx={{ color: "var(--text-color-secondary)" }}>
               Orders placed online are confirmed by phone within 24 hours.
+            </Box>
+          </Typography>
+        </Stack>
+
+        {/* Fake shop sites copy real sellers' names to take advance payments. */}
+        <Stack direction="row" alignItems="flex-start" gap={1.25}
+          sx={{ ...card, flexDirection: "row", borderColor: "var(--primary-border)", backgroundColor: "var(--primary-soft)" }}>
+          <VerifiedUserRoundedIcon sx={{ color: "var(--primary-color)", fontSize: 20, mt: 0.25 }} />
+          <Typography fontSize={14} color="var(--text-color)" lineHeight={1.7}>
+            <b>Official website: {SITE_DOMAIN}.</b>{" "}
+            <Box component="span" sx={{ color: "var(--text-color-secondary)" }}>
+              {OFFICIAL_NOTICE.replace(`Our only official website is ${SITE_DOMAIN}. `, "")}
             </Box>
           </Typography>
         </Stack>

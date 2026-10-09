@@ -18,6 +18,7 @@ import Template1 from "@/util/invoice/Template1/Template";
 import { assetUrl } from "@/util/config";
 import { inr, netPrice, lineAmount, sumAmounts } from "@/util/pricing";
 import { paymentOptions } from "@/util/paymentDetails";
+import { BUSINESS, SITE_DOMAIN } from "@/util/site";
 import { minimumFor, isTamilNadu, MIN_ORDER_TN, MIN_ORDER_OUTSIDE_TN } from "@/util/minimumOrder";
 
 const quicksand = Quicksand({ subsets: ["latin"] });
@@ -624,6 +625,10 @@ function OrderPlaced({ result }) {
               {mail?.customer
                 ? `A copy of your proforma has been emailed to ${billing?.email}.`
                 : "We couldn't email your proforma — download it below and keep a copy."}
+            </Typography>
+            <Typography fontSize={13} color="var(--text-color-secondary)" lineHeight={1.6}>
+              We&apos;ll call you from our order office on <b>{BUSINESS.orderOffice.phone}</b> to confirm.
+              Our only official website is <b>{SITE_DOMAIN}</b> — if anyone else asks you to pay in our name, call us first.
             </Typography>
           </>
         ) : (

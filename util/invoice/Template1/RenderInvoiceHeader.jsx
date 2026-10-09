@@ -1,6 +1,7 @@
 "use client";
 import { Text, View, Image } from "@react-pdf/renderer";
 import Logo from "@/public/images/logo.png";
+import { BUSINESS, SITE_DOMAIN } from "@/util/site";
 
 export default function RenderInvoiceHeader() {
   return (
@@ -56,7 +57,10 @@ export default function RenderInvoiceHeader() {
             maxWidth: 200,
           }}
         >
-          Website: thunder.sankamithra.com
+          {BUSINESS.orderOffice.label}: {BUSINESS.orderOffice.phone}
+        </Text>
+        <Text style={{ color: "#333", maxWidth: 260, fontFamily: "Lato Bold" }}>
+          Official website: {SITE_DOMAIN}
         </Text>
       </View>
       <View

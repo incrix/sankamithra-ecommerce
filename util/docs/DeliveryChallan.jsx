@@ -1,7 +1,7 @@
 "use client";
 import { Document, Page, Text, View, Font } from "@react-pdf/renderer";
 import { s, DocHeader, Field, packedLines, inr, when, MUTED, INK, LINE } from "./shared";
-import { BUSINESS } from "@/util/site";
+import { BUSINESS, SITE_DOMAIN } from "@/util/site";
 
 /**
  * The document that travels with the goods.
@@ -106,7 +106,7 @@ export default function DeliveryChallanDoc({ order }) {
         </View>
 
         <Text style={s.footer} fixed>
-          {challanNo} · {BUSINESS.name} · Not a tax invoice
+          {challanNo} · {BUSINESS.name} · Not a tax invoice · Official website: {SITE_DOMAIN}
         </Text>
       </Page>
     </Document>

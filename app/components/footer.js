@@ -4,6 +4,8 @@ import Link from "next/link";
 import PhoneRoundedIcon from "@mui/icons-material/PhoneRounded";
 import MailOutlineRoundedIcon from "@mui/icons-material/MailOutlineRounded";
 import PlaceOutlinedIcon from "@mui/icons-material/PlaceOutlined";
+import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
+import { BUSINESS, SITE_DOMAIN, OFFICIAL_NOTICE } from "@/util/site";
 import logo from "../../public/images/logo.svg";
 import green from "../../public/images/green.png";
 import iso from "../../public/images/iso.png";
@@ -92,6 +94,9 @@ export default function Footer() {
               <ContactLine icon={<PhoneRoundedIcon sx={ic} />} href="tel:+919489239970">
                 +91 94892 39970
               </ContactLine>
+              <ContactLine icon={<PhoneRoundedIcon sx={ic} />} href={`tel:${BUSINESS.orderOffice.tel}`}>
+                {BUSINESS.orderOffice.phone} · Order office
+              </ContactLine>
               <ContactLine icon={<MailOutlineRoundedIcon sx={ic} />} href="mailto:sankamithrathunderworld@gmail.com">
                 sankamithrathunderworld@gmail.com
               </ContactLine>
@@ -126,6 +131,18 @@ export default function Footer() {
         </Box>
 
         <Divider />
+
+        {/* Fake shop sites copy real sellers' names to take advance payments. */}
+        <Stack direction="row" gap={1} alignItems="flex-start"
+          sx={{ p: 1.5, borderRadius: "var(--radius)", backgroundColor: "var(--primary-soft)" }}>
+          <VerifiedUserRoundedIcon sx={{ ...ic, fontSize: 17, mt: 0.2 }} />
+          <Typography fontSize={12.5} color="var(--text-color-secondary)" lineHeight={1.7}>
+            <Box component="span" sx={{ color: "var(--text-color)", fontWeight: 800 }}>
+              Official website: {SITE_DOMAIN}.
+            </Box>{" "}
+            {OFFICIAL_NOTICE.replace(`Our only official website is ${SITE_DOMAIN}. `, "")}
+          </Typography>
+        </Stack>
 
         <Stack
           direction={{ xs: "column", sm: "row" }}

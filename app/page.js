@@ -78,6 +78,10 @@ const FAQS = [
     a: "We stock only from licensed Sivakasi units, and the range includes green-certified and ISO 9001:2015 compliant products. Everything is stored and handled to licence conditions. Always follow the safety instructions printed on each pack.",
   },
   {
+    q: "Is this the official Sankamithra website? How do I avoid fake sites?",
+    a: "Yes. thunder.sankamithra.com is the only official website of Sankamithra Thunder World. Fake websites sometimes copy a real Sivakasi shop's name and photos to take advance payments. We call customers from our order office on +91 99406 67228, and we only ask for payment to the accounts in the order email we send you. If anyone else asks you to pay in our name, call us before you pay.",
+  },
+  {
     q: "How do I track my Sankamithra order?",
     a: "Every order gets a reference like STW-0001 the moment it is placed, sent to you by email. Quote it when you call or WhatsApp +91 94892 39970 and we will tell you exactly where your order is.",
   },

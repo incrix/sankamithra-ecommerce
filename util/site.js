@@ -20,7 +20,17 @@ export const BUSINESS = {
   tagline: "Fireworks & Crackers from Sivakasi",
   description:
     "Sankamithra Thunder World is a fireworks and crackers retailer in Sivakasi, Tamil Nadu. Buy Diwali crackers online from our Sivakasi shop at up to 80% off, with delivery across India.",
-  phone: ["+91 94892 39970", "+91 75488 20326", "+91 99620 66648", "+91 84892 92901"],
+  phone: ["+91 94892 39970", "+91 75488 20326", "+91 99620 66648", "+91 84892 92901", "+91 99406 67228"],
+  /**
+   * The order office at Kanmaisurangudi. This is the line staff ring customers
+   * from to confirm orders, so emails and documents name it - a customer who
+   * knows the real number can tell a genuine call from someone posing as us.
+   */
+  orderOffice: {
+    label: "Order office, Kanmaisurangudi",
+    phone: "+91 99406 67228",
+    tel: "+919940667228",
+  },
   whatsapp: "919489239970",
   email: "sankamithrathunderworld@gmail.com",
   office: {
@@ -34,6 +44,20 @@ export const BUSINESS = {
   openingHours: "Mo-Sa 09:00-19:00",
   founded: "2018",
 };
+
+/** "thunder.sankamithra.com" - the address customers should check they are on. */
+export const SITE_DOMAIN = SITE_URL.replace(/^https?:\/\//, "");
+
+/**
+ * The warning that goes wherever the brand appears - emails, documents, the
+ * footer. Fake shop sites copy a real seller's name and photos and take
+ * advance payments; naming the one real address and the numbers we call from
+ * is the customer's best defence.
+ */
+export const OFFICIAL_NOTICE =
+  `Our only official website is ${SITE_DOMAIN}. We call customers only from ${BUSINESS.orderOffice.phone} `
+  + `or the numbers listed on our website, and we ask for payment only to the accounts in your order email from us. `
+  + `Beware of fake websites using the Sankamithra name.`;
 
 /**
  * Search terms real customers use. These inform copy and metadata - they are
