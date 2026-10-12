@@ -1,4 +1,5 @@
 "use client";
+import { readCart, writeCart, restoreCart, CART_EVENT } from "@/util/cartStore";
 import { useCallback, useEffect, useState } from "react";
 import { netPrice, lineAmount, sumAmounts, paise } from "@/util/pricing";
 import { MIN_ORDER_TN } from "@/util/minimumOrder";
@@ -16,23 +17,9 @@ import { MIN_ORDER_TN } from "@/util/minimumOrder";
 
 // Within Tamil Nadu; checkout raises it for other states. See util/minimumOrder.js.
 export const MIN_ORDER = MIN_ORDER_TN;
-const KEY = "cart";
-const EVENT = "cart:updated";
-
-export const readCart = () => {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = JSON.parse(localStorage.getItem(KEY));
-    return Array.isArray(raw) ? raw : [];
-  } catch {
-    return [];
-  }
-};
-
-const writeCart = (cart) => {
-  localStorage.setItem(KEY, JSON.stringify(cart));
-  window.dispatchEvent(new CustomEvent(EVENT, { detail: cart }));
-};
+// Storage - localStorage, a backup cookie and memory - lives in cartStore.js.
+const EVENT = CART_EVENT;
+export { readCart };
 
 /** Unit price after discount, exact to the paisa. */
 export const unitPrice = (item) => netPrice(item.price, item.discount);
@@ -56,12 +43,22 @@ export function useCart() {
   useEffect(() => {
     setCart(readCart());
     setReady(true);
+    // The main copy can be gone after the phone reloads the page; this brings
+    // the cart back from the backup cookie when it is.
+    restoreCart().then(setCart);
     const sync = () => setCart(readCart());
+    // Coming back to the tab from another app: re-read rather than trust what
+    // was on screen when the customer left.
+    const onShow = () => { if (document.visibilityState !== "hidden") restoreCart().then(setCart); };
     window.addEventListener(EVENT, sync);
     window.addEventListener("storage", sync); // other tabs
+    window.addEventListener("pageshow", onShow);
+    document.addEventListener("visibilitychange", onShow);
     return () => {
       window.removeEventListener(EVENT, sync);
       window.removeEventListener("storage", sync);
+      window.removeEventListener("pageshow", onShow);
+      document.removeEventListener("visibilitychange", onShow);
     };
   }, []);
 
