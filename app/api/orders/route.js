@@ -2,7 +2,7 @@ import { listOrders, createOrder, orderStats, updateOrder } from "@/util/ordersS
 import { requireAdmin } from "@/util/admin/auth";
 import { sendOrderMails } from "@/util/sendMail";
 import { lineAmount, sumAmounts, inr } from "@/util/pricing";
-import { minimumFor, meetsMinimumFor, MIN_ORDER_TN } from "@/util/minimumOrder";
+import { meetsMinimumFor, belowMinimumMessage } from "@/util/minimumOrder";
 
 export const dynamic = "force-dynamic";
 // Saving the order plus two emails; the default 10s can be tight on a slow
@@ -51,12 +51,7 @@ export async function POST(request) {
     if (!isPos) {
       const total = sumAmounts(productList, (p) => lineAmount(p.price, p.discount, p.count));
       if (!meetsMinimumFor(total, billingDetails.state)) {
-        const min = minimumFor(billingDetails.state);
-        return Response.json({
-          error: min > MIN_ORDER_TN
-            ? `Orders delivered outside Tamil Nadu must be above ${inr(min)}.`
-            : `Order total must be above ${inr(min)}.`,
-        }, { status: 400 });
+        return Response.json({ error: belowMinimumMessage(billingDetails.state) }, { status: 400 });
       }
     }
 

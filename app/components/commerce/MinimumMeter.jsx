@@ -3,7 +3,7 @@ import { Stack, Typography, LinearProgress, Box } from "@mui/material";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { MIN_ORDER } from "@/util/cart";
 import { amount } from "@/util/pricing";
-import { MIN_ORDER_OUTSIDE_TN } from "@/util/minimumOrder";
+import { MIN_ORDER_OUTSIDE_TN, MIN_ORDER_NEARBY, NEARBY_STATES } from "@/util/minimumOrder";
 
 /**
  * The cart cannot know the delivery state yet - that is asked at checkout -
@@ -14,8 +14,8 @@ function OutsideTnNote({ total }) {
   if (total > MIN_ORDER_OUTSIDE_TN) return null;
   return (
     <Typography fontSize={11.5} fontWeight={600} color="var(--text-color-secondary)">
-      Delivering outside Tamil Nadu? The minimum there is ₹{MIN_ORDER_OUTSIDE_TN.toLocaleString("en-IN")}
-      {" "}(₹{amount(Math.max(0, MIN_ORDER_OUTSIDE_TN - total))} more).
+      Delivering outside Tamil Nadu? The minimum is ₹{MIN_ORDER_NEARBY.toLocaleString("en-IN")} for {NEARBY_STATES},
+      {" "}and ₹{MIN_ORDER_OUTSIDE_TN.toLocaleString("en-IN")} for other states.
     </Typography>
   );
 }

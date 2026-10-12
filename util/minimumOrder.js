@@ -13,6 +13,26 @@ export const MIN_ORDER_TN = 3000;
 export const MIN_ORDER_OUTSIDE_TN = 10000;
 
 /**
+ * The neighbouring states where most of the shop's out-of-state customers
+ * are. Close enough by road, and ordered from often enough, to warrant a
+ * lower minimum than the rest of India.
+ */
+export const MIN_ORDER_NEARBY = 7000;
+export const NEARBY_STATES = "Karnataka, Kerala, Andhra Pradesh and Puducherry";
+
+const NEARBY = [
+  "karnataka", "karnatak", "karnatakam", "ka",
+  "kerala", "keralam", "kl",
+  "andhrapradesh", "andrapradesh", "andhra", "andra", "ap",
+  "puducherry", "pondicherry", "pondichery", "puduchery", "puducheri", "pondy", "py",
+];
+
+/** Whether a typed-in state is one of the nearby states. Same matching as isTamilNadu. */
+export function isNearbyState(state) {
+  return NEARBY.includes(String(state || "").toLowerCase().replace(/[^a-z]/g, ""));
+}
+
+/**
  * Whether a typed-in state is Tamil Nadu.
  *
  * The state is a free-text field, and customers write it every way there is:
@@ -25,8 +45,24 @@ export function isTamilNadu(state) {
 }
 
 /** The minimum for a delivery state. A blank state gets the Tamil Nadu figure until it is filled in. */
-export const minimumFor = (state) =>
-  !String(state || "").trim() || isTamilNadu(state) ? MIN_ORDER_TN : MIN_ORDER_OUTSIDE_TN;
+export const minimumFor = (state) => {
+  if (!String(state || "").trim() || isTamilNadu(state)) return MIN_ORDER_TN;
+  return isNearbyState(state) ? MIN_ORDER_NEARBY : MIN_ORDER_OUTSIDE_TN;
+};
+
+const rupees = (n) => `₹${Number(n).toLocaleString("en-IN")}`;
+
+/** "Minimum order for Karnataka is ₹7,000" - shown under the state field. */
+export const minimumNote = (state) =>
+  `Minimum order for ${String(state || "").trim()} is ${rupees(minimumFor(state))}`;
+
+/** Why a total was refused, worded for the delivery state. Checkout and the order route share it. */
+export const belowMinimumMessage = (state) => {
+  const min = minimumFor(state);
+  return min > MIN_ORDER_TN
+    ? `Orders delivered to ${String(state).trim()} must be above ${rupees(min)}.`
+    : `Order total must be above ${rupees(min)} to place an order.`;
+};
 
 /**
  * Whether a total clears the minimum for that state.

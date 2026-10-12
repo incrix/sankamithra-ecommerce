@@ -129,7 +129,7 @@ export default function ShopClient() {
         <Stack direction="row" gap={1} flexWrap="wrap" sx={{ mb: 0.5 }}>
           {[
             ["Delivered across India", "🚚"],
-            ["Minimum order ₹3,000 · ₹10,000 outside Tamil Nadu", "🧾"],
+            ["Minimum order ₹3,000 · ₹7,000 KA/KL/AP/PY · ₹10,000 other states", "🧾"],
             ["Licensed Sivakasi shop", "✅"],
             ["Pay on confirmation", "🤝"],
           ].map(([label, icon]) => (

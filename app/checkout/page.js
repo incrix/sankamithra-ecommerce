@@ -20,7 +20,7 @@ import { inr, netPrice, lineAmount, sumAmounts } from "@/util/pricing";
 import { readCart, restoreCart, clearSavedCart } from "@/util/cartStore";
 import { paymentOptions } from "@/util/paymentDetails";
 import { BUSINESS, SITE_DOMAIN } from "@/util/site";
-import { minimumFor, isTamilNadu, MIN_ORDER_TN, MIN_ORDER_OUTSIDE_TN } from "@/util/minimumOrder";
+import { minimumFor, isTamilNadu, minimumNote, belowMinimumMessage } from "@/util/minimumOrder";
 
 const quicksand = Quicksand({ subsets: ["latin"] });
 
@@ -266,7 +266,7 @@ function BillingDetails({ billingDetails, onChange, errors, touched, setTouched,
           rows={f.rows}
           error={Boolean(bad)}
           helperText={bad || (f.name === "state" && billingDetails.state?.trim() && !isTamilNadu(billingDetails.state)
-            ? `Outside Tamil Nadu: minimum order is ${inr(MIN_ORDER_OUTSIDE_TN)}`
+            ? minimumNote(billingDetails.state)
             : " ")}
           inputProps={{ inputMode: f.inputMode, maxLength: f.maxLength }}
           sx={{
@@ -350,14 +350,11 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
   // Follows the delivery state as it is typed: outside Tamil Nadu the parcel
   // crosses state lines and the minimum is higher. See util/minimumOrder.js.
   const minOrder = minimumFor(billingDetails.state);
-  const outsideTn = minOrder > MIN_ORDER_TN;
   const belowMin = total <= minOrder;
 
   const handlePlaceOrder = async () => {
     if (belowMin) {
-      toast(outsideTn
-        ? `Orders delivered outside Tamil Nadu must be above ${inr(minOrder)}.`
-        : `Order total must be above ${inr(minOrder)} to place an order.`);
+      toast(belowMinimumMessage(billingDetails.state));
       return;
     }
     setLoading(true);
@@ -521,7 +518,7 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
                 <ErrorOutlineRoundedIcon sx={{ color: "#e03131", fontSize: 18 }} />
                 <Typography fontSize={12} fontWeight={700} color="#c92a2a">
                   Add {inr(minOrder - total + 1)} more — minimum order
-                  {outsideTn ? ` for delivery outside Tamil Nadu (${billingDetails.state.trim()})` : ""} is {inr(minOrder)}
+                  {!isTamilNadu(billingDetails.state) && billingDetails.state?.trim() ? ` for delivery to ${billingDetails.state.trim()}` : ""} is {inr(minOrder)}
                 </Typography>
               </Stack>
             )}
