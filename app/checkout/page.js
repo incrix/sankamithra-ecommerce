@@ -20,7 +20,11 @@ import { inr, netPrice, lineAmount, sumAmounts } from "@/util/pricing";
 import { readCart, restoreCart, clearSavedCart } from "@/util/cartStore";
 import { paymentOptions } from "@/util/paymentDetails";
 import { BUSINESS, SITE_DOMAIN } from "@/util/site";
-import { minimumFor, isTamilNadu, minimumNote, belowMinimumMessage } from "@/util/minimumOrder";
+import {
+  minimumFor, isTamilNadu, minimumNote, belowMinimumMessage,
+  needsCallBeforePayment, callBeforePaymentNotice,
+} from "@/util/minimumOrder";
+import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
 
 const quicksand = Quicksand({ subsets: ["latin"] });
 
@@ -243,6 +247,37 @@ function SectionTitle({ children }) {
     <Typography fontSize={{ xs: 15, md: 17 }} fontWeight={800} color="var(--text-color)">
       {children}
     </Typography>
+  );
+}
+
+/** Outside Tamil Nadu & Puducherry: call the shop to confirm transport before paying. */
+function CallBeforePayment({ state, sx }) {
+  if (!needsCallBeforePayment(state)) return null;
+  const office = BUSINESS.orderOffice;
+  return (
+    <Stack direction="row" gap={1.25} sx={{ backgroundColor: "#fff8e1", border: "1px solid #ffd77a", borderRadius: "12px", p: 2, textAlign: "left", ...sx }}>
+      <PhoneInTalkRoundedIcon sx={{ color: "#b26a00", fontSize: 22, flexShrink: 0, mt: "1px" }} />
+      <Stack gap={1}>
+        <Typography fontSize={13.5} fontWeight={800} color="#8a5300">
+          Call us before you pay
+        </Typography>
+        <Typography fontSize={12.5} lineHeight={1.6} color="var(--text-color)">
+          {callBeforePaymentNotice(state, office.phone)}
+        </Typography>
+        <Button
+          component="a"
+          href={`tel:${office.tel}`}
+          startIcon={<PhoneInTalkRoundedIcon />}
+          sx={{
+            alignSelf: "flex-start", textTransform: "none", fontWeight: 800, fontSize: 13,
+            borderRadius: "10px", px: 2, color: "#fff", backgroundColor: "#b26a00",
+            "&:hover": { backgroundColor: "#8a5300" },
+          }}
+        >
+          Call {office.phone}
+        </Button>
+      </Stack>
+    </Stack>
   );
 }
 
@@ -483,6 +518,8 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
             </Stack>
           </Card>
 
+          <CallBeforePayment state={billingDetails.state} />
+
           {/* Legal notice - wording unchanged */}
           <Stack direction="row" gap={1.25} sx={{ backgroundColor: "#fff7f3", border: "1px solid #ffe2d5", borderRadius: "12px", p: 2 }}>
             <InfoOutlinedIcon sx={{ color: "var(--primary-color)", fontSize: 20, flexShrink: 0, mt: "1px" }} />
@@ -621,8 +658,10 @@ function OrderPlaced({ result }) {
             )}
             <Typography fontSize={14} color="var(--text-color-secondary)">
               Thanks {billing?.name?.split(" ")[0] || "there"} — we&apos;ve received your order
-              of <b>{inr(total)}</b>. Please pay using the details below to confirm it; we start
-              packing as soon as your payment reaches us.
+              of <b>{inr(total)}</b>.{" "}
+              {needsCallBeforePayment(billing?.state)
+                ? <>Please <b>call us to confirm transport</b> before paying using the details below; we start packing as soon as your payment reaches us.</>
+                : <>Please pay using the details below to confirm it; we start packing as soon as your payment reaches us.</>}
             </Typography>
 
             {/* Say plainly whether the receipt actually sent, rather than
@@ -652,11 +691,15 @@ function OrderPlaced({ result }) {
         )}
       </Stack>
 
+      {received && <CallBeforePayment state={billing?.state} sx={{ width: "100%", boxSizing: "border-box" }} />}
+
       {received && pay && paymentOptions(pay).length > 0 && (
         <Card sx={{ width: "100%" }}>
           <Stack gap={1.5} width="100%" maxWidth={480} mx="auto">
             <Stack direction="row" alignItems="baseline" justifyContent="space-between" gap={1}>
-              <Typography fontSize={14} fontWeight={800} color="var(--text-color)">Pay to confirm your order</Typography>
+              <Typography fontSize={14} fontWeight={800} color="var(--text-color)">
+                {needsCallBeforePayment(billing?.state) ? "Pay after confirming by phone" : "Pay to confirm your order"}
+              </Typography>
               <Typography fontSize={20} fontWeight={800} color="var(--primary-color)">{inr(total)}</Typography>
             </Stack>
             {paymentOptions(pay).map((o) => (
