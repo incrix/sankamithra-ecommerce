@@ -3,19 +3,18 @@ import { Stack, Typography, LinearProgress, Box } from "@mui/material";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { MIN_ORDER } from "@/util/cart";
 import { amount } from "@/util/pricing";
-import { MIN_ORDER_OUTSIDE_TN, MIN_ORDER_NEARBY, NEARBY_STATES } from "@/util/minimumOrder";
+import { MIN_ORDER_NEARBY, DELIVERY_AREA } from "@/util/minimumOrder";
 
 /**
  * The cart cannot know the delivery state yet - that is asked at checkout -
- * so it gates on the Tamil Nadu figure and says plainly that orders going
- * further need more, rather than letting a customer find out at the last step.
+ * so it says up front where we deliver and what Puducherry needs, rather
+ * than letting a customer find out at the last step.
  */
-function OutsideTnNote({ total }) {
-  if (total > MIN_ORDER_OUTSIDE_TN) return null;
+function OutsideTnNote() {
   return (
     <Typography fontSize={11.5} fontWeight={600} color="var(--text-color-secondary)">
-      Delivering outside Tamil Nadu? The minimum is ₹{MIN_ORDER_NEARBY.toLocaleString("en-IN")} for {NEARBY_STATES},
-      {" "}and ₹{MIN_ORDER_OUTSIDE_TN.toLocaleString("en-IN")} for other states.
+      We deliver only within {DELIVERY_AREA} this season. The minimum for
+      {" "}Puducherry is ₹{MIN_ORDER_NEARBY.toLocaleString("en-IN")}.
     </Typography>
   );
 }
@@ -50,7 +49,7 @@ export default function MinimumMeter({ total, shortBy, meetsMinimum }) {
           Minimum order reached — you&apos;re ready to check out
         </Typography>
       </Stack>
-      <OutsideTnNote total={total} />
+      <OutsideTnNote />
       </Stack>
     );
   }
@@ -93,7 +92,7 @@ export default function MinimumMeter({ total, shortBy, meetsMinimum }) {
           },
         }}
       />
-      <OutsideTnNote total={total} />
+      <OutsideTnNote />
     </Stack>
   );
 }

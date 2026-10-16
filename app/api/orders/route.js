@@ -2,7 +2,7 @@ import { listOrders, createOrder, orderStats, updateOrder } from "@/util/ordersS
 import { requireAdmin } from "@/util/admin/auth";
 import { sendOrderMails } from "@/util/sendMail";
 import { lineAmount, sumAmounts, inr } from "@/util/pricing";
-import { meetsMinimumFor, belowMinimumMessage } from "@/util/minimumOrder";
+import { meetsMinimumFor, belowMinimumMessage, acceptsDeliveryTo, deliveryClosedMessage } from "@/util/minimumOrder";
 
 export const dynamic = "force-dynamic";
 // Saving the order plus two emails; the default 10s can be tight on a slow
@@ -49,6 +49,10 @@ export async function POST(request) {
     // The website minimum, checked here as well as at checkout so it holds no
     // matter what the browser sends. Counter bills are exempt - see Pos.jsx.
     if (!isPos) {
+      // Out-of-state website orders are closed this season.
+      if (!acceptsDeliveryTo(billingDetails.state)) {
+        return Response.json({ error: deliveryClosedMessage(billingDetails.state) }, { status: 400 });
+      }
       const total = sumAmounts(productList, (p) => lineAmount(p.price, p.discount, p.count));
       if (!meetsMinimumFor(total, billingDetails.state)) {
         return Response.json({ error: belowMinimumMessage(billingDetails.state) }, { status: 400 });

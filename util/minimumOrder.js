@@ -98,3 +98,19 @@ export const callBeforePaymentNotice = (state, phone) =>
   + `please call Sankamithra Thunder World on ${phone} to confirm before making any payment. `
   + `Transport outside Tamil Nadu & Puducherry depends on availability and may require pre-payment. `
   + `Once we confirm by phone, complete the necessary steps to receive your crackers and enjoy this Diwali 2026!`;
+
+/**
+ * Where website orders are delivered this season.
+ *
+ * Out-of-state orders are closed for Diwali 2026: only Tamil Nadu and
+ * Puducherry are accepted. Checkout and the order route both check this.
+ * Counter bills are not affected.
+ */
+export const DELIVERY_AREA = "Tamil Nadu & Puducherry";
+export const SALES_CLOSE = "25 October 2026";
+
+export const acceptsDeliveryTo = (state) => isTamilNadu(state) || isPuducherry(state);
+
+export const deliveryClosedMessage = (state) =>
+  `Sorry, orders for delivery to ${String(state || "").trim() || "your state"} are closed. `
+  + `We are taking online orders only for ${DELIVERY_AREA}.`;

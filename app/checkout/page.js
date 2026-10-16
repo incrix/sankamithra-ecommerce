@@ -23,6 +23,7 @@ import { BUSINESS, SITE_DOMAIN } from "@/util/site";
 import {
   minimumFor, isTamilNadu, minimumNote, belowMinimumMessage,
   needsCallBeforePayment, callBeforePaymentNotice,
+  acceptsDeliveryTo, deliveryClosedMessage,
 } from "@/util/minimumOrder";
 import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
 
@@ -53,6 +54,7 @@ const validate = (b) => {
   if (!b.address?.trim()) e.address = "Required";
   if (!b.city?.trim()) e.city = "Required";
   if (!b.state?.trim()) e.state = "Required";
+  else if (!acceptsDeliveryTo(b.state)) e.state = deliveryClosedMessage(b.state);
   if (!b.zip?.trim()) e.zip = "Required";
   else if (b.zip.replace(/\D/g, "").length !== 6) e.zip = "Must be 6 digits";
   return e;
@@ -388,6 +390,10 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
   const belowMin = total <= minOrder;
 
   const handlePlaceOrder = async () => {
+    if (!acceptsDeliveryTo(billingDetails.state)) {
+      toast(deliveryClosedMessage(billingDetails.state));
+      return;
+    }
     if (belowMin) {
       toast(belowMinimumMessage(billingDetails.state));
       return;
@@ -422,6 +428,12 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
         // cart, rather than falling through to "we couldn't record it" below.
         if (saved.status === 409 && j.outOfStock) {
           toast(`${j.error}. Please lower the quantity and try again.`);
+          return;
+        }
+        // Refused outright (delivery state closed, below the minimum): say
+        // why, rather than "we couldn't record your order".
+        if (saved.status === 400 && j.error) {
+          toast(j.error);
           return;
         }
         if (saved.ok) {
