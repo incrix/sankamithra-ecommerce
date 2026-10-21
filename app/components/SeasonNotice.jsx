@@ -3,19 +3,31 @@ import { useEffect, useState } from "react";
 import { Dialog, Stack, Typography, Button, Box } from "@mui/material";
 import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
 import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
-import { DELIVERY_AREA, SALES_CLOSE } from "@/util/minimumOrder";
+import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
+import { DELIVERY_AREA, SALES_CLOSE, SALES_CLOSE_DATE } from "@/util/minimumOrder";
 
-const SEEN = "seasonNoticeSeen";
+// Bumped when the notice changes, so customers who closed the old one see the new one.
+const SEEN = "seasonNoticeSeen-lastDays";
+
+/** Days left to order, counting today and the closing day. */
+const daysLeft = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.round((SALES_CLOSE_DATE - today) / 86400000) + 1;
+};
 
 /**
  * The season's notice, shown once per visit when a customer opens the site:
- * where we deliver, and when Diwali sales close. Remembered for the browser
- * session only, so a customer coming back another day sees it again.
+ * how many days of sale are left, where we deliver, and when Diwali sales
+ * close. Remembered for the browser session only, so a customer coming back
+ * another day sees it again.
  */
 export default function SeasonNotice() {
   const [open, setOpen] = useState(false);
+  const [days, setDays] = useState(0);
 
   useEffect(() => {
+    setDays(daysLeft());
     try { if (!sessionStorage.getItem(SEEN)) setOpen(true); } catch { setOpen(true); }
   }, []);
 
@@ -49,6 +61,11 @@ export default function SeasonNotice() {
         </Typography>
       </Box>
       <Stack gap={2} sx={{ p: 3 }}>
+        {days > 0 && point(
+          TrendingUpRoundedIcon,
+          days === 1 ? "Last day of sale!" : `Last ${days} days of sale!`,
+          "Old and current prices may differ, and prices may rise. Please order your crackers as soon as possible.",
+        )}
         {point(
           LocalShippingRoundedIcon,
           `Orders only for ${DELIVERY_AREA}`,
