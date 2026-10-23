@@ -7,7 +7,7 @@ import RenderCustomerDetails from "./RenderCustomerDetails";
 import RenderInvoiceHeader from "./RenderInvoiceHeader";
 import RenderInvoiceFooter from "./RenderInvoiceFooter";
 
-export default function PageRender({ billingDetails, productList }) {
+export default function PageRender({ billingDetails, productList, estNo }) {
   return (
     <Page
       size="A4"
@@ -19,7 +19,7 @@ export default function PageRender({ billingDetails, productList }) {
       {/* //Header */}
       <RenderInvoiceHeader />
       {/* //Customer Details & Invoice Details */}
-      <RenderCustomerDetails billingDetails={billingDetails} />
+      <RenderCustomerDetails billingDetails={billingDetails} estNo={estNo} />
       {/* //Render Item Table */}
       <RenderItems productList={productList} />
       {/* //Total Amount */}

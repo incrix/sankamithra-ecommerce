@@ -185,16 +185,6 @@ export default function Pos() {
     if (!customer.name.trim()) { notify("Customer name is required", "error"); return; }
     setSaving(true);
     try {
-      // The proforma is rendered here, in the browser, for the same reason the
-      // storefront does it: the PDF template only works client-side.
-      let invoice;
-      if (customer.email?.trim()) {
-        const { buildProformaBase64 } = await import("@/util/proforma");
-        invoice = await buildProformaBase64({ customer, items: lines.map((l) => ({
-          name: l.name, mrp: priced(l).price, discount: priced(l).discount, count: l.count,
-        })) }).catch(() => undefined);
-      }
-
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -207,7 +197,8 @@ export default function Pos() {
         // this, anything added to the bill later - a line, a replacement - got
         // priced off Pricelist 1 no matter what the bill was written on.
         body: JSON.stringify({
-          source: "pos", note, billingDetails: customer, invoice, clientRef: billKey.current,
+          // Mailed below, once the bill has its reference to print as Est No.
+          source: "pos", note, billingDetails: customer, deferMail: true, clientRef: billKey.current,
           priceList: list2 ? 2 : 1,
           extraDiscount: Math.min(95, Math.max(0, Number(extra) || 0)),
           productList: lines.map((l) => ({
@@ -217,6 +208,26 @@ export default function Pos() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { notify(data.error || "Could not create the bill", "error"); return; }
+
+      // A retried bill that already landed was mailed the first time round.
+      if (!data.duplicate) {
+        // The proforma is rendered here, in the browser, for the same reason the
+        // storefront does it: the PDF template only works client-side.
+        let invoice;
+        if (customer.email?.trim()) {
+          invoice = await import("@/util/proforma")
+            .then(({ buildProformaBase64 }) => buildProformaBase64({ ref: data.ref, customer, items: lines.map((l) => ({
+              name: l.name, mrp: priced(l).price, discount: priced(l).discount, count: l.count,
+            })) }))
+            .catch(() => undefined);
+        }
+        // The bill is saved either way; a lost mail shows as unnotified in the panel.
+        fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mailFor: data.id, invoice }),
+        }).catch(() => {});
+      }
 
       notify(`${data.ref} billed · ${inr(total)}`, "success");
       setLastOrder({ ref: data.ref, total, units, lines, customer, at: new Date() });

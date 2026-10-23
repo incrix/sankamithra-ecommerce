@@ -2,7 +2,7 @@
 import { Document, Font } from "@react-pdf/renderer";
 import PageRender from "./PageRender";
 
-export default function Template1({ billingDetails, productList }) {
+export default function Template1({ billingDetails, productList, estNo }) {
   Font.register({
     family: "Lato",
     src: `https://fonts.gstatic.com/s/lato/v16/S6uyw4BMUTPHjx4wWw.ttf`,
@@ -15,7 +15,7 @@ export default function Template1({ billingDetails, productList }) {
 
   return (
     <Document>
-      <PageRender billingDetails={billingDetails} productList={productList} />
+      <PageRender billingDetails={billingDetails} productList={productList} estNo={estNo} />
     </Document>
   );
 }

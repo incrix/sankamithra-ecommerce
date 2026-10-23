@@ -1,6 +1,6 @@
 import { Text, View } from "@react-pdf/renderer";
 
-export default function RenderCustomerDetails({ billingDetails }) {
+export default function RenderCustomerDetails({ billingDetails, estNo }) {
   return (
     <View
       fixed
@@ -48,7 +48,9 @@ export default function RenderCustomerDetails({ billingDetails }) {
             }}
           >
             <Text>Est No:</Text>
-            <Text>Online Order</Text>
+            {/* The order reference (STW-0001). Only a preview rendered before
+                the order is saved goes without one. */}
+            <Text>{estNo || "-"}</Text>
           </View>
           <View
             style={{

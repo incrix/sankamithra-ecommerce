@@ -1,4 +1,4 @@
-import { listOrders, createOrder, orderStats, updateOrder } from "@/util/ordersStore";
+import { listOrders, createOrder, orderStats, updateOrder, getOrder } from "@/util/ordersStore";
 import { requireAdmin } from "@/util/admin/auth";
 import { sendOrderMails } from "@/util/sendMail";
 import { lineAmount, sumAmounts, inr } from "@/util/pricing";
@@ -29,10 +29,20 @@ export async function GET() {
  * `invoice` is base64 PDF rendered in the browser. The invoice template is a
  * "use client" component, so rendering it on the server yields a client
  * reference rather than a component (React error #130).
+ *
+ * The proforma prints the reference as its Est No, which the browser cannot
+ * know before the order exists. So checkout and the counter send `deferMail`:
+ * the order is saved and its reference returned without mailing, then the
+ * browser renders the proforma with that reference and posts it back here as
+ * `{ mailFor: id, invoice }` to send both emails. That second step lives on
+ * this public route because every /api/orders/* sub-path is admin only.
  */
 export async function POST(request) {
   try {
-    const { billingDetails, productList, invoice, source, note, clientRef, priceList, extraDiscount } = await request.json();
+    const body = await request.json();
+    if (body.mailFor) return mailPlacedOrder(body.mailFor, body.invoice);
+
+    const { billingDetails, productList, invoice, source, note, clientRef, priceList, extraDiscount, deferMail } = body;
 
     // A counter sale is staff-created, so it requires an admin session. Without
     // this check anyone could post orders that look like they came from the shop.
@@ -75,21 +85,9 @@ export async function POST(request) {
       return Response.json({ ok: true, ref: order.ref, id: order.id, duplicate: true });
     }
 
-    let mail = { customer: false, shop: false, errors: {} };
-    try {
-      mail = await sendOrderMails({ order, invoice });
-    } catch (err) {
-      console.error("order mail failed:", err);
-      mail.errors.general = err?.message;
-    }
+    if (deferMail) return Response.json({ ok: true, ref: order.ref, id: order.id });
 
-    // The panel flags orders the shop was never told about.
-    if (mail.shop) await updateOrder(order.id, { emailSent: true });
-
-    if (!mail.customer || !mail.shop) {
-      console.error(`order ${order.ref} mail issues:`, mail.errors);
-    }
-
+    const mail = await mailOrder(order, invoice);
     return Response.json({ ok: true, ref: order.ref, id: order.id, mail });
   } catch (err) {
     // Not a fault: the shelf is short. Say which lines, so the customer (or
@@ -100,4 +98,42 @@ export async function POST(request) {
     console.error("order create failed:", err);
     return Response.json({ error: "Could not save order" }, { status: 500 });
   }
+}
+
+/**
+ * How long after placing an order its browser may ask for the emails. Public,
+ * so it is kept short: the id is an unguessable UUID that only the placing
+ * browser holds, and this bounds what anyone holding one could do with it.
+ */
+const MAIL_WINDOW_MS = 15 * 60 * 1000;
+
+/** The second half of a `deferMail` order - see POST above. */
+async function mailPlacedOrder(id, invoice) {
+  const order = await getOrder(String(id));
+  if (!order) return Response.json({ error: "Not found" }, { status: 404 });
+  if (order.emailSent) return Response.json({ ok: true, ref: order.ref, mail: { customer: true, shop: true } });
+  if (Date.now() - new Date(order.createdAt).getTime() > MAIL_WINDOW_MS) {
+    return Response.json({ error: "Too late to request these emails" }, { status: 410 });
+  }
+  const mail = await mailOrder(order, invoice);
+  return Response.json({ ok: true, ref: order.ref, mail });
+}
+
+/** Sends both copies of a new order. Never throws: the order is already saved. */
+async function mailOrder(order, invoice) {
+  let mail = { customer: false, shop: false, errors: {} };
+  try {
+    mail = await sendOrderMails({ order, invoice });
+  } catch (err) {
+    console.error("order mail failed:", err);
+    mail.errors.general = err?.message;
+  }
+
+  // The panel flags orders the shop was never told about.
+  if (mail.shop) await updateOrder(order.id, { emailSent: true });
+
+  if (!mail.customer || !mail.shop) {
+    console.error(`order ${order.ref} mail issues:`, mail.errors);
+  }
+  return mail;
 }

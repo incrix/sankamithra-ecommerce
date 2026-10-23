@@ -32,7 +32,9 @@ export function proformaLines(order) {
 }
 
 export const buildProformaBlob = (order) =>
-  pdf(<Template1 billingDetails={order.customer} productList={proformaLines(order)} />).toBlob();
+  pdf(
+    <Template1 billingDetails={order.customer} productList={proformaLines(order)} estNo={order.ref} />
+  ).toBlob();
 
 export const blobToBase64 = (blob) =>
   new Promise((resolve, reject) => {

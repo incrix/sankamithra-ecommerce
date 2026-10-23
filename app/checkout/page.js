@@ -15,6 +15,7 @@ import ErrorOutlineRoundedIcon from "@mui/icons-material/ErrorOutlineRounded";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { pdf } from "@react-pdf/renderer";
 import Template1 from "@/util/invoice/Template1/Template";
+import { blobToBase64 } from "@/util/proforma";
 import { assetUrl } from "@/util/config";
 import { inr, netPrice, lineAmount, sumAmounts } from "@/util/pricing";
 import { readCart, restoreCart, clearSavedCart } from "@/util/cartStore";
@@ -400,28 +401,16 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
     }
     setLoading(true);
     try {
-      // toBlob() is the browser API. (toBuffer() returns a Node stream whose
-      // chunks needed Buffer.concat - Buffer does not exist in the browser.)
-      const blob = await pdf(
-        <Template1 billingDetails={billingDetails} productList={cart} />
-      ).toBlob();
-
-      const base64 = await new Promise((res, rej) => {
-        const r = new FileReader();
-        r.onloadend = () => res(String(r.result).split(",")[1]);
-        r.onerror = () => rej(r.error);
-        r.readAsDataURL(blob);
-      });
-
-      // One call: it records the order, then emails the customer their invoice
-      // and the shop its packing notice. Both carry the order reference.
+      // Recorded first, with the emails held back: the proforma prints the
+      // order reference as its Est No, and that only exists once it is saved.
       let ref = null;
+      let id = null;
       let mail = { customer: false, shop: false };
       try {
         const saved = await fetch("/api/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ billingDetails, productList: cart, invoice: base64 }),
+          body: JSON.stringify({ billingDetails, productList: cart, deferMail: true }),
         });
         const j = await saved.json().catch(() => ({}));
         // Short on stock: nothing was ordered. Say which lines and keep the
@@ -438,10 +427,39 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
         }
         if (saved.ok) {
           ref = j.ref;
-          mail = j.mail || mail;
+          id = j.id;
         }
       } catch {
         /* keep going: the customer still gets their invoice below */
+      }
+
+      // toBlob() is the browser API. (toBuffer() returns a Node stream whose
+      // chunks needed Buffer.concat - Buffer does not exist in the browser.)
+      // Once the order is saved a failed render must not read as "try again" -
+      // that would place it twice - so the emails still go, without the PDF.
+      let blob = null;
+      try {
+        blob = await pdf(
+          <Template1 billingDetails={billingDetails} productList={cart} estNo={ref} />
+        ).toBlob();
+      } catch (err) {
+        if (!ref) throw err;
+        console.error("proforma render failed:", err);
+      }
+
+      // Emails the customer their invoice and the shop its packing notice.
+      if (id) {
+        try {
+          const sent = await fetch("/api/orders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mailFor: id, invoice: blob ? await blobToBase64(blob) : undefined }),
+          });
+          const j = await sent.json().catch(() => ({}));
+          mail = j.mail || mail;
+        } catch {
+          /* the order is saved; the panel flags it as unnotified */
+        }
       }
 
       const recorded = Boolean(ref);
@@ -756,7 +774,7 @@ function OrderPlaced({ result }) {
             )}
           </Stack>
 
-          <Button
+          {invoice && <Button
             onClick={download}
             startIcon={<DownloadRoundedIcon />}
             sx={{
@@ -767,7 +785,7 @@ function OrderPlaced({ result }) {
             }}
           >
             Download proforma
-          </Button>
+          </Button>}
 
           <Button
             onClick={() => router.push("/shop")}
