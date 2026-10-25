@@ -81,6 +81,14 @@ export function isPuducherry(state) {
 }
 
 /**
+ * Whether a typed-in state is Karnataka. Same matching as isTamilNadu.
+ */
+export function isKarnataka(state) {
+  const s = String(state || "").toLowerCase().replace(/[^a-z]/g, "");
+  return ["karnataka", "karnatak", "karnatakam", "ka"].includes(s);
+}
+
+/**
  * Whether the customer must call the shop before paying.
  *
  * Outside Tamil Nadu and Puducherry, transport is not always available and may
@@ -102,16 +110,16 @@ export const callBeforePaymentNotice = (state, phone) =>
 /**
  * Where website orders are delivered this season.
  *
- * Out-of-state orders are closed for Diwali 2026: only Tamil Nadu and
- * Puducherry are accepted. Checkout and the order route both check this.
- * Counter bills are not affected.
+ * Out-of-state orders are closed for Diwali 2026: only Tamil Nadu,
+ * Puducherry and Karnataka (for Bangalore) are accepted. Checkout and the
+ * order route both check this. Counter bills are not affected.
  */
-export const DELIVERY_AREA = "Tamil Nadu & Puducherry";
+export const DELIVERY_AREA = "Tamil Nadu, Puducherry & Karnataka";
 export const SALES_CLOSE = "25 October 2026";
 /** Last day orders are taken (local date), for counting the days left. */
 export const SALES_CLOSE_DATE = new Date(2026, 9, 25);
 
-export const acceptsDeliveryTo = (state) => isTamilNadu(state) || isPuducherry(state);
+export const acceptsDeliveryTo = (state) => isTamilNadu(state) || isPuducherry(state) || isKarnataka(state);
 
 export const deliveryClosedMessage = (state) =>
   `Sorry, orders for delivery to ${String(state || "").trim() || "your state"} are closed. `

@@ -69,7 +69,7 @@ export default function SeasonNotice() {
         {point(
           LocalShippingRoundedIcon,
           `Orders only for ${DELIVERY_AREA}`,
-          "Orders for delivery to other states are closed. We are delivering only within Tamil Nadu and Puducherry.",
+          `Orders for delivery to other states are closed. We are delivering only within ${DELIVERY_AREA}.`,
         )}
         {point(
           EventBusyRoundedIcon,

@@ -7,14 +7,14 @@ import { MIN_ORDER_NEARBY, DELIVERY_AREA } from "@/util/minimumOrder";
 
 /**
  * The cart cannot know the delivery state yet - that is asked at checkout -
- * so it says up front where we deliver and what Puducherry needs, rather
+ * so it says up front where we deliver and what Puducherry and Karnataka need, rather
  * than letting a customer find out at the last step.
  */
 function OutsideTnNote() {
   return (
     <Typography fontSize={11.5} fontWeight={600} color="var(--text-color-secondary)">
       We deliver only within {DELIVERY_AREA} this season. The minimum for
-      {" "}Puducherry is ₹{MIN_ORDER_NEARBY.toLocaleString("en-IN")}.
+      {" "}Puducherry and Karnataka is ₹{MIN_ORDER_NEARBY.toLocaleString("en-IN")}.
     </Typography>
   );
 }
