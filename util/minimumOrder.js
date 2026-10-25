@@ -115,9 +115,9 @@ export const callBeforePaymentNotice = (state, phone) =>
  * order route both check this. Counter bills are not affected.
  */
 export const DELIVERY_AREA = "Tamil Nadu, Puducherry & Karnataka";
-export const SALES_CLOSE = "25 October 2026";
+export const SALES_CLOSE = "31 October 2026";
 /** Last day orders are taken (local date), for counting the days left. */
-export const SALES_CLOSE_DATE = new Date(2026, 9, 25);
+export const SALES_CLOSE_DATE = new Date(2026, 9, 31);
 
 export const acceptsDeliveryTo = (state) => isTamilNadu(state) || isPuducherry(state) || isKarnataka(state);
 
