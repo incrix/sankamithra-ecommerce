@@ -1,0 +1,14 @@
+# Mirror .gitignore so CLI deploys match Git deploys
+node_modules
+.next
+.vercel
+.env*
+.DS_Store
+*.pem
+
+# local asset database (symlinked into public/) and order store
+/database
+/public/database
+/data
+/public/uploads
+_backup-*.json

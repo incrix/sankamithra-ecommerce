@@ -115,9 +115,21 @@ export const callBeforePaymentNotice = (state, phone) =>
  * order route both check this. Counter bills are not affected.
  */
 export const DELIVERY_AREA = "Tamil Nadu, Puducherry & Karnataka";
-export const SALES_CLOSE = "31 October 2026";
+export const SALES_CLOSE = "2 November 2026, 12:00 PM";
 /** Last day orders are taken (local date), for counting the days left. */
-export const SALES_CLOSE_DATE = new Date(2026, 9, 31);
+export const SALES_CLOSE_DATE = new Date(2026, 10, 2);
+
+/**
+ * When website orders stop: 12:00 PM IST on SALES_CLOSE_DATE. An exact instant
+ * in IST, so the server (UTC on Vercel) and the customer's browser agree on it.
+ * Checkout and the order route both check this; counter bills are not affected.
+ */
+export const ONLINE_SALES_CLOSE_AT = new Date("2026-11-02T12:00:00+05:30");
+
+export const onlineSalesOpen = (now = Date.now()) => now < ONLINE_SALES_CLOSE_AT.getTime();
+
+export const SALES_CLOSED_MESSAGE =
+  "Online sales are closed for Diwali 2026. Our shop counter is open as usual - please visit us to buy.";
 
 export const acceptsDeliveryTo = (state) => isTamilNadu(state) || isPuducherry(state) || isKarnataka(state);
 

@@ -24,7 +24,7 @@ import { BUSINESS, SITE_DOMAIN } from "@/util/site";
 import {
   minimumFor, isTamilNadu, minimumNote, belowMinimumMessage,
   needsCallBeforePayment, callBeforePaymentNotice,
-  acceptsDeliveryTo, deliveryClosedMessage,
+  acceptsDeliveryTo, deliveryClosedMessage, onlineSalesOpen, SALES_CLOSED_MESSAGE,
 } from "@/util/minimumOrder";
 import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
 
@@ -391,6 +391,10 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
   const belowMin = total <= minOrder;
 
   const handlePlaceOrder = async () => {
+    if (!onlineSalesOpen()) {
+      toast(SALES_CLOSED_MESSAGE);
+      return;
+    }
     if (!acceptsDeliveryTo(billingDetails.state)) {
       toast(deliveryClosedMessage(billingDetails.state));
       return;

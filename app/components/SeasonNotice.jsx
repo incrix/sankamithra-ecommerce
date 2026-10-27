@@ -4,10 +4,13 @@ import { Dialog, Stack, Typography, Button, Box } from "@mui/material";
 import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
 import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
 import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
-import { DELIVERY_AREA, SALES_CLOSE, SALES_CLOSE_DATE } from "@/util/minimumOrder";
+import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
+import { DELIVERY_AREA, SALES_CLOSE, SALES_CLOSE_DATE, onlineSalesOpen } from "@/util/minimumOrder";
 
 // Bumped when the notice changes, so customers who closed the old one see the new one.
 const SEEN = "seasonNoticeSeen-lastDays";
+// Its own key, so customers who closed the last-days notice still see that sales have closed.
+const SEEN_CLOSED = "seasonNoticeSeen-closed";
 
 /** Days left to order, counting today and the closing day. */
 const daysLeft = () => {
@@ -25,15 +28,18 @@ const daysLeft = () => {
 export default function SeasonNotice() {
   const [open, setOpen] = useState(false);
   const [days, setDays] = useState(0);
+  const [closed, setClosed] = useState(false);
 
   useEffect(() => {
+    const c = !onlineSalesOpen();
+    setClosed(c);
     setDays(daysLeft());
-    try { if (!sessionStorage.getItem(SEEN)) setOpen(true); } catch { setOpen(true); }
+    try { if (!sessionStorage.getItem(c ? SEEN_CLOSED : SEEN)) setOpen(true); } catch { setOpen(true); }
   }, []);
 
   const close = () => {
     setOpen(false);
-    try { sessionStorage.setItem(SEEN, "1"); } catch {}
+    try { sessionStorage.setItem(closed ? SEEN_CLOSED : SEEN, "1"); } catch {}
   };
 
   const point = (Icon, title, text) => (
@@ -57,23 +63,28 @@ export default function SeasonNotice() {
     >
       <Box sx={{ backgroundColor: "var(--primary-color)", px: 3, py: 2 }}>
         <Typography id="season-notice-title" fontSize={18} fontWeight={800} color="#fff">
-          Important notice · Diwali 2026
+          {closed ? "Online sales closed · Diwali 2026" : "Important notice · Diwali 2026"}
         </Typography>
       </Box>
       <Stack gap={2} sx={{ p: 3 }}>
-        {days > 0 && point(
+        {closed && point(
+          StorefrontRoundedIcon,
+          "Online orders are closed",
+          "Thank you for shopping with us this Diwali. Our shop counter is open as usual - please visit us to buy.",
+        )}
+        {!closed && days > 0 && point(
           TrendingUpRoundedIcon,
           days === 1 ? "Last day of sale!" : `Last ${days} days of sale!`,
           "Old and current prices may differ, and prices may rise. Please order your crackers as soon as possible.",
         )}
-        {point(
+        {!closed && point(
           LocalShippingRoundedIcon,
           `Orders only for ${DELIVERY_AREA}`,
           `Orders for delivery to other states are closed. We are delivering only within ${DELIVERY_AREA}.`,
         )}
-        {point(
+        {!closed && point(
           EventBusyRoundedIcon,
-          `Diwali sales close on ${SALES_CLOSE}`,
+          `Online sales close on ${SALES_CLOSE}`,
           "Please place your order before then.",
         )}
         <Button
@@ -86,7 +97,7 @@ export default function SeasonNotice() {
             "&:hover": { backgroundColor: "var(--primary-color)", filter: "brightness(0.92)" },
           }}
         >
-          OK, continue shopping
+          {closed ? "OK" : "OK, continue shopping"}
         </Button>
       </Stack>
     </Dialog>
