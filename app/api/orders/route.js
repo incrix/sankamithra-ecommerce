@@ -136,7 +136,8 @@ async function mailOrder(order, invoice) {
   // The panel flags orders the shop was never told about.
   if (mail.shop) await updateOrder(order.id, { emailSent: true });
 
-  if (!mail.customer || !mail.shop) {
+  // A counter bill with no customer email skips that mail on purpose.
+  if ((!mail.customer && !mail.customerSkipped) || !mail.shop) {
     console.error(`order ${order.ref} mail issues:`, mail.errors);
   }
   return mail;
