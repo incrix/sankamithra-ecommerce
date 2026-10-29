@@ -8,6 +8,15 @@ import { needsCallBeforePayment, callBeforePaymentNotice } from "@/util/minimumO
 
 const inr = (n) => `Rs. ${amount(n)}`;
 
+/**
+ * TEMPORARY: Hostinger is refusing mail ("hostinger_out_ratelimit") because
+ * the shared noreply mailbox is over its sending cap in the Diwali rush, and it
+ * counts every recipient. While true, customer mails skip the shop's BCC copy
+ * and the packing notice skips ORDER_MAIL_CC; the shop still gets its packing
+ * notice for every order. Set back to false once mail moves to a higher limit.
+ */
+const TRIM_MAIL_COPIES = true;
+
 /** The From header: a readable name in front of the authenticated mailbox. */
 const FROM = (label) =>
   `"${label || process.env.MAIL_NAME || "Sankamithra Thunder World"}" <${process.env.MAIL_USER}>`;
@@ -268,7 +277,7 @@ export async function sendCustomerMail({ order, invoice, kind = "invoice" }) {
     // copied on confirmations too. Left as-is deliberately - changing it alters
     // what the shop receives for website orders. See the comment above for what
     // was intended.
-    bcc: process.env.ORDER_MAIL,
+    bcc: TRIM_MAIL_COPIES ? undefined : process.env.ORDER_MAIL,
     subject: COPY.subject,
     html: SHELL(COPY.title, body),
     attachments: invoice
@@ -339,7 +348,7 @@ export async function sendShopMail({ order, invoice }) {
   const info = {
     from: FROM("Sankamithra Orders"),
     to,
-    cc: process.env.ORDER_MAIL_CC || undefined,
+    cc: TRIM_MAIL_COPIES ? undefined : process.env.ORDER_MAIL_CC || undefined,
     replyTo: c.email || undefined, // replying goes straight to the customer
     subject: `New order ${order.ref} — ${c.name} — ${inr(order.total)}`,
     html: SHELL(`Start packing: order ${order.ref}`, body),
