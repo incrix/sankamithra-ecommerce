@@ -110,11 +110,24 @@ export const callBeforePaymentNotice = (state, phone) =>
 /**
  * Where website orders are delivered this season.
  *
- * Out-of-state orders are closed for Diwali 2026: only Tamil Nadu,
- * Puducherry and Karnataka (for Bangalore) are accepted. Checkout and the
- * order route both check this. Counter bills are not affected.
+ * For the last days of Diwali 2026, online orders are taken only for these
+ * Tamil Nadu delivery points; Puducherry, Karnataka and the rest of the state
+ * are closed. Checkout offers them as a dropdown, and checkout and the order
+ * route both check them. Counter bills are not affected.
  */
-export const DELIVERY_AREA = "Tamil Nadu, Puducherry & Karnataka";
+export const DELIVERY_POINTS = [
+  "Chennai", "Tambaram", "Koyambedu", "Porur Tollgate",
+  "Coimbatore", "Tirupur", "Salem", "Madurai",
+];
+export const DELIVERY_STATE = "Tamil Nadu";
+export const DELIVERY_AREA = `${DELIVERY_POINTS.slice(0, -1).join(", ")} & ${DELIVERY_POINTS.at(-1)}`;
+
+const letters = (s) => String(s || "").toLowerCase().replace(/[^a-z]/g, "");
+
+/** The delivery point a city names, spelled as listed, or "". Only letters are compared, as for the state. */
+export const deliveryPointFor = (city) => DELIVERY_POINTS.find((p) => letters(p) === letters(city)) || "";
+
+export const isDeliveryPoint = (city) => Boolean(deliveryPointFor(city));
 export const SALES_CLOSE = "1 November 2026, 12:00 PM";
 /** Last day orders are taken (local date), for counting the days left. */
 export const SALES_CLOSE_DATE = new Date(2026, 10, 1);
@@ -131,8 +144,8 @@ export const onlineSalesOpen = (now = Date.now()) => now < ONLINE_SALES_CLOSE_AT
 export const SALES_CLOSED_MESSAGE =
   "Online sales are closed for Diwali 2026. Our shop counter is open as usual - please visit us to buy.";
 
-export const acceptsDeliveryTo = (state) => isTamilNadu(state) || isPuducherry(state) || isKarnataka(state);
+export const acceptsDeliveryTo = (state, city) => isTamilNadu(state) && isDeliveryPoint(city);
 
-export const deliveryClosedMessage = (state) =>
-  `Sorry, orders for delivery to ${String(state || "").trim() || "your state"} are closed. `
+export const deliveryClosedMessage = (state, city) =>
+  `Sorry, online orders for ${String(city || "").trim() || String(state || "").trim() || "your area"} are closed. `
   + `We are taking online orders only for ${DELIVERY_AREA}.`;

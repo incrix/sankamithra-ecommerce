@@ -80,7 +80,7 @@ export default function SeasonNotice() {
         {!closed && point(
           LocalShippingRoundedIcon,
           `Orders only for ${DELIVERY_AREA}`,
-          `Orders for delivery to other states are closed. We are delivering only within ${DELIVERY_AREA}.`,
+          `Online orders for other places are closed. We are delivering only to ${DELIVERY_AREA}.`,
         )}
         {!closed && point(
           EventBusyRoundedIcon,

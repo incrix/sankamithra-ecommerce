@@ -1,7 +1,7 @@
 "use client";
 import {
   Stack, Typography, TextField, Button, Snackbar, Alert, Box,
-  Divider, Chip, CircularProgress,
+  Divider, Chip, CircularProgress, MenuItem,
 } from "@mui/material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { Quicksand } from "next/font/google";
@@ -25,6 +25,7 @@ import {
   minimumFor, isTamilNadu, minimumNote, belowMinimumMessage,
   needsCallBeforePayment, callBeforePaymentNotice,
   acceptsDeliveryTo, deliveryClosedMessage, onlineSalesOpen, SALES_CLOSED_MESSAGE,
+  DELIVERY_POINTS, DELIVERY_STATE, deliveryPointFor,
 } from "@/util/minimumOrder";
 import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
 
@@ -40,8 +41,10 @@ const FIELDS = [
   { name: "email", label: "Email", span: 1, group: "contact", type: "email" },
   { name: "phone", label: "Phone", span: 1, group: "contact", inputMode: "numeric", maxLength: 10 },
   { name: "address", label: "Address", span: 2, group: "shipping", multiline: true, rows: 2 },
-  { name: "city", label: "City", span: 1, group: "shipping" },
-  { name: "state", label: "State", span: 1, group: "shipping" },
+  // Online orders go only to these points this season, so the city is picked
+  // from them and the state is fixed. See util/minimumOrder.js.
+  { name: "city", label: "Delivery point", span: 1, group: "shipping", options: DELIVERY_POINTS },
+  { name: "state", label: "State", span: 1, group: "shipping", readOnly: true },
   { name: "zip", label: "PIN code", span: 1, group: "shipping", inputMode: "numeric", maxLength: 6 },
 ];
 
@@ -54,8 +57,7 @@ const validate = (b) => {
   else if (b.phone.replace(/\D/g, "").length !== 10) e.phone = "Must be 10 digits";
   if (!b.address?.trim()) e.address = "Required";
   if (!b.city?.trim()) e.city = "Required";
-  if (!b.state?.trim()) e.state = "Required";
-  else if (!acceptsDeliveryTo(b.state)) e.state = deliveryClosedMessage(b.state);
+  else if (!acceptsDeliveryTo(b.state, b.city)) e.city = deliveryClosedMessage(b.state, b.city);
   if (!b.zip?.trim()) e.zip = "Required";
   else if (b.zip.replace(/\D/g, "").length !== 6) e.zip = "Must be 6 digits";
   return e;
@@ -68,7 +70,7 @@ export default function Page() {
   const [result, setResult] = useState(null); // { emailSent, invoice, billing }
 
   const [billingDetails, setBillingDetails] = useState({
-    name: "", email: "", phone: "", address: "", city: "", state: "", zip: "",
+    name: "", email: "", phone: "", address: "", city: "", state: DELIVERY_STATE, zip: "",
   });
 
   // Guards the save effect: without it the save fires on first mount with the
@@ -78,7 +80,16 @@ export default function Page() {
   useEffect(() => {
     const stored = localStorage.getItem("billingDetails");
     if (stored) {
-      try { setBillingDetails((p) => ({ ...p, ...JSON.parse(stored) })); } catch {}
+      // Details saved before the delivery points existed may carry any city
+      // or state; keep the rest, and make the customer pick a point.
+      try {
+        const saved = JSON.parse(stored);
+        setBillingDetails((p) => ({
+          ...p, ...saved,
+          state: DELIVERY_STATE,
+          city: deliveryPointFor(saved.city),
+        }));
+      } catch {}
     }
     setBillingLoaded(true);
   }, []);
@@ -302,6 +313,8 @@ function BillingDetails({ billingDetails, onChange, errors, touched, setTouched,
           onBlur={() => setTouched((t) => ({ ...t, [f.name]: true }))}
           multiline={f.multiline}
           rows={f.rows}
+          select={Boolean(f.options)}
+          InputProps={f.readOnly ? { readOnly: true } : undefined}
           error={Boolean(bad)}
           helperText={bad || (f.name === "state" && billingDetails.state?.trim() && !isTamilNadu(billingDetails.state)
             ? minimumNote(billingDetails.state)
@@ -315,7 +328,9 @@ function BillingDetails({ billingDetails, onChange, errors, touched, setTouched,
             "& label.Mui-focused": { color: "var(--primary-color)" },
             "& .MuiFormHelperText-root": { minHeight: 18, mt: 0.25 },
           }}
-        />
+        >
+          {f.options?.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+        </TextField>
       </Box>
     );
   };
@@ -395,8 +410,8 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
       toast(SALES_CLOSED_MESSAGE);
       return;
     }
-    if (!acceptsDeliveryTo(billingDetails.state)) {
-      toast(deliveryClosedMessage(billingDetails.state));
+    if (!acceptsDeliveryTo(billingDetails.state, billingDetails.city)) {
+      toast(deliveryClosedMessage(billingDetails.state, billingDetails.city));
       return;
     }
     if (belowMin) {

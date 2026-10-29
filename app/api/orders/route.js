@@ -63,9 +63,9 @@ export async function POST(request) {
       if (!onlineSalesOpen()) {
         return Response.json({ error: SALES_CLOSED_MESSAGE }, { status: 400 });
       }
-      // Out-of-state website orders are closed this season.
-      if (!acceptsDeliveryTo(billingDetails.state)) {
-        return Response.json({ error: deliveryClosedMessage(billingDetails.state) }, { status: 400 });
+      // Website orders are taken only for the delivery points this season.
+      if (!acceptsDeliveryTo(billingDetails.state, billingDetails.city)) {
+        return Response.json({ error: deliveryClosedMessage(billingDetails.state, billingDetails.city) }, { status: 400 });
       }
       const total = sumAmounts(productList, (p) => lineAmount(p.price, p.discount, p.count));
       if (!meetsMinimumFor(total, billingDetails.state)) {
