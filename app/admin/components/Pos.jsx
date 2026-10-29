@@ -235,7 +235,8 @@ export default function Pos() {
       // Close the sheet: leaving it open over an empty bill reads as "nothing
       // happened", which is exactly how it felt.
       setSheetOpen(false);
-      loadOrders();
+      // Quiet: fetches just the new bill, not every order again.
+      loadOrders(true);
       // The bill just took stock; show the counts as they now stand.
       loadCatalogue();
     } catch {

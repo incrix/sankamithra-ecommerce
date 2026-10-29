@@ -1,4 +1,4 @@
-import { listOrders, createOrder, orderStats, updateOrder, getOrder } from "@/util/ordersStore";
+import { listOrdersWithStats, createOrder, updateOrder, getOrder } from "@/util/ordersStore";
 import { requireAdmin } from "@/util/admin/auth";
 import { sendOrderMails } from "@/util/sendMail";
 import { lineAmount, sumAmounts, inr } from "@/util/pricing";
@@ -10,12 +10,21 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 30;
 
 /** Admin only - the order list carries customer contact details. */
-export async function GET() {
+export async function GET(request) {
   const denied = await requireAdmin();
   if (denied) return denied;
 
-  const [orders, stats] = await Promise.all([listOrders(), orderStats()]);
-  return Response.json({ orders, stats });
+  // `?since=` returns only orders changed after it - see listOrdersWithStats.
+  // The cursor handed back is taken before the scan and a minute early, so a
+  // write that lands while the scan runs, or on a server whose clock runs a
+  // little behind, is sent again next time rather than missed. The panel
+  // merges by id, so a repeat is harmless.
+  const cursor = new Date(Date.now() - 60_000).toISOString();
+  const raw = new URL(request.url).searchParams.get("since");
+  const since = raw && !Number.isNaN(Date.parse(raw)) ? new Date(raw).toISOString() : null;
+
+  const { orders, stats } = await listOrdersWithStats(since);
+  return Response.json({ orders, stats, cursor, partial: Boolean(since) });
 }
 
 /**

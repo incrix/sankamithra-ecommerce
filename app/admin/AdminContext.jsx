@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 /** Status changes that email the customer, and so need a current proforma. */
 const NOTIFYING = ["packed", "dispatched", "cancelled"];
 
@@ -12,6 +12,14 @@ const NOTIFYING = ["packed", "dispatched", "cancelled"];
  * doesn't refetch everything, and the sign-in gate is evaluated once.
  */
 const AdminContext = createContext(null);
+
+/** Folds changed orders into the list by id, newest first as the server sends it. */
+function mergeOrders(prev, changed) {
+  if (!changed.length) return prev;
+  const byId = new Map(prev.map((o) => [o.id, o]));
+  for (const o of changed) byId.set(o.id, o);
+  return [...byId.values()].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+}
 
 export const useAdmin = () => {
   const ctx = useContext(AdminContext);
@@ -34,13 +42,21 @@ export function AdminProvider({ children }) {
 
   const notify = useCallback((msg, severity = "success") => setToast({ msg, severity }), []);
 
+  // Where the last load left off, from the server. A quiet load asks only for
+  // what changed after it and merges that in; a loud one (first load, sign-in,
+  // the refresh button) fetches everything and resets it.
+  const cursor = useRef(null);
+
   const loadOrders = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
     try {
-      const res = await fetch("/api/orders", { cache: "no-store" });
+      const since = quiet && cursor.current;
+      const res = await fetch(since ? `/api/orders?since=${encodeURIComponent(since)}` : "/api/orders", { cache: "no-store" });
       if (res.status === 401 || res.status === 503) { setAuthed(false); return; }
       const data = await res.json();
-      setOrders(data.orders || []);
+      if (since && data.partial) setOrders((prev) => mergeOrders(prev, data.orders || []));
+      else setOrders(data.orders || []);
+      cursor.current = data.cursor || null;
       setStats(data.stats || null);
       setAuthed(true);
     } catch {
@@ -73,11 +89,18 @@ export function AdminProvider({ children }) {
       .catch(() => {});
   }, [authed]);
 
-  // Light polling so a counter screen stays current without a refresh.
+  // Light polling so a counter screen stays current without a refresh. Only
+  // while the tab is on screen; coming back to it catches up at once, so a
+  // screen someone is looking at is never more than a poll behind.
   useEffect(() => {
     if (!authed) return;
-    const t = setInterval(() => loadOrders(true), 20000);
-    return () => clearInterval(t);
+    const poll = () => { if (document.visibilityState === "visible") loadOrders(true); };
+    const t = setInterval(poll, 20000);
+    document.addEventListener("visibilitychange", poll);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener("visibilitychange", poll);
+    };
   }, [authed, loadOrders]);
 
   const patchOrder = useCallback(async (id, body) => {
@@ -133,6 +156,7 @@ export function AdminProvider({ children }) {
     await fetch("/api/admin/logout", { method: "POST" });
     setAuthed(false);
     setOrders([]);
+    cursor.current = null;
     setCatalogue(null);
   }, []);
 

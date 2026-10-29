@@ -473,7 +473,33 @@ export async function orderStats() {
 
   // No projection: DynamoDB charges for the item it reads, not the fields
   // returned, so asking for two attributes would cost exactly the same.
+  return statsOf(await allOrders());
+}
+
+/**
+ * The admin panel's order list and the stats over every order, from one scan.
+ *
+ * With `since` (an ISO time), only orders created or changed after it are
+ * returned. The panel polls with it so each refresh carries the few orders that
+ * moved, not the whole table - a full list is megabytes by mid-season, and
+ * re-sending it every 20s from every open screen used up the host's transfer
+ * allowance. Every write goes through createOrder or updateOrder, and both
+ * stamp updatedAt, so nothing can change without showing up here.
+ */
+export async function listOrdersWithStats(since) {
+  const changed = (o) => !since || String(o.updatedAt || o.createdAt || "") > since;
+  if (!useDb()) {
+    const [orders, stats] = await Promise.all([fileStore.listOrders(), fileStore.orderStats()]);
+    return { orders: orders.filter(changed), stats };
+  }
   const all = await allOrders();
+  const orders = all.filter(changed)
+    .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+    .map(strip);
+  return { orders, stats: statsOf(all) };
+}
+
+function statsOf(all) {
   const by = Object.fromEntries(STATUSES.map((s) => [s, 0]));
   let revenue = 0;
   for (const o of all) {
