@@ -44,7 +44,7 @@ const TABS = ["/admin", "/admin/pos", "/admin/orders", "/admin/products"];
 export const BAR_H = 62;
 
 export default function AdminShell({ children }) {
-  const { authed, toast, setToast, loadOrders, loadCatalogue, catalogue, logout } = useAdmin();
+  const { authed, toast, setToast, loadOrders, loadCatalogue, catalogue, logout, idle, resume } = useAdmin();
   const pathname = usePathname() || "/admin";
   const [moreOpen, setMoreOpen] = useState(false);
 
@@ -79,6 +79,7 @@ export default function AdminShell({ children }) {
 
   return (
     <Box sx={{ display: "flex", width: "100%", minHeight: { md: "100dvh" }, backgroundColor: "var(--surface-muted)" }}>
+      {idle && <IdleCover onResume={resume} />}
       <SideNav isActive={isActive} />
 
       <Stack
@@ -298,5 +299,36 @@ function BottomBar({ isActive, onMore, moreOpen }) {
         <Typography fontSize={10} fontWeight={moreOpen ? 800 : 600} color="inherit">More</Typography>
       </Stack>
     </Box>
+  );
+}
+
+/**
+ * Covers a window that has gone idle - see IDLE_AFTER_MS in AdminContext.
+ * Any click, tap or key brings it back; nothing is lost while it is paused.
+ */
+function IdleCover({ onResume }) {
+  useEffect(() => {
+    window.addEventListener("keydown", onResume);
+    return () => window.removeEventListener("keydown", onResume);
+  }, [onResume]);
+
+  return (
+    <Stack
+      role="button"
+      tabIndex={0}
+      onClick={onResume}
+      alignItems="center"
+      justifyContent="center"
+      gap={1}
+      sx={{
+        position: "fixed", inset: 0, zIndex: 2000, cursor: "pointer", textAlign: "center", px: 3,
+        backgroundColor: "rgba(255,255,255,0.92)", backdropFilter: "blur(2px)",
+      }}
+    >
+      <Typography fontSize={20} fontWeight={800} color="var(--text-color)">Paused</Typography>
+      <Typography fontSize={14} fontWeight={600} color="var(--text-color-secondary)">
+        This window was idle for 10 minutes. Tap anywhere to continue.
+      </Typography>
+    </Stack>
   );
 }

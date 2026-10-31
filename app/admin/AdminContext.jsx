@@ -13,6 +13,14 @@ const NOTIFYING = ["packed", "dispatched", "cancelled"];
  */
 const AdminContext = createContext(null);
 
+/**
+ * How long a window may sit untouched before it stops polling. A counter PC
+ * left open all day would otherwise keep asking the server for orders - it is
+ * the host's CPU and transfer allowance that pays for that.
+ */
+const IDLE_AFTER_MS = 10 * 60 * 1000;
+const ACTIVITY = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"];
+
 /** Folds changed orders into the list by id, newest first as the server sends it. */
 function mergeOrders(prev, changed) {
   if (!changed.length) return prev;
@@ -90,11 +98,36 @@ export function AdminProvider({ children }) {
       .catch(() => {});
   }, [authed]);
 
-  // Light polling so a counter screen stays current without a refresh. Only
-  // while the tab is on screen; coming back to it catches up at once, so a
-  // screen someone is looking at is never more than a poll behind.
+  // Untouched for IDLE_AFTER_MS: polling stops and the shell covers the
+  // screen. The session stays signed in, so the first touch resumes it and
+  // catches up at once - a changes-only load, so cheap however long it slept.
+  const [idle, setIdle] = useState(false);
+  const lastActive = useRef(Date.now());
+
   useEffect(() => {
     if (!authed) return;
+    const seen = () => { lastActive.current = Date.now(); };
+    ACTIVITY.forEach((e) => window.addEventListener(e, seen, { passive: true }));
+    const t = setInterval(() => {
+      if (Date.now() - lastActive.current > IDLE_AFTER_MS) setIdle(true);
+    }, 30000);
+    return () => {
+      ACTIVITY.forEach((e) => window.removeEventListener(e, seen));
+      clearInterval(t);
+    };
+  }, [authed]);
+
+  const resume = useCallback(() => {
+    lastActive.current = Date.now();
+    setIdle(false);
+    loadOrders(true);
+  }, [loadOrders]);
+
+  // Light polling so a counter screen stays current without a refresh. Only
+  // while the tab is on screen and in use; coming back to it catches up at
+  // once, so a screen someone is looking at is never more than a poll behind.
+  useEffect(() => {
+    if (!authed || idle) return;
     const poll = () => { if (document.visibilityState === "visible") loadOrders(true); };
     const t = setInterval(poll, 20000);
     document.addEventListener("visibilitychange", poll);
@@ -102,7 +135,7 @@ export function AdminProvider({ children }) {
       clearInterval(t);
       document.removeEventListener("visibilitychange", poll);
     };
-  }, [authed, loadOrders]);
+  }, [authed, idle, loadOrders]);
 
   const patchOrder = useCallback(async (id, body) => {
     setBusy(true);
@@ -162,7 +195,7 @@ export function AdminProvider({ children }) {
   }, []);
 
   const value = {
-    authed, setAuthed, orders, stats, loading, busy, toast, setToast, notify,
+    authed, setAuthed, orders, stats, loading, busy, toast, setToast, notify, idle, resume,
     catalogue, catLoading, loadOrders, loadCatalogue, patchOrder, logout, admins, setAdmins,
   };
 
