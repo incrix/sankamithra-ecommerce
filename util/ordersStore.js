@@ -480,17 +480,32 @@ export async function orderStats() {
  * The admin panel's order list and the stats over every order, from one scan.
  *
  * With `since` (an ISO time), only orders created or changed after it are
- * returned. The panel polls with it so each refresh carries the few orders that
- * moved, not the whole table - a full list is megabytes by mid-season, and
- * re-sending it every 20s from every open screen used up the host's transfer
- * allowance. Every write goes through createOrder or updateOrder, and both
- * stamp updatedAt, so nothing can change without showing up here.
+ * returned, and no stats. The panel polls with it so each refresh carries the
+ * few orders that moved, not the whole table - a full list is megabytes by
+ * mid-season, and re-sending it every 20s from every open screen used up the
+ * host's transfer allowance. Every write goes through createOrder or
+ * updateOrder, and both stamp updatedAt, so nothing can change without showing
+ * up here.
+ *
+ * The filter runs in DynamoDB, so only the changed rows reach this function.
+ * Scanning everything and filtering here cost ~850ms of CPU per poll, which
+ * ate the host's CPU allowance; the filtered scan costs ~25ms.
  */
 export async function listOrdersWithStats(since) {
   const changed = (o) => !since || String(o.updatedAt || o.createdAt || "") > since;
   if (!useDb()) {
     const [orders, stats] = await Promise.all([fileStore.listOrders(), fileStore.orderStats()]);
     return { orders: orders.filter(changed), stats };
+  }
+  if (since) {
+    const rows = await scanAll(TABLE.orders, {
+      filter: "updatedAt > :since OR createdAt > :since",
+      values: { ":since": since },
+    });
+    const orders = rows.filter((o) => !isClaim(o))
+      .sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)))
+      .map(strip);
+    return { orders, stats: null };
   }
   const all = await allOrders();
   const orders = all.filter(changed)

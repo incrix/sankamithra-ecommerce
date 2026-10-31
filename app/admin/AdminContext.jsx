@@ -57,7 +57,8 @@ export function AdminProvider({ children }) {
       if (since && data.partial) setOrders((prev) => mergeOrders(prev, data.orders || []));
       else setOrders(data.orders || []);
       cursor.current = data.cursor || null;
-      setStats(data.stats || null);
+      // A changes-only load carries no stats; keep the last full ones.
+      if (data.stats) setStats(data.stats);
       setAuthed(true);
     } catch {
       notify("Could not load orders", "error");
