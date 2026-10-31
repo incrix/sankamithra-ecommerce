@@ -128,16 +128,16 @@ const letters = (s) => String(s || "").toLowerCase().replace(/[^a-z]/g, "");
 export const deliveryPointFor = (city) => DELIVERY_POINTS.find((p) => letters(p) === letters(city)) || "";
 
 export const isDeliveryPoint = (city) => Boolean(deliveryPointFor(city));
-export const SALES_CLOSE = "1 November 2026, 12:00 PM";
+export const SALES_CLOSE = "31 October 2026, 8:30 PM";
 /** Last day orders are taken (local date), for counting the days left. */
-export const SALES_CLOSE_DATE = new Date(2026, 10, 1);
+export const SALES_CLOSE_DATE = new Date(2026, 9, 31);
 
 /**
- * When website orders stop: 12:00 PM IST on SALES_CLOSE_DATE. An exact instant
+ * When website orders stop: 8:30 PM IST on SALES_CLOSE_DATE (ended early). An exact instant
  * in IST, so the server (UTC on Vercel) and the customer's browser agree on it.
  * Checkout and the order route both check this; counter bills are not affected.
  */
-export const ONLINE_SALES_CLOSE_AT = new Date("2026-11-01T12:00:00+05:30");
+export const ONLINE_SALES_CLOSE_AT = new Date("2026-10-31T20:30:00+05:30");
 
 export const onlineSalesOpen = (now = Date.now()) => now < ONLINE_SALES_CLOSE_AT.getTime();
 
