@@ -34,10 +34,12 @@ export const PRODUCT_SEED_URL = `${ASSET_BASE}/SortedJSON/productData.json`;
 /** Live catalogue for the storefront: the editable store, not the seed file. */
 export const PRODUCT_DATA_URL = "/api/products";
 
-/** Used until the admin uploads one - the copy that shipped with the site. */
-export const PRICE_LIST_FALLBACK = `${ASSET_BASE}/${encodeURIComponent(
-  "SANKAMITHRA THUNDER WORLD PRICE LIST 2025.pdf"
-)}`;
+/**
+ * Used until the admin uploads one - the copy that shipped with the site.
+ * Committed under public/ rather than read from ASSET_BASE: the asset folder
+ * is not in Git, so a Git deploy (or a new Vercel account) has no copy of it.
+ */
+export const PRICE_LIST_FALLBACK = "/price-list-2025.pdf";
 
 /**
  * Every "Download price list" link points here. The route redirects to
