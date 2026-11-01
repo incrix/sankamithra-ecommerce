@@ -117,7 +117,7 @@ export const callBeforePaymentNotice = (state, phone) =>
  */
 export const DELIVERY_POINTS = [
   "Chennai", "Tambaram", "Koyambedu", "Porur Tollgate",
-  "Coimbatore", "Tirupur", "Salem", "Madurai",
+  "Coimbatore", "Tirupur", "Salem", "Madurai", "Vellore",
 ];
 export const DELIVERY_STATE = "Tamil Nadu";
 export const DELIVERY_AREA = `${DELIVERY_POINTS.slice(0, -1).join(", ")} & ${DELIVERY_POINTS.at(-1)}`;
@@ -128,16 +128,16 @@ const letters = (s) => String(s || "").toLowerCase().replace(/[^a-z]/g, "");
 export const deliveryPointFor = (city) => DELIVERY_POINTS.find((p) => letters(p) === letters(city)) || "";
 
 export const isDeliveryPoint = (city) => Boolean(deliveryPointFor(city));
-export const SALES_CLOSE = "31 October 2026, 8:30 PM";
+export const SALES_CLOSE = "1 November 2026, 11:59 PM";
 /** Last day orders are taken (local date), for counting the days left. */
-export const SALES_CLOSE_DATE = new Date(2026, 9, 31);
+export const SALES_CLOSE_DATE = new Date(2026, 10, 1);
 
 /**
- * When website orders stop: 8:30 PM IST on SALES_CLOSE_DATE (ended early). An exact instant
- * in IST, so the server (UTC on Vercel) and the customer's browser agree on it.
+ * When website orders stop: 11:59 PM IST on SALES_CLOSE_DATE (reopened for the day). An exact
+ * instant in IST, so the server (UTC on Vercel) and the customer's browser agree on it.
  * Checkout and the order route both check this; counter bills are not affected.
  */
-export const ONLINE_SALES_CLOSE_AT = new Date("2026-10-31T20:30:00+05:30");
+export const ONLINE_SALES_CLOSE_AT = new Date("2026-11-01T23:59:00+05:30");
 
 export const onlineSalesOpen = (now = Date.now()) => now < ONLINE_SALES_CLOSE_AT.getTime();
 
