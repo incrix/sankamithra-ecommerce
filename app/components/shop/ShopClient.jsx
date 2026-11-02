@@ -11,6 +11,7 @@ import { useProducts } from "@/context/ProductContext";
 import { useCart } from "@/util/cart";
 import ProductCard from "@/app/components/commerce/ProductCard";
 import CartPanel from "@/app/components/commerce/CartPanel";
+import FreeDeliveryBanner from "./FreeDeliveryBanner";
 import { netPrice, amount } from "@/util/pricing";
 
 /**
@@ -123,6 +124,8 @@ export default function ShopClient() {
             your cart without leaving this page.
           </Typography>
         </Stack>
+
+        <FreeDeliveryBanner />
 
         {/* What the shop promises, before the grid - a first-time buyer decides
             here whether to bother scrolling. */}
