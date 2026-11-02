@@ -24,9 +24,10 @@ import { BUSINESS, SITE_DOMAIN } from "@/util/site";
 import {
   minimumFor, isTamilNadu, minimumNote, belowMinimumMessage,
   needsCallBeforePayment, callBeforePaymentNotice,
-  acceptsDeliveryTo, deliveryClosedMessage, onlineSalesOpen, SALES_CLOSED_MESSAGE,
-  DELIVERY_POINTS, DELIVERY_STATE, deliveryPointFor,
+  acceptsDeliveryTo, deliveryClosedMessage, activePoints, SALES_CLOSED_MESSAGE,
+  DELIVERY_STATE, deliveryPointFor,
 } from "@/util/minimumOrder";
+import { useSales } from "@/app/components/commerce/useSales";
 import PhoneInTalkRoundedIcon from "@mui/icons-material/PhoneInTalkRounded";
 
 const quicksand = Quicksand({ subsets: ["latin"] });
@@ -41,14 +42,14 @@ const FIELDS = [
   { name: "email", label: "Email", span: 1, group: "contact", type: "email" },
   { name: "phone", label: "Phone", span: 1, group: "contact", inputMode: "numeric", maxLength: 10 },
   { name: "address", label: "Address", span: 2, group: "shipping", multiline: true, rows: 2 },
-  // Online orders go only to these points this season, so the city is picked
-  // from them and the state is fixed. See util/minimumOrder.js.
-  { name: "city", label: "Delivery point", span: 1, group: "shipping", options: DELIVERY_POINTS },
+  // Online orders go only to the points the admin has ticked, so the city is
+  // picked from them and the state is fixed. See util/minimumOrder.js.
+  { name: "city", label: "Delivery point", span: 1, group: "shipping", options: true },
   { name: "state", label: "State", span: 1, group: "shipping", readOnly: true },
   { name: "zip", label: "PIN code", span: 1, group: "shipping", inputMode: "numeric", maxLength: 6 },
 ];
 
-const validate = (b) => {
+const validate = (b, points) => {
   const e = {};
   if (!b.name?.trim()) e.name = "Required";
   if (!b.email?.trim()) e.email = "Required";
@@ -57,7 +58,7 @@ const validate = (b) => {
   else if (b.phone.replace(/\D/g, "").length !== 10) e.phone = "Must be 10 digits";
   if (!b.address?.trim()) e.address = "Required";
   if (!b.city?.trim()) e.city = "Required";
-  else if (!acceptsDeliveryTo(b.state, b.city)) e.city = deliveryClosedMessage(b.state, b.city);
+  else if (!acceptsDeliveryTo(b.state, b.city, points)) e.city = deliveryClosedMessage(b.state, b.city, points);
   if (!b.zip?.trim()) e.zip = "Required";
   else if (b.zip.replace(/\D/g, "").length !== 6) e.zip = "Must be 6 digits";
   return e;
@@ -68,6 +69,8 @@ export default function Page() {
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "error" });
   const [touched, setTouched] = useState({});
   const [result, setResult] = useState(null); // { emailSent, invoice, billing }
+  const sales = useSales();
+  const points = activePoints(sales);
 
   const [billingDetails, setBillingDetails] = useState({
     name: "", email: "", phone: "", address: "", city: "", state: DELIVERY_STATE, zip: "",
@@ -80,19 +83,23 @@ export default function Page() {
   useEffect(() => {
     const stored = localStorage.getItem("billingDetails");
     if (stored) {
-      // Details saved before the delivery points existed may carry any city
-      // or state; keep the rest, and make the customer pick a point.
+      // Details saved earlier may carry any state; the city is checked against
+      // the delivery points below, once they have loaded.
       try {
         const saved = JSON.parse(stored);
         setBillingDetails((p) => ({
           ...p, ...saved,
           state: DELIVERY_STATE,
-          city: deliveryPointFor(saved.city),
         }));
       } catch {}
     }
     setBillingLoaded(true);
   }, []);
+
+  // A city that is not a delivery point now is cleared, so the customer picks one.
+  useEffect(() => {
+    if (sales) setBillingDetails((p) => ({ ...p, city: deliveryPointFor(p.city, activePoints(sales)) }));
+  }, [sales]);
 
   useEffect(() => {
     if (!billingLoaded) return;
@@ -101,7 +108,7 @@ export default function Page() {
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [step]);
 
-  const errors = validate(billingDetails);
+  const errors = validate(billingDetails, points);
 
   const onChange = (e) => {
     let { name, value } = e.target;
@@ -150,6 +157,7 @@ export default function Page() {
         {step === "billing" && (
           <BillingDetails
             billingDetails={billingDetails}
+            points={points}
             onChange={onChange}
             errors={errors}
             touched={touched}
@@ -161,6 +169,7 @@ export default function Page() {
         {step === "order" && (
           <OrderSummary
             billingDetails={billingDetails}
+            sales={sales}
             onBack={() => setStep("billing")}
             onDone={(r) => { setResult(r); setStep("done"); }}
             toast={toast}
@@ -297,7 +306,7 @@ function CallBeforePayment({ state, sx }) {
 
 /* ---------------------------------------------------------------- billing */
 
-function BillingDetails({ billingDetails, onChange, errors, touched, setTouched, onNext }) {
+function BillingDetails({ billingDetails, points, onChange, errors, touched, setTouched, onNext }) {
   const field = (f) => {
     const bad = touched[f.name] && errors[f.name];
     return (
@@ -308,7 +317,7 @@ function BillingDetails({ billingDetails, onChange, errors, touched, setTouched,
           label={f.label}
           name={f.name}
           type={f.type || "text"}
-          value={billingDetails[f.name] || ""}
+          value={f.options && !points.includes(billingDetails[f.name]) ? "" : billingDetails[f.name] || ""}
           onChange={onChange}
           onBlur={() => setTouched((t) => ({ ...t, [f.name]: true }))}
           multiline={f.multiline}
@@ -329,7 +338,7 @@ function BillingDetails({ billingDetails, onChange, errors, touched, setTouched,
             "& .MuiFormHelperText-root": { minHeight: 18, mt: 0.25 },
           }}
         >
-          {f.options?.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>)}
+          {f.options ? points.map((o) => <MenuItem key={o} value={o}>{o}</MenuItem>) : null}
         </TextField>
       </Box>
     );
@@ -386,7 +395,7 @@ function BillingDetails({ billingDetails, onChange, errors, touched, setTouched,
 
 /* ----------------------------------------------------------- order review */
 
-function OrderSummary({ billingDetails, onBack, onDone, toast }) {
+function OrderSummary({ billingDetails, sales, onBack, onDone, toast }) {
   const [cart, setCart] = useState([]);
   const [ready, setReady] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -406,12 +415,13 @@ function OrderSummary({ billingDetails, onBack, onDone, toast }) {
   const belowMin = total <= minOrder;
 
   const handlePlaceOrder = async () => {
-    if (!onlineSalesOpen()) {
+    if (!sales.open) {
       toast(SALES_CLOSED_MESSAGE);
       return;
     }
-    if (!acceptsDeliveryTo(billingDetails.state, billingDetails.city)) {
-      toast(deliveryClosedMessage(billingDetails.state, billingDetails.city));
+    const points = activePoints(sales);
+    if (!acceptsDeliveryTo(billingDetails.state, billingDetails.city, points)) {
+      toast(deliveryClosedMessage(billingDetails.state, billingDetails.city, points));
       return;
     }
     if (belowMin) {

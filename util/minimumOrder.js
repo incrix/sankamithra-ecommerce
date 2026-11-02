@@ -108,14 +108,14 @@ export const callBeforePaymentNotice = (state, phone) =>
   + `Once we confirm by phone, complete the necessary steps to receive your crackers and enjoy this Diwali 2026!`;
 
 /**
- * Where website orders are delivered this season.
+ * Where website orders are delivered, and whether they are being taken at all.
  *
- * For the last days of Diwali 2026, online orders are taken only for these
- * Tamil Nadu delivery points; Puducherry, Karnataka and the rest of the state
- * are closed. Checkout offers them as a dropdown, and checkout and the order
- * route both check them. Counter bills are not affected.
+ * The admin sets both on the Online sales page, and they are stored as the
+ * `sales` setting (see util/settingsStore.js). These are the points offered
+ * until the first save. Checkout offers the ticked ones as a dropdown, and
+ * checkout and the order route both check them. Counter bills are not affected.
  */
-export const DELIVERY_POINTS = [
+export const DEFAULT_DELIVERY_POINTS = [
   "Chennai", "Tambaram", "Koyambedu", "Porur Tollgate",
   "Coimbatore", "Tirupur", "Salem", "Madurai", "Vellore",
   "Trichy", "Thanjavur", "Kumbakonam", "Tiruvarur", "Mayiladuthurai", "Nagapattinam",
@@ -123,36 +123,38 @@ export const DELIVERY_POINTS = [
   "Aruppukottai", "Sivaganga", "Karaikudi", "Paramakudi", "Usilampatti",
 ];
 export const DELIVERY_STATE = "Tamil Nadu";
-export const DELIVERY_AREA = `${DELIVERY_POINTS.slice(0, -1).join(", ")} & ${DELIVERY_POINTS.at(-1)}`;
+export const MAX_DELIVERY_POINTS = 100;
 
 const letters = (s) => String(s || "").toLowerCase().replace(/[^a-z]/g, "");
 
+/** Coerces the stored or submitted setting into a complete, safe shape. */
+export function normaliseSales(input) {
+  const seen = new Set();
+  const points = (Array.isArray(input?.points)
+    ? input.points
+    : DEFAULT_DELIVERY_POINTS.map((name) => ({ name, enabled: true })))
+    .map((p) => ({ name: String(p?.name ?? "").replace(/\s+/g, " ").trim().slice(0, 40), enabled: p?.enabled !== false }))
+    .filter((p) => letters(p.name) && !seen.has(letters(p.name)) && seen.add(letters(p.name)))
+    .slice(0, MAX_DELIVERY_POINTS);
+  return { open: input?.open !== false, points };
+}
+
+export const DEFAULT_SALES = normaliseSales(null);
+
+/** The names of the points taking orders now. */
+export const activePoints = (sales) => (sales?.points || []).filter((p) => p.enabled).map((p) => p.name);
+
+export const deliveryAreaText = (points) =>
+  (points.length > 1 ? `${points.slice(0, -1).join(", ")} & ${points.at(-1)}` : points[0] || "");
+
 /** The delivery point a city names, spelled as listed, or "". Only letters are compared, as for the state. */
-export const deliveryPointFor = (city) => DELIVERY_POINTS.find((p) => letters(p) === letters(city)) || "";
-
-export const isDeliveryPoint = (city) => Boolean(deliveryPointFor(city));
-/** The closing time customers see, or "" while none is set. */
-export const SALES_CLOSE = "";
-/** Last day orders are taken (local date), for counting the days left, or null while none is set. */
-export const SALES_CLOSE_DATE = null;
-
-/**
- * When website orders stop, or null to stay open until a closing time is set.
- * An exact instant in IST, so the server (UTC on Vercel) and the customer's
- * browser agree on it, e.g. new Date("2026-11-03T20:00:00+05:30"). Set it with
- * SALES_CLOSE and SALES_CLOSE_DATE. Checkout and the order route both check
- * this; counter bills are not affected.
- */
-export const ONLINE_SALES_CLOSE_AT = null;
-
-export const onlineSalesOpen = (now = Date.now()) =>
-  !ONLINE_SALES_CLOSE_AT || now < ONLINE_SALES_CLOSE_AT.getTime();
+export const deliveryPointFor = (city, points) => points.find((p) => letters(p) === letters(city)) || "";
 
 export const SALES_CLOSED_MESSAGE =
   "Online sales are closed for Diwali 2026. Our shop counter is open as usual - please visit us to buy.";
 
-export const acceptsDeliveryTo = (state, city) => isTamilNadu(state) && isDeliveryPoint(city);
+export const acceptsDeliveryTo = (state, city, points) => isTamilNadu(state) && Boolean(deliveryPointFor(city, points));
 
-export const deliveryClosedMessage = (state, city) =>
+export const deliveryClosedMessage = (state, city, points) =>
   `Sorry, online orders for ${String(city || "").trim() || String(state || "").trim() || "your area"} are closed. `
-  + `We are taking online orders only for ${DELIVERY_AREA}.`;
+  + `We are taking online orders only for ${deliveryAreaText(points)}.`;

@@ -2,41 +2,29 @@
 import { useEffect, useState } from "react";
 import { Dialog, Stack, Typography, Button, Box } from "@mui/material";
 import LocalShippingRoundedIcon from "@mui/icons-material/LocalShippingRounded";
-import EventBusyRoundedIcon from "@mui/icons-material/EventBusyRounded";
-import TrendingUpRoundedIcon from "@mui/icons-material/TrendingUpRounded";
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
-import { DELIVERY_AREA, SALES_CLOSE, SALES_CLOSE_DATE, onlineSalesOpen } from "@/util/minimumOrder";
+import { activePoints, deliveryAreaText } from "@/util/minimumOrder";
+import { useSales } from "@/app/components/commerce/useSales";
 
 // Bumped when the notice changes, so customers who closed the old one see the new one.
 const SEEN = "seasonNoticeSeen-lastDays";
 // Its own key, so customers who closed the last-days notice still see that sales have closed.
 const SEEN_CLOSED = "seasonNoticeSeen-closed";
 
-/** Days left to order, counting today and the closing day. */
-const daysLeft = () => {
-  if (!SALES_CLOSE_DATE) return 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return Math.round((SALES_CLOSE_DATE - today) / 86400000) + 1;
-};
-
 /**
  * The season's notice, shown once per visit when a customer opens the site:
- * how many days of sale are left, where we deliver, and when Diwali sales
- * close. Remembered for the browser session only, so a customer coming back
+ * where we deliver, or that online sales are closed. Remembered for the browser session only, so a customer coming back
  * another day sees it again.
  */
 export default function SeasonNotice() {
   const [open, setOpen] = useState(false);
-  const [days, setDays] = useState(0);
-  const [closed, setClosed] = useState(false);
+  const sales = useSales();
+  const closed = Boolean(sales) && !sales.open;
 
   useEffect(() => {
-    const c = !onlineSalesOpen();
-    setClosed(c);
-    setDays(daysLeft());
-    try { if (!sessionStorage.getItem(c ? SEEN_CLOSED : SEEN)) setOpen(true); } catch { setOpen(true); }
-  }, []);
+    if (!sales) return;
+    try { if (!sessionStorage.getItem(closed ? SEEN_CLOSED : SEEN)) setOpen(true); } catch { setOpen(true); }
+  }, [sales, closed]);
 
   const close = () => {
     setOpen(false);
@@ -73,20 +61,10 @@ export default function SeasonNotice() {
           "Online orders are closed",
           "Thank you for shopping with us this Diwali. Our shop counter is open as usual - please visit us to buy.",
         )}
-        {!closed && days > 0 && point(
-          TrendingUpRoundedIcon,
-          days === 1 ? "Last day of sale!" : `Last ${days} days of sale!`,
-          "Old and current prices may differ, and prices may rise. Please order your crackers as soon as possible.",
-        )}
         {!closed && point(
           LocalShippingRoundedIcon,
           "Orders only for selected places",
-          `Online orders for other places are closed. We are delivering only to ${DELIVERY_AREA}.`,
-        )}
-        {!closed && SALES_CLOSE && point(
-          EventBusyRoundedIcon,
-          `Online sales close on ${SALES_CLOSE}`,
-          "Please place your order before then.",
+          `Online orders for other places are closed. We are delivering only to ${deliveryAreaText(activePoints(sales))}.`,
         )}
         <Button
           onClick={close}

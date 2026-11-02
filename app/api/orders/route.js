@@ -2,7 +2,8 @@ import { listOrdersWithStats, createOrder, updateOrder, getOrder } from "@/util/
 import { requireAdmin } from "@/util/admin/auth";
 import { sendOrderMails } from "@/util/sendMail";
 import { lineAmount, sumAmounts, inr } from "@/util/pricing";
-import { meetsMinimumFor, belowMinimumMessage, acceptsDeliveryTo, deliveryClosedMessage, onlineSalesOpen, SALES_CLOSED_MESSAGE } from "@/util/minimumOrder";
+import { meetsMinimumFor, belowMinimumMessage, acceptsDeliveryTo, deliveryClosedMessage, activePoints, SALES_CLOSED_MESSAGE } from "@/util/minimumOrder";
+import { getSales } from "@/util/settingsStore";
 
 export const dynamic = "force-dynamic";
 // Saving the order plus two emails; the default 10s can be tight on a slow
@@ -68,13 +69,15 @@ export async function POST(request) {
     // The website minimum, checked here as well as at checkout so it holds no
     // matter what the browser sends. Counter bills are exempt - see Pos.jsx.
     if (!isPos) {
-      // Website orders are closed for the season once the cut-off passes.
-      if (!onlineSalesOpen()) {
+      // Website orders stop when the admin turns online sales off.
+      const sales = await getSales();
+      if (!sales.open) {
         return Response.json({ error: SALES_CLOSED_MESSAGE }, { status: 400 });
       }
-      // Website orders are taken only for the delivery points this season.
-      if (!acceptsDeliveryTo(billingDetails.state, billingDetails.city)) {
-        return Response.json({ error: deliveryClosedMessage(billingDetails.state, billingDetails.city) }, { status: 400 });
+      // Website orders are taken only for the points the admin has ticked.
+      const points = activePoints(sales);
+      if (!acceptsDeliveryTo(billingDetails.state, billingDetails.city, points)) {
+        return Response.json({ error: deliveryClosedMessage(billingDetails.state, billingDetails.city, points) }, { status: 400 });
       }
       const total = sumAmounts(productList, (p) => lineAmount(p.price, p.discount, p.count));
       if (!meetsMinimumFor(total, billingDetails.state)) {

@@ -15,6 +15,7 @@ import PriceChangeRoundedIcon from "@mui/icons-material/PriceChangeRounded";
 import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import WarehouseRoundedIcon from "@mui/icons-material/WarehouseRounded";
 import PointOfSaleRoundedIcon from "@mui/icons-material/PointOfSaleRounded";
+import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
 import MoreHorizRoundedIcon from "@mui/icons-material/MoreHorizRounded";
 import { useEffect, useState } from "react";
 import { useAdmin } from "../AdminContext";
@@ -31,6 +32,7 @@ export const NAV = [
   { href: "/admin",            label: "Dashboard",  blurb: "Revenue, pipeline and what needs attention", icon: <DashboardRoundedIcon /> },
   { href: "/admin/pos",        label: "New bill",   blurb: "Bill a walk-in customer at the counter",     icon: <PointOfSaleRoundedIcon /> },
   { href: "/admin/orders",     label: "Orders",     blurb: "Track, pack and dispatch every order",        icon: <ListAltRoundedIcon /> },
+  { href: "/admin/sales",      label: "Online sales", blurb: "Turn sales on or off and pick delivery cities", icon: <StorefrontRoundedIcon /> },
   { href: "/admin/products",   label: "Products",   blurb: "Edit titles, prices, stock and images",      icon: <Inventory2RoundedIcon /> },
   { href: "/admin/arrange",   label: "Arrange",     blurb: "Drag categories and products into the order you want", icon: <SwapVertRoundedIcon /> },
   { href: "/admin/pricing",    label: "Price lists", blurb: "Pricelist 1 and 2, side by side",             icon: <PriceChangeRoundedIcon /> },

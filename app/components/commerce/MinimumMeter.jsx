@@ -3,17 +3,21 @@ import { Stack, Typography, LinearProgress, Box } from "@mui/material";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import { MIN_ORDER } from "@/util/cart";
 import { amount } from "@/util/pricing";
-import { DELIVERY_AREA } from "@/util/minimumOrder";
+import { activePoints, deliveryAreaText, SALES_CLOSED_MESSAGE } from "@/util/minimumOrder";
+import { useSales } from "./useSales";
 
 /**
  * The cart cannot know the delivery point yet - that is asked at checkout -
  * so it says up front where we deliver, rather than letting a customer find
  * out at the last step.
  */
-function OutsideTnNote() {
+function OutsideTnNote({ sales }) {
+  if (!sales) return null;
   return (
     <Typography fontSize={11.5} fontWeight={600} color="var(--text-color-secondary)">
-      Online orders are delivered only to {DELIVERY_AREA} this season.
+      {sales.open
+        ? `Online orders are delivered only to ${deliveryAreaText(activePoints(sales))} this season.`
+        : SALES_CLOSED_MESSAGE}
     </Typography>
   );
 }
@@ -26,6 +30,7 @@ function OutsideTnNote() {
  * shortfall, so it reads as a goal to close rather than a rejection.
  */
 export default function MinimumMeter({ total, shortBy, meetsMinimum }) {
+  const sales = useSales();
   const pct = Math.min(100, (total / MIN_ORDER) * 100);
 
   if (meetsMinimum) {
@@ -48,7 +53,7 @@ export default function MinimumMeter({ total, shortBy, meetsMinimum }) {
           Minimum order reached — you&apos;re ready to check out
         </Typography>
       </Stack>
-      <OutsideTnNote />
+      <OutsideTnNote sales={sales} />
       </Stack>
     );
   }
@@ -91,7 +96,7 @@ export default function MinimumMeter({ total, shortBy, meetsMinimum }) {
           },
         }}
       />
-      <OutsideTnNote />
+      <OutsideTnNote sales={sales} />
     </Stack>
   );
 }

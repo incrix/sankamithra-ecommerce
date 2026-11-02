@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { TABLE, getItem, putItem, isDbConfigured } from "@/util/db/dynamo";
 import { DEFAULT_BANNER } from "@/util/config";
+import { normaliseSales } from "@/util/minimumOrder";
 
 /**
  * A tiny key/value store for site settings the admin can change - currently
@@ -68,6 +69,24 @@ export async function getBanner() {
     return DEFAULT_BANNER;
   }
 }
+
+export const SALES_KEY = "sales";
+export const SALES_TAG = "online-sales";
+
+/**
+ * Whether online sales are on, and the delivery points. The order route reads
+ * this directly, and a failed read escapes so the order is refused: a database
+ * blip must not reopen sales the admin has turned off.
+ */
+export async function getSales() {
+  return normaliseSales(await getSetting(SALES_KEY));
+}
+
+/**
+ * The same, for the storefront, where every page view asks. Cached and tagged
+ * like the banner, and the admin's save calls revalidateTag(SALES_TAG).
+ */
+export const getSalesCached = unstable_cache(getSales, ["online-sales"], { tags: [SALES_TAG], revalidate: 300 });
 
 export const WHOLESALE_KEY = "wholesaleSlug";
 
