@@ -14,6 +14,7 @@ const SEEN_CLOSED = "seasonNoticeSeen-closed";
 
 /** Days left to order, counting today and the closing day. */
 const daysLeft = () => {
+  if (!SALES_CLOSE_DATE) return 0;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   return Math.round((SALES_CLOSE_DATE - today) / 86400000) + 1;
@@ -79,10 +80,10 @@ export default function SeasonNotice() {
         )}
         {!closed && point(
           LocalShippingRoundedIcon,
-          `Orders only for ${DELIVERY_AREA}`,
+          "Orders only for selected places",
           `Online orders for other places are closed. We are delivering only to ${DELIVERY_AREA}.`,
         )}
-        {!closed && point(
+        {!closed && SALES_CLOSE && point(
           EventBusyRoundedIcon,
           `Online sales close on ${SALES_CLOSE}`,
           "Please place your order before then.",

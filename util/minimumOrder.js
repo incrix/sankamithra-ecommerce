@@ -118,6 +118,9 @@ export const callBeforePaymentNotice = (state, phone) =>
 export const DELIVERY_POINTS = [
   "Chennai", "Tambaram", "Koyambedu", "Porur Tollgate",
   "Coimbatore", "Tirupur", "Salem", "Madurai", "Vellore",
+  "Trichy", "Thanjavur", "Kumbakonam", "Tiruvarur", "Mayiladuthurai", "Nagapattinam",
+  "Dindigul", "Theni", "Virudhunagar", "Sivakasi", "Srivilliputhur", "Rajapalayam",
+  "Aruppukottai", "Sivaganga", "Karaikudi", "Paramakudi", "Usilampatti",
 ];
 export const DELIVERY_STATE = "Tamil Nadu";
 export const DELIVERY_AREA = `${DELIVERY_POINTS.slice(0, -1).join(", ")} & ${DELIVERY_POINTS.at(-1)}`;
@@ -128,18 +131,22 @@ const letters = (s) => String(s || "").toLowerCase().replace(/[^a-z]/g, "");
 export const deliveryPointFor = (city) => DELIVERY_POINTS.find((p) => letters(p) === letters(city)) || "";
 
 export const isDeliveryPoint = (city) => Boolean(deliveryPointFor(city));
-export const SALES_CLOSE = "1 November 2026, 11:59 PM";
-/** Last day orders are taken (local date), for counting the days left. */
-export const SALES_CLOSE_DATE = new Date(2026, 10, 1);
+/** The closing time customers see, or "" while none is set. */
+export const SALES_CLOSE = "";
+/** Last day orders are taken (local date), for counting the days left, or null while none is set. */
+export const SALES_CLOSE_DATE = null;
 
 /**
- * When website orders stop: 11:59 PM IST on SALES_CLOSE_DATE (reopened for the day). An exact
- * instant in IST, so the server (UTC on Vercel) and the customer's browser agree on it.
- * Checkout and the order route both check this; counter bills are not affected.
+ * When website orders stop, or null to stay open until a closing time is set.
+ * An exact instant in IST, so the server (UTC on Vercel) and the customer's
+ * browser agree on it, e.g. new Date("2026-11-03T20:00:00+05:30"). Set it with
+ * SALES_CLOSE and SALES_CLOSE_DATE. Checkout and the order route both check
+ * this; counter bills are not affected.
  */
-export const ONLINE_SALES_CLOSE_AT = new Date("2026-11-01T23:59:00+05:30");
+export const ONLINE_SALES_CLOSE_AT = null;
 
-export const onlineSalesOpen = (now = Date.now()) => now < ONLINE_SALES_CLOSE_AT.getTime();
+export const onlineSalesOpen = (now = Date.now()) =>
+  !ONLINE_SALES_CLOSE_AT || now < ONLINE_SALES_CLOSE_AT.getTime();
 
 export const SALES_CLOSED_MESSAGE =
   "Online sales are closed for Diwali 2026. Our shop counter is open as usual - please visit us to buy.";
